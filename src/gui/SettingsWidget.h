@@ -23,6 +23,7 @@
 namespace Ui {
     class SettingsWidgetGeneral;
     class SettingsWidgetSecurity;
+    class SettingsWidgetCloud;
 }
 
 class SettingsWidget : public EditWidget
@@ -41,12 +42,15 @@ private Q_SLOTS:
     void saveSettings();
     void reject();
     void enableAutoSaveOnExit(bool checked);
+    void browseDbDirectory();
 
 private:
     QWidget* const m_secWidget;
     QWidget* const m_generalWidget;
+    QWidget* const m_cloudWidget;
     const QScopedPointer<Ui::SettingsWidgetSecurity> m_secUi;
     const QScopedPointer<Ui::SettingsWidgetGeneral> m_generalUi;
+    const QScopedPointer<Ui::SettingsWidgetCloud> m_cloudUi;
     Qt::Key m_globalAutoTypeKey;
     Qt::KeyboardModifiers m_globalAutoTypeModifiers;
 };

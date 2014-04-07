@@ -34,6 +34,7 @@
 #include "gui/ChangeMasterKeyWidget.h"
 #include "gui/Clipboard.h"
 #include "gui/DatabaseOpenWidget.h"
+#include "gui/databaseopenwidgetcloud.h"
 #include "gui/DatabaseSettingsWidget.h"
 #include "gui/KeePass1OpenWidget.h"
 #include "gui/UnlockDatabaseWidget.h"
@@ -41,6 +42,7 @@
 #include "gui/entry/EntryView.h"
 #include "gui/group/EditGroupWidget.h"
 #include "gui/group/GroupView.h"
+#include <QtCore/QDebug>
 
 DatabaseWidget::DatabaseWidget(Database* db, QWidget* parent)
     : QStackedWidget(parent)
@@ -50,6 +52,7 @@ DatabaseWidget::DatabaseWidget(Database* db, QWidget* parent)
     , m_newGroup(Q_NULLPTR)
     , m_newEntry(Q_NULLPTR)
     , m_newParent(Q_NULLPTR)
+    , m_tabWidget(parent)
 {
     m_searchUi->setupUi(m_searchWidget);
 
@@ -75,7 +78,6 @@ DatabaseWidget::DatabaseWidget(Database* db, QWidget* parent)
     m_entryView->setGroup(db->rootGroup());
     connect(m_entryView, SIGNAL(customContextMenuRequested(QPoint)),
             SLOT(emitEntryContextMenuRequested(QPoint)));
-
     QSizePolicy policy;
     policy = m_groupView->sizePolicy();
     policy.setHorizontalStretch(30);
@@ -111,6 +113,7 @@ DatabaseWidget::DatabaseWidget(Database* db, QWidget* parent)
     m_editGroupWidget = new EditGroupWidget();
     m_editGroupWidget->setObjectName("editGroupWidget");
     m_changeMasterKeyWidget = new ChangeMasterKeyWidget();
+    m_databaseOpenWidgetCloud= new DatabaseOpenWidgetCloud();
     m_changeMasterKeyWidget->headlineLabel()->setText(tr("Change master key"));
     QFont headlineLabelFont = m_changeMasterKeyWidget->headlineLabel()->font();
     headlineLabelFont.setBold(true);
@@ -133,6 +136,7 @@ DatabaseWidget::DatabaseWidget(Database* db, QWidget* parent)
     addWidget(m_databaseOpenWidget);
     addWidget(m_keepass1OpenWidget);
     addWidget(m_unlockDatabaseWidget);
+    addWidget(m_databaseOpenWidgetCloud);
 
     connect(m_groupView, SIGNAL(groupChanged(Group*)), this, SLOT(clearLastGroup(Group*)));
     connect(m_groupView, SIGNAL(groupChanged(Group*)), SIGNAL(groupChanged()));
@@ -148,6 +152,8 @@ DatabaseWidget::DatabaseWidget(Database* db, QWidget* parent)
     connect(m_databaseSettingsWidget, SIGNAL(editFinished(bool)), SLOT(switchToView(bool)));
     connect(m_databaseOpenWidget, SIGNAL(editFinished(bool)), SLOT(openDatabase(bool)));
     connect(m_keepass1OpenWidget, SIGNAL(editFinished(bool)), SLOT(openDatabase(bool)));
+    connect(m_databaseOpenWidgetCloud, SIGNAL(dbRejected()),SLOT(rejectDb()));
+    connect(m_databaseOpenWidgetCloud,SIGNAL(dbSelected(const QString&)),this,SLOT(cloudDbOpen(const QString&)));
     connect(m_unlockDatabaseWidget, SIGNAL(editFinished(bool)), SLOT(unlockDatabase(bool)));
     connect(this, SIGNAL(currentChanged(int)), this, SLOT(emitCurrentModeChanged()));
     connect(m_searchUi->searchEdit, SIGNAL(textChanged(QString)), this, SLOT(startSearchTimer()));
@@ -158,6 +164,19 @@ DatabaseWidget::DatabaseWidget(Database* db, QWidget* parent)
     connect(closeAction, SIGNAL(triggered()), this, SLOT(closeSearch()));
 
     setCurrentWidget(m_mainWidget);
+}
+
+void DatabaseWidget::cloudDbOpen(const QString& dbName) {
+qDebug() <<"DB was selected and passed to slot::"+dbName;
+//Pass path to the downloaded database and key to dbStruct array to get this struct from another widget
+Q_EMIT cloudDbSelected(dbName,m_db);
+
+}
+
+void DatabaseWidget::rejectDb() {
+    qDebug() << "Emitting cloudDbRejected";
+    Q_EMIT cloudDbRejected(m_db);
+
 }
 
 DatabaseWidget::~DatabaseWidget()
@@ -467,6 +486,9 @@ void DatabaseWidget::updateMasterKey(bool accepted)
     setCurrentWidget(m_mainWidget);
 }
 
+
+
+
 void DatabaseWidget::openDatabase(bool accepted)
 {
     if (accepted) {
@@ -526,6 +548,12 @@ void DatabaseWidget::switchToMasterKeyChange()
 {
     m_changeMasterKeyWidget->clearForms();
     setCurrentWidget(m_changeMasterKeyWidget);
+}
+
+void DatabaseWidget::switchToCloudDbOpen()
+{
+    m_databaseOpenWidgetCloud->loadSupportedCloudEngines();
+    setCurrentWidget(m_databaseOpenWidgetCloud);
 }
 
 void DatabaseWidget::switchToDatabaseSettings()

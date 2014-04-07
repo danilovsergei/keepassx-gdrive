@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Google Drive Test</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <property name="margin">
+     <number>0</number>
+    </property>
+    <item>
+     <widget class="QTextEdit" name="textEdit">
+      <property name="readOnly">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuLogin">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionClear_log"/>
+    <addaction name="separator"/>
+    <addaction name="actionExit"/>
+   </widget>
+   <widget class="QMenu" name="menuOptions">
+    <property name="title">
+     <string>Options</string>
+    </property>
+    <addaction name="actionEdit_options"/>
+   </widget>
+   <widget class="QMenu" name="menuOperations">
+    <property name="title">
+     <string>Operations</string>
+    </property>
+    <addaction name="actionLogin"/>
+    <addaction name="separator"/>
+    <addaction name="actionAbout"/>
+    <addaction name="actionGet_file_list"/>
+    <addaction name="actionUpload_simple_file"/>
+    <addaction name="actionGet_file_info"/>
+    <addaction name="actionDownload_file"/>
+    <addaction name="actionDelete_test_file"/>
+    <addaction name="actionUpdate_test_file"/>
+   </widget>
+   <addaction name="menuLogin"/>
+   <addaction name="menuOperations"/>
+   <addaction name="menuOptions"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionLogin">
+   <property name="text">
+    <string>Login</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="text">
+    <string>Exit</string>
+   </property>
+  </action>
+  <action name="actionEdit_options">
+   <property name="text">
+    <string>Edit options</string>
+   </property>
+  </action>
+  <action name="actionGet_file_list">
+   <property name="text">
+    <string>Get file list</string>
+   </property>
+  </action>
+  <action name="actionClear_log">
+   <property name="text">
+    <string>Clear log</string>
+   </property>
+  </action>
+  <action name="action">
+   <property name="text">
+    <string>-</string>
+   </property>
+  </action>
+  <action name="action_2">
+   <property name="text">
+    <string>---</string>
+   </property>
+  </action>
+  <action name="action_3">
+   <property name="text">
+    <string>--</string>
+   </property>
+  </action>
+  <action name="actionDownload_file">
+   <property name="text">
+    <string>Download test file</string>
+   </property>
+  </action>
+  <action name="actionUpload_simple_file">
+   <property name="text">
+    <string>Upload test file</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>About</string>
+   </property>
+  </action>
+  <action name="actionGet_file_info">
+   <property name="text">
+    <string>Get test file info</string>
+   </property>
+  </action>
+  <action name="actionDelete_test_file">
+   <property name="text">
+    <string>Delete test file</string>
+   </property>
+  </action>
+  <action name="actionUpdate_test_file">
+   <property name="text">
+    <string>Update test file</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>actionExit</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>close()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionClear_log</sender>
+   <signal>triggered()</signal>
+   <receiver>textEdit</receiver>
+   <slot>clear()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>300</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

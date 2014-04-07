@@ -18,23 +18,29 @@
 #include "SettingsWidget.h"
 #include "ui_SettingsWidgetGeneral.h"
 #include "ui_SettingsWidgetSecurity.h"
+#include "ui_SettingsWidgetCloud.h"
 
 #include "autotype/AutoType.h"
 #include "core/Config.h"
+#include "QtGui/QFileDialog"
 
 SettingsWidget::SettingsWidget(QWidget* parent)
     : EditWidget(parent)
     , m_secWidget(new QWidget())
     , m_generalWidget(new QWidget())
+    , m_cloudWidget(new QWidget)
     , m_secUi(new Ui::SettingsWidgetSecurity())
     , m_generalUi(new Ui::SettingsWidgetGeneral())
+    , m_cloudUi(new Ui::SettingsWidgetCloud())
 {
     setHeadline(tr("Application Settings"));
 
     m_secUi->setupUi(m_secWidget);
     m_generalUi->setupUi(m_generalWidget);
+    m_cloudUi->setupUi(m_cloudWidget);
     add(tr("General"), m_generalWidget);
     add(tr("Security"), m_secWidget);
+    add(tr("Cloud"),m_cloudWidget);
 
     connect(this, SIGNAL(accepted()), SLOT(saveSettings()));
     connect(this, SIGNAL(rejected()), SLOT(reject()));
@@ -44,6 +50,8 @@ SettingsWidget::SettingsWidget(QWidget* parent)
 
     connect(m_secUi->clearClipboardCheckBox, SIGNAL(toggled(bool)),
             m_secUi->clearClipboardSpinBox, SLOT(setEnabled(bool)));
+    connect(m_cloudUi->browseButton, SIGNAL(clicked()), SLOT(browseDbDirectory()));
+
 }
 
 SettingsWidget::~SettingsWidget()
@@ -67,6 +75,8 @@ void SettingsWidget::loadSettings()
     m_secUi->clearClipboardCheckBox->setChecked(config()->get("security/clearclipboard").toBool());
     m_secUi->clearClipboardSpinBox->setValue(config()->get("security/clearclipboardtimeout").toInt());
 
+    m_cloudUi->dbDirectory->setText(config()->get("cloud/dbdir").toString());
+
     setCurrentRow(0);
 }
 
@@ -81,6 +91,7 @@ void SettingsWidget::saveSettings()
     config()->set("GlobalAutoTypeModifiers", static_cast<int>(m_generalUi->autoTypeShortcutWidget->modifiers()));
     config()->set("security/clearclipboard", m_secUi->clearClipboardCheckBox->isChecked());
     config()->set("security/clearclipboardtimeout", m_secUi->clearClipboardSpinBox->value());
+    config()->set("cloud/dbdir",m_cloudUi->dbDirectory->toPlainText());
 
     Q_EMIT editFinished(true);
 }
@@ -98,4 +109,19 @@ void SettingsWidget::reject()
 void SettingsWidget::enableAutoSaveOnExit(bool checked)
 {
     m_generalUi->autoSaveOnExitCheckBox->setEnabled(!checked);
+}
+
+void SettingsWidget::browseDbDirectory()
+{
+    QString fileName= QFileDialog::getExistingDirectory(this, tr("Open Directory"),
+                                                 config()->getConfigDir(),
+                                                 QFileDialog::ShowDirsOnly
+                                                 | QFileDialog::DontResolveSymlinks);
+
+    if (!fileName.isEmpty()) {
+        m_cloudUi->dbDirectory->setText(fileName);
+    }
+    else {
+        m_cloudUi->dbDirectory->setText("Test");
+    }
 }

@@ -22,6 +22,7 @@
 #include "core/Group.h"
 #include "core/Metadata.h"
 #include "keys/CompositeKey.h"
+#include "../qtdrive/gdrive/gdrive.h"
 
 DatabaseSettingsWidget::DatabaseSettingsWidget(QWidget* parent)
     : DialogyWidget(parent)

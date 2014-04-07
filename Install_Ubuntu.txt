@@ -1,0 +1,8 @@
+Dependencies:
+libgcrypt11
+libgcrypt11-dev
+zlib1g-dev
+zlib1g
+libqjson0
+libqjson-dev
+libboost-all-dev

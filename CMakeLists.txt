@@ -56,7 +56,9 @@ macro(add_gcc_compiler_flags FLAGS)
   add_gcc_compiler_cflags("${FLAGS}")
 endmacro(add_gcc_compiler_flags)
 
-add_definitions(-DQT_NO_KEYWORDS -DQT_NO_EXCEPTIONS -DQT_NO_STL -DQT_STRICT_ITERATORS -DQT_NO_CAST_TO_ASCII)
+#add_definitions(-DQT_NO_KEYWORDS -DQT_NO_EXCEPTIONS -DQT_NO_STL -DQT_STRICT_ITERATORS -DQT_NO_CAST_TO_ASCII)
+#Remove DQT_NO_STL because it causes gdrive fail in numerous places
+add_definitions(-DQT_NO_KEYWORDS -DQT_NO_EXCEPTIONS  -DQT_STRICT_ITERATORS -DQT_NO_CAST_TO_ASCII)
 
 add_gcc_compiler_flags("-fno-common -fstack-protector --param=ssp-buffer-size=4 -D_FORTIFY_SOURCE=2")
 add_gcc_compiler_flags("-Wall -Wextra -Wundef -Wpointer-arith -Wno-long-long")
@@ -64,7 +66,8 @@ add_gcc_compiler_flags("-Wformat=2 -Wmissing-format-attribute")
 add_gcc_compiler_flags("-fvisibility=hidden")
 add_gcc_compiler_cxxflags("-fvisibility-inlines-hidden")
 
-add_gcc_compiler_cxxflags("-fno-exceptions -fno-rtti")
+#commented because of keepass use this feature
+#add_gcc_compiler_cxxflags("-fno-exceptions -fno-rtti")
 add_gcc_compiler_cxxflags("-Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual")
 add_gcc_compiler_cflags("-Wchar-subscripts -Wwrite-strings")
 

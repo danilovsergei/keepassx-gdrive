@@ -70,7 +70,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>20</height>
+     <height>27</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -83,6 +83,7 @@
      </property>
     </widget>
     <addaction name="actionDatabaseNew"/>
+    <addaction name="actionOpen_Cloud_database"/>
     <addaction name="actionDatabaseOpen"/>
     <addaction name="menuRecentDatabases"/>
     <addaction name="actionDatabaseSave"/>
@@ -344,6 +345,11 @@
    </property>
    <property name="text">
     <string>Lock databases</string>
+   </property>
+  </action>
+  <action name="actionOpen_Cloud_database">
+   <property name="text">
+    <string>Open Cloud database</string>
    </property>
   </action>
  </widget>

@@ -26,6 +26,12 @@
 #include "format/KeePass2Reader.h"
 #include "keys/FileKey.h"
 #include "keys/PasswordKey.h"
+#include <QtCore/QSettings>
+#include "../qtdrive/test/options.h"
+#include "../qtdrive/lib/session.h"
+#include "QtNetwork/QNetworkAccessManager"
+#include "../qtdrive/lib/command_file_list.h"
+using namespace GoogleDrive;
 
 DatabaseOpenWidget::DatabaseOpenWidget(QWidget* parent)
     : DialogyWidget(parent)
@@ -53,11 +59,47 @@ DatabaseOpenWidget::DatabaseOpenWidget(QWidget* parent)
 
     connect(m_ui->buttonBox, SIGNAL(accepted()), SLOT(openDatabase()));
     connect(m_ui->buttonBox, SIGNAL(rejected()), SLOT(reject()));
+    connect(m_ui->checkGDrive,SIGNAL(toggled(bool)),SLOT(cloudDbLoad()));
 }
 
 DatabaseOpenWidget::~DatabaseOpenWidget()
 {
 }
+
+void DatabaseOpenWidget::cloudDbLoad()
+{
+    QSettings s("/home/geonix/.config/prog-org-ru-developers/qtgoogledrive-test-1.conf",QSettings::IniFormat);
+    QString clientId = s.value(cClientId).toString();
+    QString clientSecret = s.value(cClientSecret).toString();
+    QString refreshToken = s.value(cRefreshToken).toString();
+
+   //QNetworkAccessManager* manager =  new QNetworkAccessManager(this);
+   //Session* session = new Session(manager, this);
+   QNetworkAccessManager* manager=new QNetworkAccessManager(this);
+   Session session(manager,this);
+
+   session.setClientId(clientId);
+   session.setClientSecret(clientSecret);
+   session.setRefreshToken(refreshToken);
+
+
+
+   CommandFileList cmd(&session);
+   cmd.setFields("items(fileSize,id,title,modifiedDate)");
+   cmd.execForFolder("0B8tltL21wts3NGpOZzdNZDcwTXc");
+   if (!cmd.waitForFinish(true))
+       return;
+   QStringList db_files;
+   Q_FOREACH (const FileInfo& fi, cmd.files()) {
+       db_files.append(fi.title()+" "+fi.modifiedDate().toString());
+       m_ui->mytext->append(fi.title()+" "+fi.modifiedDate().toString());
+       }
+
+
+   m_ui->selectCloudDb->addItems(db_files);
+}
+
+
 
 void DatabaseOpenWidget::load(const QString& filename)
 {

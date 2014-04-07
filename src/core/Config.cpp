@@ -22,6 +22,7 @@
 #include <QtCore/QTemporaryFile>
 #include <QtGui/QApplication>
 #include <QtGui/QDesktopServices>
+#include <QtCore/QDebug>
 
 Config* Config::m_instance(Q_NULLPTR);
 
@@ -75,12 +76,17 @@ Config::Config(QObject* parent)
 #endif
 
     userPath += "keepassx2.ini";
-
+    this->userPath=userPath;
     init(userPath);
 }
 
 Config::~Config()
 {
+}
+
+QString Config::getConfigDir() {
+    return QDir::toNativeSeparators(QFileInfo(userPath).path());
+
 }
 
 void Config::init(const QString& fileName)
@@ -95,6 +101,7 @@ void Config::init(const QString& fileName)
     m_defaults.insert("ShowToolbar", true);
     m_defaults.insert("security/clearclipboard", true);
     m_defaults.insert("security/clearclipboardtimeout", 10);
+    m_defaults.insert("cloud/dbdir",QDir::toNativeSeparators(QFileInfo(fileName).path()+"/cloud"));
 }
 
 Config* Config::instance()

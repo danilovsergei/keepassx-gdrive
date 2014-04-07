@@ -48,6 +48,7 @@ Metadata::Metadata(QObject* parent)
     m_recycleBinChanged = now;
     m_entryTemplatesGroupChanged = now;
     m_masterKeyChanged = now;
+    m_lastModified=now;
 }
 
 template <class P, class V> bool Metadata::set(P& property, const V& value)
@@ -115,6 +116,8 @@ QDateTime Metadata::defaultUserNameChanged() const
 {
     return m_defaultUserNameChanged;
 }
+
+
 
 int Metadata::maintenanceHistoryDays() const
 {
@@ -437,3 +440,19 @@ void Metadata::removeCustomField(const QString& key)
     m_customFields.remove(key);
     Q_EMIT modified();
 }
+
+
+//sets database last modification date.
+void Metadata::setLastModifiedDate(const QDateTime& date) {
+m_lastModified=date;
+}
+
+//Returns database last modification date
+QDateTime Metadata::lastModifiedDate() const
+{
+ return m_lastModified;
+}
+
+
+
+

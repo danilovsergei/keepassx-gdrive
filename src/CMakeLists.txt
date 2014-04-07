@@ -13,9 +13,21 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
+
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+#include_directories(qtdrive/gdrive)
+find_package(Qt4 REQUIRED QtCore QtNetwork QtGui)
 configure_file(config-keepassx.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config-keepassx.h)
+
+add_subdirectory(qtdrive)
+add_subdirectory(gdrive)
+
+set(GDRIVE_DEPS
+    google_drive
+    google_drive_proxy
+)
 
 set(keepassx_SOURCES
     autotype/AutoType.cpp
@@ -110,6 +122,10 @@ set(keepassx_SOURCES
     streams/qtiocompressor.cpp
     streams/StoreDataStream.cpp
     streams/SymmetricCipherStream.cpp
+    gui/databaseopenwidgetcloud.cpp
+    gdrive/GoogleDriveSession.cpp
+    gui/SettingsWidgetCloud.cpp
+    gdrive/GoogleDriveApi.cpp
 )
 
 set(keepassx_SOURCES_MAINEXE
@@ -169,6 +185,13 @@ set(keepassx_MOC
     streams/qtiocompressor.h
     streams/StoreDataStream.h
     streams/SymmetricCipherStream.h
+    qtdrive/gdrive/gdrive.h
+    qtdrive/gdrive/tools.h
+    gui/databaseopenwidgetcloud.h
+    gui/SettingsWidgetCloud.h
+    gdrive/GoogleDriveSession.h
+    gdrive/Singleton.h
+    gdrive/GoogleDriveApi.h
 )
 
 set(keepassx_FORMS
@@ -190,6 +213,9 @@ set(keepassx_FORMS
     gui/entry/EditEntryWidgetHistory.ui
     gui/entry/EditEntryWidgetMain.ui
     gui/group/EditGroupWidgetMain.ui
+    gui/databaseopenwidgetcloud.ui
+    gui/SettingsWidgetCloud.ui
+    qtdrive/test/networkaccessmanagerproxy/networkrequests.ui
 )
 
 if(MINGW)
@@ -210,7 +236,8 @@ target_link_libraries(${PROGNAME}
                       ${QT_QTCORE_LIBRARY}
                       ${QT_QTGUI_LIBRARY}
                       ${GCRYPT_LIBRARIES}
-                      ${ZLIB_LIBRARIES})
+                      ${ZLIB_LIBRARIES}
+                      ${GDRIVE_DEPS})
 
 if(UNIX AND NOT APPLE)
   target_link_libraries(${PROGNAME} ${QT_QTDBUS_LIBRARY})
@@ -257,3 +284,4 @@ if(MINGW AND NOT (${CMAKE_VERSION} VERSION_LESS 2.8.8))
   include(DeployQt4)
   install_qt4_executable(${PROGNAME}.exe "qjpeg;qgif;qico;qtaccessiblewidgets")
 endif()
+

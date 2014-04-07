@@ -23,6 +23,7 @@
 
 #include "format/KeePass2Writer.h"
 #include "gui/DatabaseWidget.h"
+#include "gdrive/GoogleDriveApi.h"
 
 class DatabaseWidget;
 class DatabaseOpenWidget;
@@ -60,6 +61,7 @@ public:
 public Q_SLOTS:
     void newDatabase();
     void openDatabase();
+    void openCloudDatabase();
     void importKeePass1Database();
     void saveDatabase(int index = -1);
     void saveDatabaseAs(int index = -1);
@@ -71,10 +73,15 @@ public Q_SLOTS:
     bool readOnly(int index = -1);
     void performGlobalAutoType();
     void lockDatabases();
+    void openDatabaseDownloadedFromCloud(const QString& fileName, Database *db);
+
+
 
 Q_SIGNALS:
     void tabNameChanged();
     void databaseWithFileClosed(QString filePath);
+    void databaseSavedLocally(Database* db);
+
 
 private Q_SLOTS:
     void updateTabName(Database* db);
@@ -83,6 +90,9 @@ private Q_SLOTS:
     void modified();
     void toggleTabbar();
     void changeDatabase(Database* newDb);
+    void destroyCloudDatabaseStub(Database* db);
+    void saveDatabaseToCloud(Database* db);
+
 
 private:
     void saveDatabase(Database* db);

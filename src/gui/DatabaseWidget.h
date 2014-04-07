@@ -39,6 +39,7 @@ class KeePass1OpenWidget;
 class QFile;
 class QMenu;
 class UnlockDatabaseWidget;
+class DatabaseOpenWidgetCloud;
 
 namespace Ui {
     class SearchWidget;
@@ -81,6 +82,8 @@ Q_SIGNALS:
     void groupContextMenuRequested(const QPoint& globalPos);
     void entryContextMenuRequested(const QPoint& globalPos);
     void unlockedDatabase();
+    void cloudDbSelected(const QString& fileName,Database* db);
+    void cloudDbRejected(Database* db);
 
 public Q_SLOTS:
     void createEntry();
@@ -97,6 +100,7 @@ public Q_SLOTS:
     void switchToEntryEdit();
     void switchToGroupEdit();
     void switchToMasterKeyChange();
+    void switchToCloudDbOpen();
     void switchToDatabaseSettings();
     void switchToOpenDatabase(const QString& fileName);
     void switchToOpenDatabase(const QString& fileName, const QString& password, const QString& keyFile);
@@ -104,6 +108,7 @@ public Q_SLOTS:
     void toggleSearch();
     void emitGroupContextMenuRequested(const QPoint& pos);
     void emitEntryContextMenuRequested(const QPoint& pos);
+    void cloudDbOpen(const QString& dbName);
 
 private Q_SLOTS:
     void entryActivationSignalReceived(Entry* entry, EntryModel::ModelColumn column);
@@ -115,6 +120,7 @@ private Q_SLOTS:
     void switchToGroupEdit(Group* entry, bool create);
     void updateMasterKey(bool accepted);
     void openDatabase(bool accepted);
+    void rejectDb();
     void unlockDatabase(bool accepted);
     void emitCurrentModeChanged();
     void clearLastGroup(Group* group);
@@ -129,12 +135,14 @@ private:
     const QScopedPointer<Ui::SearchWidget> m_searchUi;
     QWidget* const m_searchWidget;
     QWidget* m_mainWidget;
+    QWidget* m_tabWidget;
     EditEntryWidget* m_editEntryWidget;
     EditEntryWidget* m_historyEditEntryWidget;
     EditGroupWidget* m_editGroupWidget;
     ChangeMasterKeyWidget* m_changeMasterKeyWidget;
     DatabaseSettingsWidget* m_databaseSettingsWidget;
     DatabaseOpenWidget* m_databaseOpenWidget;
+    DatabaseOpenWidgetCloud* m_databaseOpenWidgetCloud;
     KeePass1OpenWidget* m_keepass1OpenWidget;
     UnlockDatabaseWidget* m_unlockDatabaseWidget;
     GroupView* m_groupView;

@@ -32,6 +32,7 @@
 #include "gui/FileDialog.h"
 #include "gui/entry/EntryView.h"
 #include "gui/group/GroupView.h"
+#include <QtCore/QDebug>;
 
 DatabaseManagerStruct::DatabaseManagerStruct()
     : dbWidget(Q_NULLPTR)
@@ -53,6 +54,7 @@ DatabaseTabWidget::DatabaseTabWidget(QWidget* parent)
 
     connect(this, SIGNAL(tabCloseRequested(int)), SLOT(closeDatabase(int)));
     connect(autoType(), SIGNAL(globalShortcutTriggered()), SLOT(performGlobalAutoType()));
+    connect(this,SIGNAL(databaseSavedLocally(Database*)),this,SLOT(saveDatabaseToCloud(Database*)));
 }
 
 DatabaseTabWidget::~DatabaseTabWidget()
@@ -100,6 +102,92 @@ void DatabaseTabWidget::openDatabase()
     }
 }
 
+void DatabaseTabWidget::openCloudDatabase()
+{
+    //Create dbStruct with empty database which will be populated further during database open from local drive
+    DatabaseManagerStruct dbStruct;
+    Database* db = new Database();
+    dbStruct.dbWidget = new DatabaseWidget(db, this);
+    insertDatabase(db, dbStruct);
+
+    //Expect CloudDbSelected signal which will be emmited when cloud database will be selected and downloaded locally.
+    //Pass also database pointer to use it as key for struct extraction from m_dbList
+    connect(dbStruct.dbWidget,SIGNAL(cloudDbSelected(const QString&,Database*)),this,SLOT(openDatabaseDownloadedFromCloud(const QString&,Database*)));
+
+    //Destoy created in advance empty database if user cancels download db dialog
+    connect(dbStruct.dbWidget,SIGNAL(cloudDbRejected(Database*)),this,SLOT(destroyCloudDatabaseStub(Database*)));
+    dbStruct.dbWidget->switchToCloudDbOpen();
+
+
+}
+
+void DatabaseTabWidget::destroyCloudDatabaseStub(Database* db)
+{
+qDebug() << "Start destroy cloud database...";
+DatabaseManagerStruct& dbStruct = m_dbList[db];
+//We didn't open any files since user rejected open dialog
+//thus we don't need to destoy any files while deleteDatabase procedure
+dbStruct.saveToFilename=false;
+deleteDatabase(db);
+}
+
+
+void DatabaseTabWidget::openDatabaseDownloadedFromCloud(const QString& fileName,Database* db)
+{
+    Q_ASSERT(db);
+    //Reuse already created struct while Cloud Db opening
+    DatabaseManagerStruct& dbStruct = m_dbList[db];
+
+    qDebug() <<"We are inside tab widget:: "+fileName;
+
+    QFileInfo fileInfo(fileName);
+    QString canonicalFilePath = fileInfo.canonicalFilePath();
+    if (canonicalFilePath.isEmpty()) {
+        QMessageBox::warning(this, tr("Warning"), tr("File not found!"));
+        return;
+    }
+
+    //Check if database with given name was already opened
+    //and focus current tab on it if yes
+    QHashIterator<Database*, DatabaseManagerStruct> i(m_dbList);
+    while (i.hasNext()) {
+        i.next();
+        if (i.value().canonicalFilePath == canonicalFilePath) {
+            setCurrentIndex(databaseIndex(i.key()));
+            return;
+        }
+    }
+
+
+
+    // test if we can read/write or read the file
+    QFile file(fileName);
+    // TODO: error handling
+    if (!file.open(QIODevice::ReadWrite)) {
+        if (!file.open(QIODevice::ReadOnly)) {
+            // can't open
+            // TODO: error message
+            return;
+        }
+        else {
+            // can only open read-only
+            dbStruct.readOnly = true;
+        }
+    }
+    file.close();
+
+    dbStruct.saveToFilename = !dbStruct.readOnly;
+
+    dbStruct.filePath = fileInfo.absoluteFilePath();
+    dbStruct.canonicalFilePath = canonicalFilePath;
+    dbStruct.fileName = fileInfo.fileName();
+
+    updateLastDatabases(dbStruct.filePath);
+    dbStruct.dbWidget->switchToOpenDatabase(dbStruct.filePath);
+
+}
+
+
 void DatabaseTabWidget::openDatabase(const QString& fileName, const QString& pw,
                                      const QString& keyFile)
 {
@@ -110,7 +198,8 @@ void DatabaseTabWidget::openDatabase(const QString& fileName, const QString& pw,
         return;
     }
 
-
+    //Check if database with given name was already opened
+    //and focus current tab on it if yes
     QHashIterator<Database*, DatabaseManagerStruct> i(m_dbList);
     while (i.hasNext()) {
         i.next();
@@ -224,7 +313,9 @@ bool DatabaseTabWidget::closeDatabase(Database* db)
 }
 
 void DatabaseTabWidget::deleteDatabase(Database* db)
+
 {
+    qDebug() << "Emitting close database procedure";
     const DatabaseManagerStruct dbStruct = m_dbList.value(db);
     bool emitDatabaseWithFileClosed = dbStruct.saveToFilename;
     QString filePath = dbStruct.filePath;
@@ -251,6 +342,16 @@ bool DatabaseTabWidget::closeAllDatabases()
     }
     return true;
 }
+/**
+ * @brief DatabaseTabWidget::saveDatabaseToCloud - loads current version of the database to cloud
+ * @param db - database which will be loaded to cloud
+ */
+void DatabaseTabWidget::saveDatabaseToCloud(Database* db) {
+qDebug() << "Saving database to cloud with modification date:"+db->metadata()->lastModifiedDate().toString();
+DatabaseManagerStruct& dbStruct = m_dbList[db];
+
+googleDriveApi()->uploadDatabase(dbStruct.filePath,db->metadata()->lastModifiedDate());
+}
 
 void DatabaseTabWidget::saveDatabase(Database* db)
 {
@@ -266,8 +367,15 @@ void DatabaseTabWidget::saveDatabase(Database* db)
         }
 
         if (result) {
+            //get local database modification time
+            QFileInfo info(dbStruct.filePath);
+            db->metadata()->setLastModifiedDate(info.lastModified());
             dbStruct.modified = false;
+
+
             updateTabName(db);
+            qDebug() << "Emitting Signal databaseSavedLocally ";
+            Q_EMIT databaseSavedLocally(db);
         }
         else {
             QMessageBox::critical(this, tr("Error"), tr("Writing the database failed.") + "\n\n"

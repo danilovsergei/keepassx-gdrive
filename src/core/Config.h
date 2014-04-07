@@ -31,6 +31,7 @@ class Config : public QObject
 
 public:
     ~Config();
+    QString getConfigDir();
     QVariant get(const QString& key);
     QVariant get(const QString& key, const QVariant& defaultValue);
     void set(const QString& key, const QVariant& value);
@@ -39,16 +40,23 @@ public:
     static void createConfigFromFile(QString file);
     static void createTempFileInstance();
 
+
 private:
     Config(const QString& fileName, QObject* parent);
     explicit Config(QObject* parent);
     void init(const QString& fileName);
+    QString userPath;
 
     static Config* m_instance;
 
     QScopedPointer<QSettings> m_settings;
     QHash<QString, QVariant> m_defaults;
-
+    struct LastCloudDatabases {
+    QString databaseName;
+    QString cloudSyncTime;
+    };
+    typedef QMap<QString,LastCloudDatabases> LastCloudDatabasesMap;
+    LastCloudDatabasesMap m_LastCloudDatabases;
     Q_DISABLE_COPY(Config)
 };
 

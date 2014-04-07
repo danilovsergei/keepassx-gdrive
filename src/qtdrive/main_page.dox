@@ -1,0 +1,15 @@
+/*!
+\mainpage Qt Google Drive API
+
+This is a Google Drive API based on the Qt Framework.
+
+\author Vladislav Navrocky
+\author Oleg Linkin
+*/
+
+
+/*!
+\namespace GoogleDrive
+\brief Google Drive API namespace
+*/
+namespace GoogleDrive {}

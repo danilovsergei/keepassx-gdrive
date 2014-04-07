@@ -22,6 +22,7 @@
 
 #include "gui/DialogyWidget.h"
 #include "keys/CompositeKey.h"
+#include "../qtdrive/gdrive/gdrive.h"
 
 class Database;
 class QFile;
@@ -39,6 +40,7 @@ public:
     ~DatabaseOpenWidget();
     void load(const QString& filename);
     void enterKey(const QString& pw, const QString& keyFile);
+    void writeMessage(const QString &msg, QColor col, bool time);
     Database* database();
 
 Q_SIGNALS:
@@ -57,6 +59,7 @@ private Q_SLOTS:
     void activateKeyFile();
     void setOkButtonEnabled();
     void browseKeyFile();
+    void cloudDbLoad();
 
 protected:
     const QScopedPointer<Ui::DatabaseOpenWidget> m_ui;
