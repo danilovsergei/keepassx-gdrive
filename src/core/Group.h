@@ -98,6 +98,7 @@ public:
     QList<Entry*> entries();
     const QList<Entry*>& entries() const;
     QList<Entry*> entriesRecursive(bool includeHistoryItems = false) const;
+    QMap<Uuid,Entry*> Group::entriesMapRecursive() const;
     QList<const Group*> groupsRecursive(bool includeSelf) const;
     QSet<Uuid> customIconsRecursive() const;
     Group* clone() const;

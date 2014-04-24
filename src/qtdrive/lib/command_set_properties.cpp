@@ -123,7 +123,7 @@ void CommandSetFileProperties::reexecuteQuery()
 
 
     QString urlStr("https://www.googleapis.com/drive/v2/files");
-    //TODO just crash here is file not found!!!
+
     if (!d->fileInfo.id().isEmpty())
         urlStr += QString("/%1/properties").arg(d->fileInfo.id());
     QUrl url(urlStr);

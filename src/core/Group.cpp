@@ -422,6 +422,27 @@ QList<Entry*> Group::entriesRecursive(bool includeHistoryItems) const
     return entryList;
 }
 
+/**
+ * @brief Group::entriesMapRecursive - build QMap of entries with UUID as a key
+ * @return  QMap of entries UUID is a key
+ */
+QMap<Uuid,Entry*> Group::entriesMapRecursive() const
+{
+    QMap<Uuid,Entry*> entryList;
+
+    Q_FOREACH(Entry* entry,m_entries) {
+        entryList[entry->uuid()]=entry;
+    }
+    Q_FOREACH (Group* group, m_children) {
+        Q_FOREACH(Entry* entry1,group->entriesMapRecursive()) {
+            entryList[entry1->uuid()]=entry1;
+        }
+    }
+
+    return entryList;
+}
+
+
 QList<const Group*> Group::groupsRecursive(bool includeSelf) const
 {
     QList<const Group*> groupList;

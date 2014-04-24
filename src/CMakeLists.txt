@@ -126,6 +126,7 @@ set(keepassx_SOURCES
     gdrive/GoogleDriveSession.cpp
     gui/SettingsWidgetCloud.cpp
     gdrive/GoogleDriveApi.cpp
+    gdrive/GDriveDatabaseSync.cpp
 )
 
 set(keepassx_SOURCES_MAINEXE
@@ -192,6 +193,7 @@ set(keepassx_MOC
     gdrive/GoogleDriveSession.h
     gdrive/Singleton.h
     gdrive/GoogleDriveApi.h
+    gdrive/GDriveDatabaseSync.h
 )
 
 set(keepassx_FORMS
