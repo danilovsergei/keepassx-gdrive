@@ -98,11 +98,13 @@ public:
     QList<Entry*> entries();
     const QList<Entry*>& entries() const;
     QList<Entry*> entriesRecursive(bool includeHistoryItems = false) const;
-    QMap<Uuid,Entry*> Group::entriesMapRecursive() const;
+    QMap<Uuid,Entry*> entriesMapRecursive() const;
+    QMap<Uuid,Group*> groupsMapRecursive(bool includeSelf);
     QList<const Group*> groupsRecursive(bool includeSelf) const;
     QSet<Uuid> customIconsRecursive() const;
     Group* clone() const;
     void copyDataFrom(const Group* other);
+    QString getGroupName() const;
 
     QList<Entry*> search(const QString& searchTerm, Qt::CaseSensitivity caseSensitivity,
                          bool resolveInherit = true);

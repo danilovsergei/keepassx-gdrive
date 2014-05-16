@@ -442,6 +442,24 @@ QMap<Uuid,Entry*> Group::entriesMapRecursive() const
     return entryList;
 }
 
+QMap<Uuid,Group*> Group::groupsMapRecursive(bool includeSelf)
+{
+    QMap<Uuid,Group*> groupMap;
+    if (includeSelf) {
+        groupMap[this->uuid()]=this;
+    }
+
+    Q_FOREACH (Group* group, m_children) {
+        Q_FOREACH(Group* group1,group->groupsMapRecursive(true)){
+        groupMap[group1->uuid()]=group1;
+        }
+    }
+    return groupMap;
+}
+
+QString Group::getGroupName() const {
+return m_data.name;
+}
 
 QList<const Group*> Group::groupsRecursive(bool includeSelf) const
 {
@@ -456,6 +474,8 @@ QList<const Group*> Group::groupsRecursive(bool includeSelf) const
 
     return groupList;
 }
+
+
 
 QSet<Uuid> Group::customIconsRecursive() const
 {

@@ -33,7 +33,7 @@
 #include "../qtdrive/lib/command_file_list.h"
 #include "core/Group.h"
 #include <QtCore/QDebug>
-#include "gdrive/GDriveDatabaseSync.h"
+#include "gdrive/GDriveEntriesSync.h"
 
 using namespace GoogleDrive;
 
@@ -156,7 +156,7 @@ void DatabaseOpenWidget::openDatabase()
     QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
 
 
-    QFile file1 ("/home/geonix/.config/keepassx/keepass2_mod.kdbx");
+    QFile file1 ("/home/geonix/.config/keepassx/testdb_modified.kdbx");
     if (!file1.open(QIODevice::ReadOnly)) {
         qDebug() << "Could not open modified database";
         return;
@@ -170,8 +170,8 @@ void DatabaseOpenWidget::openDatabase()
 
 
     if (m_db) {
-        GDriveDatabaseSync sync;
-        sync.syncDatabases(m_db,m_db_mod);
+        GDriveEntriesSync sync(m_db,m_db_mod);
+        sync.syncDatabases();
         Q_EMIT editFinished(true);
     }
     else {

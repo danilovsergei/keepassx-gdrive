@@ -288,7 +288,7 @@ bool GroupModel::dropMimeData(const QMimeData* data, Qt::DropAction action,
                 continue;
             }
 
-            Entry* dragEntry = db->resolveEntry(entryUuid);
+              Entry* dragEntry = db->resolveEntry(entryUuid);
             if (!dragEntry || !Tools::hasChild(db, dragEntry)) {
                 continue;
             }
