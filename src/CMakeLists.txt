@@ -17,7 +17,6 @@
 
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-#include_directories(qtdrive/gdrive)
 find_package(Qt4 REQUIRED QtCore QtNetwork QtGui)
 configure_file(config-keepassx.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config-keepassx.h)
 
@@ -129,6 +128,13 @@ set(keepassx_SOURCES
     gdrive/GDriveEntriesSync.cpp
     gdrive/GDriveGroupsSync.cpp
     gdrive/GDriveDatabaseSync.cpp
+    gdrive/GDriveDatabaseSyncFactory.cpp
+    gdrive/GoogleDriveTools.cpp
+    gdrive/QueryEntry.cpp
+    gdrive/helpers/GDriveDbDownloadHelper.cpp
+    gdrive/helpers/GDriveGetDbHelper.cpp
+    gdrive/helpers/SyncRecentDbHelper.cpp
+    gdrive/Errors.cpp
 )
 
 set(keepassx_SOURCES_MAINEXE
@@ -198,6 +204,14 @@ set(keepassx_MOC
     gdrive/GDriveEntriesSync.h
     gdrive/GDriveGroupsSync.h
     gdrive/GDriveDatabaseSync.h
+    gdrive/GDriveDatabaseSyncFactory.h
+    gdrive/GoogleDriveTools.h
+    gdrive/QueryEntry.h
+    gdrive/helpers/GDriveDbDownloadHelper.h
+    gdrive/helpers/GDriveGetDbHelper.h
+    gdrive/helpers/SyncRecentDbHelper.h
+    gdrive/GDriveConstants.h
+    gdrive/Errors.h
 )
 
 set(keepassx_FORMS

@@ -146,7 +146,7 @@ QString FileInfo::extension(const QString& format) const
     }
     else
     {
-        int ext = exportList()[format].toString().lastIndexOf("=");    
+        int ext = exportList()[format].toString().lastIndexOf("=");
         return exportList()[format].toString().mid(++ext, -1);
     }
 }
@@ -192,7 +192,7 @@ void FileInfo::setParents(const QStringList& l)
 
 
 namespace {
-    
+
 const std::map<FileInfo::Labels, QString>& labels()
 {
     static std::map<FileInfo::Labels, QString> m;
@@ -202,7 +202,7 @@ const std::map<FileInfo::Labels, QString>& labels()
         m[FileInfo::Restricted] = "restricted";
         m[FileInfo::Starred]    = "starred";
         m[FileInfo::Trashed]    = "trashed";
-        m[FileInfo::Viewed]     = "viewed";        
+        m[FileInfo::Viewed]     = "viewed";
     }
     return m;
 }

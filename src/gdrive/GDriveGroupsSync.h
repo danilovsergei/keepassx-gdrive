@@ -6,13 +6,12 @@
 #include "../core/Entry.h"
 #include "../core/Tools.h"
 #include "../core/Metadata.h"
+#include "GDriveDatabaseSync.h"
 #include <QtCore/QDebug>
-
 #include <QtCore/QObject>
 
-class GDriveGroupsSync : public QObject
+class GDriveGroupsSync : public GDriveDatabaseSync
 {
-    Q_OBJECT
 public:
     GDriveGroupsSync(Database* db1, Database* db2);
     ~GDriveGroupsSync();
@@ -31,9 +30,6 @@ private:
     void updateEntryGroup(Group *entry, Group* new_data);
     void removeEntry(Group* entry);
     bool isItemMoved(Group* entry);
-
-    Database* db1;
-    Database* db2;
     QMap<Uuid,Group*> entries1;
     QMap<Uuid,Group*> entries2;
 

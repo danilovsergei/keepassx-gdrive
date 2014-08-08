@@ -76,6 +76,7 @@ void CommandSetFileProperties::queryFinished()
     tryAutoDelete();
     QNetworkReply *reply = qobject_cast<QNetworkReply*>(sender());
     if (!reply) {
+        //TODO throw an error message
         qDebug() << "There is no reply::"+reply->errorString();
         return;
     }
@@ -95,7 +96,7 @@ void CommandSetFileProperties::queryFinished()
 
 
 
-}
+    }
     QNetworkRequest req=reply->request();
     qDebug()<< req.url();
     bool ok;

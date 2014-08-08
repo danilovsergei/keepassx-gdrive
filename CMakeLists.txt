@@ -19,6 +19,7 @@ cmake_minimum_required(VERSION 2.6.4)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
+
 include(CheckCCompilerFlag)
 include(CheckCXXCompilerFlag)
 include(CheckCXXSourceCompiles)
@@ -27,6 +28,7 @@ option(WITH_TESTS "Enable building of unit tests" ON)
 option(WITH_GUI_TESTS "Enable building of GUI tests" OFF)
 option(WITH_LTO "Enable Link Time Optimization (LTO)" OFF)
 option(WITH_CXX11 "Build with the C++ 11 standard" OFF)
+option(WITH_GOOGLE_DRIVE "Enable support for syncing with google drive" OFF)
 
 set(KEEPASSX_VERSION "2.0 alpha 4")
 set(KEEPASSX_VERSION_NUM "1.9.83")
@@ -166,6 +168,10 @@ if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
 endif()
 
 find_package(Gcrypt REQUIRED)
+if(NOT (${GCRYPT_VERSION_STRING} VERSION_LESS "1.6.0"))
+  message(STATUS "Gcrypt ${GCRYPT_VERSION_STRING} supports the SALSA20 cipher")
+  set(GCRYPT_HAS_SALSA20 1)
+endif()
 
 find_package(ZLIB REQUIRED)
 

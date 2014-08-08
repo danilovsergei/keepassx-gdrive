@@ -61,6 +61,21 @@ void CommandFileList::execForFolder(const QString& folderId)
     exec(query);
 }
 
+/**
+ * @brief CommandFileList::execForFolder - get the list of items in the specified folder using specified optional querydc
+ * @param folderId - id of folder where query will be executed
+ * @param query - optional query. For example you can specify title to filter
+ */
+void CommandFileList::execForFolder(const QString& folderId,const QString& query)
+{
+    QString execQuery(QString("'%1' in parents").arg(folderId));
+    execQuery+=" and trashed = false";
+    if (query.length()>0) {
+     execQuery+=QString(" and %1").arg(query);
+    }
+    exec(execQuery);
+}
+
 void CommandFileList::queryFinished()
 {
     Q_D(CommandFileList);

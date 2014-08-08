@@ -86,6 +86,12 @@ public:
      * Sets the database key and generates a random transform seed.
      */
     void setKey(const CompositeKey& key);
+    /**
+     * @brief getKey - get the database key to use it for sync with other database
+     * @return - reference to the database key. Reference should be safe because given database object has to present all the time
+     */
+    const CompositeKey& getKey();
+
     bool hasKey() const;
     bool verifyKey(const CompositeKey& key) const;
     void recycleEntry(Entry* entry);

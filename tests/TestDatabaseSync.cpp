@@ -5,6 +5,7 @@
 #include <QtCore/QDebug>
 #include "crypto/Crypto.h"
 #include "core/Tools.h"
+#include "gdrive/GoogleDriveApi.h"
 
 void TestDatabaseSync::initTestCase() {
     Crypto::init();
@@ -18,9 +19,9 @@ void TestDatabaseSync::init()
     groupRoot2 = db2->resolveGroup(db2->rootGroup()->uuid());
     groupRoot2->setUuid(groupRoot->uuid());
     groupRoot2->setTimeInfo(groupRoot->timeInfo());
-
-    entrySync=new GDriveEntriesSync(db1,db2);
-    groupSync=new GDriveGroupsSync(db1,db2);
+    entrySync=GDriveDatabaseSyncFactory::createDatabaseSync(GDriveDatabaseSyncFactory::SyncId::ENTRY,db1,db2);
+    groupSync=GDriveDatabaseSyncFactory::createDatabaseSync(GDriveDatabaseSyncFactory::SyncId::GROUP,db1,db2);
+    allSync=GDriveDatabaseSyncFactory::createDatabaseSync(GDriveDatabaseSyncFactory::SyncId::ALL,db1,db2);
 
 }
 
@@ -29,10 +30,103 @@ void TestDatabaseSync::cleanup() {
     delete groupRoot2;
     delete db1;
     delete db2;
-    delete entrySync;
-    delete groupSync;
 }
 
+
+/**
+ * @brief TestDatabaseSync::testEntryAndGroupRemove - check group and entry will be removed from local db after removal from remote db
+ * 1. Add group and child entry both to local and remote db
+ * 2. Perform sync to make sure databases are identical
+ * 3. Remove group and entry from remote db
+ * 4. Perform sync
+ * 5. Make sure group and entry moved to recycle bin in local db
+ */
+void TestDatabaseSync::testEntryAndGroupRemove(){
+    Group* localGroup = new Group();
+    localGroup->setParent(groupRoot);
+    localGroup->setUuid(Uuid::random());
+    localGroup->setName("TestGroupName");
+
+    Group* remoteGroup = new Group();
+    remoteGroup->setParent(groupRoot2);
+    remoteGroup->copyDataFrom(localGroup);
+    remoteGroup->setUuid(localGroup->uuid());
+    remoteGroup->setTimeInfo(localGroup->timeInfo());
+
+    Entry* localEntry=new Entry();
+    localEntry->setTitle("New Entry");
+    localEntry->setUuid(Uuid::random());
+    localEntry->setGroup(localGroup);
+
+    Entry* remoteEntry=new Entry();
+    remoteEntry->copyDataFrom(localEntry);
+    remoteEntry->setUuid(localEntry->uuid());
+    remoteEntry->setGroup(remoteGroup);
+    remoteEntry->setTimeInfo(localEntry->timeInfo());
+
+    //doing sync to make sure databases are fully identical
+    allSync->syncDatabases();
+
+    Tools::sleep(1000);
+
+    db2->recycleEntry(remoteEntry);
+    db2->recycleGroup(remoteGroup);
+
+    //sync to remove both items from local database
+    allSync->syncDatabases();
+
+    //check only Recycle bin group created and exists in local db
+    QCOMPARE(groupRoot->children().size(),1);
+    QCOMPARE(groupRoot->children().first()==db1->metadata()->recycleBin(),true);
+    Group* recycleBin=db1->metadata()->recycleBin();
+    //check group was removed to recycle bin
+    QCOMPARE(recycleBin->children().size(),1);
+    QCOMPARE(recycleBin->children().first()->uuid(),remoteGroup->uuid());
+    //check entry was removed to recycle bin
+    QCOMPARE(recycleBin->entries().size(),1);
+    QCOMPARE(recycleBin->entries().first()->uuid(),remoteEntry->uuid());
+
+    delete localEntry;
+    delete remoteEntry;
+    delete localGroup;
+    delete remoteGroup;
+    delete recycleBin;
+}
+
+
+
+/**
+ * @brief TestDatabaseSync::testEntryAndGroupAttributesUpdate - check newly created group and entry inside are synced after update
+ * 1 Create new group in db2
+ * 2 Create new entry in db2 in a new group
+ * 3 Check both group and entry will be synced
+ */
+void TestDatabaseSync::testEntryAndGroupAddUpdate(){
+    Group* group = new Group();
+    group->setParent(groupRoot2);
+    group->setName("title");
+    group->setNotes("GroupNotes");
+
+    Entry* entry = new Entry();
+    entry->setGroup(group);
+    entry->setTitle("NewEntry");
+
+    allSync->syncDatabases();
+
+    //check rootGroup of source db contains one group
+    QCOMPARE(groupRoot->children().size(),1);
+    QCOMPARE(groupRoot->children().first()->uuid(),group->uuid());
+
+    QCOMPARE(groupRoot->children().first()->entries().size(),1);
+    QCOMPARE(groupRoot->children().first()->entries().first()->uuid(),entry->uuid());
+
+    delete entry;
+    delete group;
+
+
+
+
+}
 
 
 /**
@@ -170,7 +264,7 @@ void TestDatabaseSync::testGroupDeleteUpdate() {
     db2->recycleGroup(newEntry);
     groupSync->syncDatabases();
 
-    //recycle bin is not enabled and pointer points to 0 if no item was deleted
+    //check recycle bin enabled. must happen after item deletion
     QCOMPARE(db1->metadata()->recycleBin()!=0,true);
 
     Group* recycleBin=db1->resolveGroup(db1->metadata()->recycleBin()->uuid());

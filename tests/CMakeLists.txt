@@ -87,6 +87,11 @@ macro(add_unit_test)
 endmacro(add_unit_test)
 
 
+set(GDRIVE_DEPS
+    google_drive
+    google_drive_proxy
+)
+
 set(TEST_LIBRARIES
     keepassx_core
     ${QT_QTCORE_LIBRARY}
@@ -94,6 +99,7 @@ set(TEST_LIBRARIES
     ${QT_QTTEST_LIBRARY}
     ${GCRYPT_LIBRARIES}
     ${ZLIB_LIBRARIES}
+    ${GDRIVE_DEPS}
 )
 
 if(UNIX AND NOT APPLE)
@@ -164,6 +170,14 @@ add_unit_test(NAME testargumentparser SOURCES TestArgumentParser.cpp MOCS TestAr
 
 add_unit_test(NAME testdatabasesync SOURCES TestDatabaseSync.cpp MOCS TestDatabaseSync.h
               LIBS ${TEST_LIBRARIES})
+
+add_unit_test(NAME testgoogledriveapi SOURCES TestGoogleDriveApi.cpp MOCS TestGoogleDriveApi.h
+              LIBS ${TEST_LIBRARIES})
+
+add_unit_test(NAME testremotedatabasesync SOURCES TestDatabaseRemoteSync.cpp MOCS TestDatabaseRemoteSync.h
+              LIBS ${TEST_LIBRARIES})
+
+
 
 if(WITH_GUI_TESTS)
   add_subdirectory(gui)

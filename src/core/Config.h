@@ -15,8 +15,8 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef KEEPASSX_CONFIG_H
-#define KEEPASSX_CONFIG_H
+#ifndef CONFIG_H
+#define CONFIG_H
 
 #include <QtCore/QScopedPointer>
 #include <QtCore/QVariant>
@@ -64,4 +64,4 @@ inline Config* config() {
     return Config::instance();
 }
 
-#endif // KEEPASSX_CONFIG_H
+#endif // CONFIG_H

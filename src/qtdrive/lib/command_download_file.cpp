@@ -67,6 +67,7 @@ void CommandDownloadFile::reexecuteQuery()
     connect(reply, SIGNAL(readyRead()), SLOT(readyRead()));
     connect(reply, SIGNAL(downloadProgress(qint64,qint64)), SIGNAL(progress(qint64,qint64)));
     reply->setParent(this);
+    qDebug() <<"download function finished";
 }
 
 void CommandDownloadFile::requestFinished()

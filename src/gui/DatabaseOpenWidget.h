@@ -17,13 +17,15 @@
 
 #ifndef KEEPASSX_DATABASEOPENWIDGET_H
 #define KEEPASSX_DATABASEOPENWIDGET_H
-
+#include "config-keepassx.h"
+#include "core/Config.h"
 #include <QtCore/QScopedPointer>
-
 #include "gui/DialogyWidget.h"
 #include "keys/CompositeKey.h"
 #include "../qtdrive/gdrive/gdrive.h"
-
+#include  "gdrive/GoogleDriveApi.h"
+#include "gdrive/GoogleDriveTools.h"
+#include "gdrive/helpers/SyncRecentDbHelper.h"
 class Database;
 class QFile;
 
@@ -60,6 +62,8 @@ private Q_SLOTS:
     void setOkButtonEnabled();
     void browseKeyFile();
     void cloudDbLoad();
+    void syncDone();
+    void syncError(int ErrorType,QString description);
 
 protected:
     const QScopedPointer<Ui::DatabaseOpenWidget> m_ui;

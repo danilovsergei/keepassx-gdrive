@@ -215,6 +215,11 @@ void Database::setKey(const CompositeKey& key)
     setKey(key, Random::randomArray(32));
 }
 
+const CompositeKey& Database::getKey() {
+    return m_key;
+}
+
+
 bool Database::hasKey() const
 {
     return m_hasKey;

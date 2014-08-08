@@ -18,7 +18,7 @@ GoogleDriveSession::GoogleDriveSession()
     #endif
 
     QString homePath=QString(appDir+"qtgoogledrive-test.conf");
-    qDebug() << QString("home path:"+homePath);
+    qDebug() << QString("Read Google drive settings from :"+homePath);
     QSettings s(homePath,QSettings::IniFormat);
     QString clientId = s.value(cClientId).toString();
     QString clientSecret = s.value(cClientSecret).toString();

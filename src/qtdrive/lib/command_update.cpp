@@ -20,12 +20,19 @@ class CommandUpdatePrivate : public CommandPrivate
 {
 public:
     CommandUpdatePrivate()
-        : convert(false)
-    {}
+    {
+
+    }
 
     FileInfo info;
     FileInfo resultInfo;
-    bool convert;
+    //list of options fields which will be passed with post request url.
+    QMap<QString,QString> urlFields;
+
+    //list of options fields which will be passed in the post request body.
+    QMap<QString,QString> bodyFields;
+
+
 };
 
 CommandUpdate::CommandUpdate(Session *session)
@@ -37,18 +44,6 @@ FileInfo CommandUpdate::resultFileInfo() const
 {
     Q_D(const CommandUpdate);
     return d->resultInfo;
-}
-
-bool CommandUpdate::convert() const
-{
-    Q_D(const CommandUpdate);
-    return d->convert;
-}
-
-void CommandUpdate::setConvert(bool v)
-{
-    Q_D(CommandUpdate);
-    d->convert = v;
 }
 
 void CommandUpdate::exec(const FileInfo& info)
@@ -64,6 +59,14 @@ void CommandUpdate::exec(const FileInfo& info)
     d->info = info;
     executeQuery();
 }
+
+void CommandUpdate::exec(const FileInfo& info,const QMap<QString,QString>& urlFields,const QMap<QString,QString>& bodyFields) {
+Q_D(CommandUpdate);
+d->urlFields=urlFields;
+d->bodyFields=bodyFields;
+CommandUpdate::exec(info);
+}
+
 
 void CommandUpdate::queryFinished()
 {
@@ -90,6 +93,9 @@ void CommandUpdate::queryFinished()
     emitSuccess();
 }
 
+
+
+
 void CommandUpdate::reexecuteQuery()
 {
     Q_D(CommandUpdate);
@@ -97,12 +103,19 @@ void CommandUpdate::reexecuteQuery()
     // prepare url
     QString urlStr = QString("https://www.googleapis.com/drive/v2/files/%1").arg(d->info.id());
     QUrl url(urlStr);
-    if (d->convert)
-        url.addQueryItem("convert", "true");
+    Q_FOREACH(QString key,d->urlFields.keys()) {
+    url.addQueryItem(key,d->urlFields[key]);
+    }
 
     QNetworkRequest request(url);
     setRequestAccessToken(request, session()->accessToken());
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json; charset=UTF-8");
+
+    Q_FOREACH(QString key,d->bodyFields.keys()) {
+    d->info.rawData()[key]=d->bodyFields[key];
+    qDebug()<< QString("Add to body:%1=%2").arg(key,d->bodyFields[key]);
+    }
+    qDebug()<< "pass url: "+url.toString();
     QVariantMap fileInfoMap = d->info.rawData();
     QByteArray data = QJson::Serializer().serialize(fileInfoMap);
 

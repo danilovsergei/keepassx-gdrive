@@ -71,6 +71,7 @@ public Q_SLOTS:
      * @sa CommandAbout::rootFolder, files
      */
     void execForFolder(const QString& folderId);
+    void execForFolder(const QString& folderId, const QString &query);
 
 protected:
     void reexecuteQuery();

@@ -102,6 +102,16 @@ public Q_SLOTS:
      */
     void exec(const FileInfo& fileInfo, QIODevice* fileData);
 
+    /**
+     * @brief exec - overloaded version of exec.Used to update metadata of existing file
+     * @param fileInfo  - Google drive object of existing file
+     * @param fileData - fileData QIODevice that provides file data. Command doesn't own
+     *        this object, so it must exists during command execution
+     * @param fields - list of fields which will be passed to put request
+     */
+    void exec(const FileInfo &fileInfo, QIODevice* fileData,const QMap<QString,QString>& urlFields,const QMap<QString,QString>& bodyfields);
+
+
 Q_SIGNALS:
     /**
      * This signal is emitted during uploading process.

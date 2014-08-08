@@ -5,10 +5,11 @@
 #include "../core/Entry.h"
 #include "../core/Tools.h"
 #include "../core/Metadata.h"
-class GDriveEntriesSync:public QObject
+#include  "GDriveGroupsSync.h"
+class GDriveEntriesSync:public GDriveGroupsSync
 {
 public:
-    GDriveEntriesSync(Database* db1, Database* db2);
+    GDriveEntriesSync(Database* db1, Database* db2, bool syncGroups=true);
     /**
      * @brief syncDatabases - syncs items between two provided databases
      * @param db1  -first source/destination database.Will contain modifications from db2 database after sync
@@ -23,8 +24,7 @@ private:
     void updateEntryGroup(Entry* entry, Entry* new_data);
     void removeEntry(Entry* entry);
     bool isItemMoved(Entry* entry);
-    Database* db1;
-    Database* db2;
+    bool syncGroups;
     QMap<Uuid,Entry*> entries1;
     QMap<Uuid,Entry*> entries2;
 

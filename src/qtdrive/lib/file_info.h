@@ -50,7 +50,7 @@ namespace GoogleDrive
 class FileInfo
 {
 public:
-    
+
     enum Labels {
         None        = 0,
         Hidden      = 1 << 0,
@@ -59,9 +59,9 @@ public:
         Trashed     = 1 << 3,
         Viewed      = 1 << 4,
     };
-    
+
     typedef int LabelsMask;
-    
+
     FileInfo();
     explicit FileInfo(const QVariantMap& data);
     FileInfo(const FileInfo& src);
@@ -90,17 +90,17 @@ public:
     bool isEditable() const;
     QUrl downloadUrl() const;
     QMap<QString, QUrl> exportList() const;
-    
+
     QString extension(const QString& format = QString()) const;
-	
+
     qint64 fileSize() const;
 
     QStringList parents() const;
     void setParents(const QStringList&);
-    
+
     LabelsMask labels() const;
     bool hasLabel(Labels label) const;
-    
+
 private:
     struct Impl;
     Impl* d;

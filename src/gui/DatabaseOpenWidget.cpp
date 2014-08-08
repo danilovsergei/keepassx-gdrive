@@ -17,10 +17,7 @@
 
 #include "DatabaseOpenWidget.h"
 #include "ui_DatabaseOpenWidget.h"
-
 #include <QtGui/QMessageBox>
-
-#include "core/Config.h"
 #include "core/Database.h"
 #include "gui/FileDialog.h"
 #include "format/KeePass2Reader.h"
@@ -33,7 +30,8 @@
 #include "../qtdrive/lib/command_file_list.h"
 #include "core/Group.h"
 #include <QtCore/QDebug>
-#include "gdrive/GDriveEntriesSync.h"
+#include "gdrive/GDriveDatabaseSyncFactory.h"
+#include "gdrive/helpers/GDriveDbDownloadHelper.h"
 
 using namespace GoogleDrive;
 
@@ -43,24 +41,18 @@ DatabaseOpenWidget::DatabaseOpenWidget(QWidget* parent)
     , m_db(Q_NULLPTR)
 {
     m_ui->setupUi(this);
-
     QFont font = m_ui->labelHeadline->font();
     font.setBold(true);
     font.setPointSize(font.pointSize() + 2);
     m_ui->labelHeadline->setFont(font);
-
     m_ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
-
     connect(m_ui->buttonTogglePassword, SIGNAL(toggled(bool)), SLOT(togglePassword(bool)));
     connect(m_ui->buttonBrowseFile, SIGNAL(clicked()), SLOT(browseKeyFile()));
-
     connect(m_ui->editPassword, SIGNAL(textChanged(QString)), SLOT(activatePassword()));
     connect(m_ui->comboKeyFile, SIGNAL(editTextChanged(QString)), SLOT(activateKeyFile()));
-
     connect(m_ui->checkPassword, SIGNAL(toggled(bool)), SLOT(setOkButtonEnabled()));
     connect(m_ui->checkKeyFile, SIGNAL(toggled(bool)), SLOT(setOkButtonEnabled()));
     connect(m_ui->comboKeyFile, SIGNAL(editTextChanged(QString)), SLOT(setOkButtonEnabled()));
-
     connect(m_ui->buttonBox, SIGNAL(accepted()), SLOT(openDatabase()));
     connect(m_ui->buttonBox, SIGNAL(rejected()), SLOT(reject()));
     connect(m_ui->checkGDrive,SIGNAL(toggled(bool)),SLOT(cloudDbLoad()));
@@ -90,7 +82,11 @@ void DatabaseOpenWidget::cloudDbLoad()
 
    CommandFileList cmd(&session);
    cmd.setFields("items(fileSize,id,title,modifiedDate)");
-   cmd.execForFolder("0B8tltL21wts3NGpOZzdNZDcwTXc");
+   //Keepass db folder is set to root in Google drive if use did not customize it
+   if (config()->get("cloud/GdriveKeepassFolder").toString().length()>0)
+            cmd.execForFolder(config()->get("cloud/GdriveKeepassFolder").toString());
+   else
+    cmd.exec();
    if (!cmd.waitForFinish(true))
        return;
    QStringList db_files;
@@ -154,25 +150,24 @@ void DatabaseOpenWidget::openDatabase()
         delete m_db;
     }
     QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
-
-
-    QFile file1 ("/home/geonix/.config/keepassx/testdb_modified.kdbx");
-    if (!file1.open(QIODevice::ReadOnly)) {
-        qDebug() << "Could not open modified database";
-        return;
-    }
-
-    m_db = reader.readDatabase(&file, masterKey);
-    Database* m_db_mod = reader.readDatabase(&file1, masterKey);
-
+     m_db = reader.readDatabase(&file, masterKey);
+     QFileInfo fileInfo(file.fileName());
     QApplication::restoreOverrideCursor();
 
 
 
     if (m_db) {
-        GDriveEntriesSync sync(m_db,m_db_mod);
-        sync.syncDatabases();
-        Q_EMIT editFinished(true);
+         //Perfom asyncronous sync of recent database with remote database if GOOGLE_DRIVE_SYNC feature enabled through CMAKE
+         if (QString(GOOGLE_DRIVE_SYNC)=="ON") {
+            connect(syncRecentDbHelper().data(),SIGNAL(syncDone()),this,SLOT(syncDone()));
+            connect(syncRecentDbHelper().data(),SIGNAL(syncError(int,QString)),this,SLOT(syncError(int,QString)));
+            syncRecentDbHelper()->syncParallel(m_db,m_filename);
+
+         }else {
+            Q_EMIT editFinished(true);
+         }
+
+
     }
     else {
         QMessageBox::warning(this, tr("Error"), tr("Unable to open the database.\n%1")
@@ -247,4 +242,16 @@ void DatabaseOpenWidget::browseKeyFile()
     if (!filename.isEmpty()) {
         m_ui->comboKeyFile->lineEdit()->setText(filename);
     }
+}
+
+void DatabaseOpenWidget::syncDone() {
+Q_EMIT editFinished(true);
+qDebug() << "Successfully synced database on "+QDateTime::currentDateTime().toString();
+}
+
+
+void DatabaseOpenWidget::syncError(int ErrorType, QString description) {
+    Q_EMIT editFinished(true);
+    QMessageBox::warning(this, tr("Error"), tr("Unable to sync database with remote source: %1: %2").arg(QString(ErrorType))
+                         .arg(description));
 }

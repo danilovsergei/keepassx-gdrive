@@ -16,11 +16,12 @@
 #include "../gdrive/GoogleDriveApi.h"
 
 #include <QtCore/QMetaType>
-Q_DECLARE_METATYPE(FileInfo)
+
 
 
 using namespace GoogleDrive;
-
+Q_DECLARE_METATYPE(GoogleDrive::FileInfo)
+Q_DECLARE_METATYPE(GoogleDrive::FileInfoList)
 
 
 DatabaseOpenWidgetCloud::DatabaseOpenWidgetCloud(QWidget *parent) :
@@ -65,7 +66,7 @@ void DatabaseOpenWidgetCloud::startWorkInAThread()
 
 qRegisterMetaType<GoogleDrive::FileInfoList>("GoogleDrive::FileInfoList");
 connect(googleDriveApi(),SIGNAL(DbListLoaded(GoogleDrive::FileInfoList)),this,SLOT(cloudDbLoad(GoogleDrive::FileInfoList)));
-googleDriveApi()->getDatabases();
+googleDriveApi()->getDatabasesPar();
 }
 
 void DatabaseOpenWidgetCloud::selectCloud(int cloud) {

@@ -64,6 +64,13 @@ public Q_SLOTS:
      */
     void exec(const FileInfo& info);
 
+    /**
+     * @brief exec - Executes command to update file in the google drive
+     * @param info - File object at google drive.A valid file id is required
+     * @param fields - Optional fields passed with put command
+     */
+    void exec(const FileInfo& info, const QMap<QString,QString>& urlFields, const QMap<QString, QString>& bodyFields);
+
 protected:
     void reexecuteQuery();
 

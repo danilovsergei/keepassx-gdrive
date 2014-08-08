@@ -102,6 +102,8 @@ void Config::init(const QString& fileName)
     m_defaults.insert("security/clearclipboard", true);
     m_defaults.insert("security/clearclipboardtimeout", 10);
     m_defaults.insert("cloud/dbdir",QDir::toNativeSeparators(QFileInfo(fileName).path()+"/cloud"));
+    //default value means all keepass databases will stored in the Google drive root folder
+    m_defaults.insert("cloud/GdriveKeepassFolder","");
 }
 
 Config* Config::instance()

@@ -285,7 +285,6 @@ void MainWindow::updateFile()
     FileInfo info;
     info.setId(fi.id());
     info.setTitle(tr("test_file_updated.txt"));
-    cmd.setConvert(true);
     cmd.exec(info);
     if (!cmd.waitForFinish(false))
         return;
