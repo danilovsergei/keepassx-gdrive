@@ -30,7 +30,7 @@ private:
 public:
     SyncRecentDbHelper();
     static QSharedPointer<SyncRecentDbHelper> instance();
-    void sync(Database* localDb, const QString& localDbPath);
+    QSharedPointer<GDriveSyncObject> sync(Database* localDb, const QString& localDbPath);
     void syncParallel(Database* localDb, const QString& localDbPath);
     ~SyncRecentDbHelper();
 Q_SIGNALS:

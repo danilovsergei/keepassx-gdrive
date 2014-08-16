@@ -15,7 +15,7 @@ public:
      * @param db1  -first source/destination database.Will contain modifications from db2 database after sync
      * @param db2 - second source database.
      */
-    void syncDatabases();
+    QSharedPointer<GDriveSyncObject> syncDatabases();
     static bool compareByUuid(Entry* entry1,Entry* entry2);
     static bool compareByCreationTime(Entry* entry1,Entry* entry2);
 private:
@@ -25,6 +25,8 @@ private:
     void removeEntry(Entry* entry);
     bool isItemMoved(Entry* entry);
     bool syncGroups;
+    void syncLocation(Entry* localEntry,Entry* cloudEntry);
+    void syncEntry(Entry* localEntry,Entry* cloudEntry);
     QMap<Uuid,Entry*> entries1;
     QMap<Uuid,Entry*> entries2;
 

@@ -19,7 +19,8 @@ private Q_SLOTS:
     void initTestCase();
     void init();
     void cleanup();
-    void testRemoteDatabaseSyncSeq();
+    void testRemoveRemoteEntry();
+    void testUpdateRemoteEntry();
     void testRemoteDatabaseSyncRemoveEntry();
     void testRemoteDatabaseSyncDoNothing();
     void testRemoteDatabaseSyncAmbigiousDb();
@@ -30,6 +31,9 @@ private:
     Database* createLocalDatabase();
     void uploadDb(const QString& dbPath);
     void deleteDb(const FileInfo& db);
+    void saveDatabase(Database* db, const QString& dbPath);
+    Entry* createEntry(Database* db,const QString& title=QString("testTitle"),const QString& password=QString("testPassword"));
+    Group* createGroup(Database* db,const QString& groupName=QString("testGroup"));
 
     QString dbName;
     GoogleDriveApi* gdrive=googleDriveApi();

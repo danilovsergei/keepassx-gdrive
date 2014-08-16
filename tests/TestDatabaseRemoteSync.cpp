@@ -8,6 +8,7 @@
 #include <format/KeePass2Writer.h>
 #include <core/qsavefile.h>
 #include <QtCore/QDebug>
+#include <QtCore/qmath.h>
 void TestDatabaseRemoteSync::initTestCase() {
   Crypto::init();
 
@@ -68,6 +69,30 @@ void TestDatabaseRemoteSync::deleteDb(const FileInfo& db) {
   delete deleteCmd;
 }
 
+void TestDatabaseRemoteSync::saveDatabase(Database* db,const QString& dbPath) {
+    // save fake database locally
+    KeePass2Writer m_writer;
+    QString fileName(dbPath);
+    qDebug() << "saving to " + fileName;
+    QFile qFile(fileName);
+
+    if (qFile.exists()) {
+      qFile.remove();
+    }
+    Q_ASSERT(qFile.exists() == false);
+    QSaveFile saveFile(fileName);
+    bool result = false;
+
+    if (saveFile.open(QIODevice::WriteOnly)) {
+      m_writer.writeDatabase(&saveFile, db);
+      result = saveFile.commit();
+    }
+
+    // check database saved successfully
+    Q_ASSERT(result == true);
+    Q_ASSERT(qFile.exists() == true);
+}
+
 Database * TestDatabaseRemoteSync::createLocalDatabase() {
   Database *db1 = new Database();
   CompositeKey key;
@@ -75,12 +100,6 @@ Database * TestDatabaseRemoteSync::createLocalDatabase() {
   key.addKey(PasswordKey("test"));
   db1->setKey(key);
   db1->metadata()->setName(dbName);
-
-  Entry *entry = new Entry();
-  entry->setGroup(db1->resolveGroup(db1->rootGroup()->uuid()));
-  entry->setTitle("NewEntry");
-  entry->setPassword("TestPassword");
-  entry->setUuid(Uuid::random());
 
   // save fake database locally
   KeePass2Writer m_writer;
@@ -106,40 +125,113 @@ Database * TestDatabaseRemoteSync::createLocalDatabase() {
   return db1;
 }
 
+
+
+Entry* TestDatabaseRemoteSync::createEntry(Database* db,const QString& title,const QString& password) {
+    Entry *entry = new Entry();
+    entry->setGroup(db->resolveGroup(db->rootGroup()->uuid()));
+    entry->setTitle(title);
+    entry->setPassword(password);
+    entry->setUuid(Uuid::random());
+    return entry;
+}
+
+Group* TestDatabaseRemoteSync::createGroup(Database* db,const QString& groupName) {
+    Group *newGroup = new Group();
+    newGroup->setName(groupName);
+    newGroup->setUuid(Uuid::random());
+    newGroup->setParent(db->resolveGroup(db->rootGroup()->uuid()));
+    return newGroup;
+}
+
 /**
- * @brief TestDatabaseRemoteSync::testRemoteDatabaseSyncSeq -
+ * @brief TestDatabaseRemoteSync::testRemoteDatabaseSyncSeq - upload database with one entry to the cloud. Then remove entry locally and check sync reports that remote database entry should be removed
  */
-void TestDatabaseRemoteSync::testRemoteDatabaseSyncSeq() {
+void TestDatabaseRemoteSync::testRemoveRemoteEntry() {
   Database *db = createLocalDatabase();
   QString   dbPath(QDir::tempPath() + QDir::separator() + dbName + ".kdbx");
+  //create new entry
+  Entry* entry=createEntry(db);
+  // create new group
+  Group* group=createGroup(db);
 
-  Entry *entry = new Entry();
-
-  entry->setGroup(db->resolveGroup(db->rootGroup()->uuid()));
-  entry->setTitle("NewEntry1");
-  entry->setPassword("TestPassword");
-  entry->setUuid(Uuid::random());
-
-  // create new group in the remote database
-  Group *newGroup = new Group();
-  newGroup->setName("NewGroup");
-  newGroup->setUuid(Uuid::random());
-  newGroup->setParent(db->resolveGroup(db->rootGroup()->uuid()));
-
+  //save database to file since upload db takes local file
+  saveDatabase(db,dbPath);
   uploadDb(dbPath);
 
   Tools::sleep(1000);
 
-  // db->recycleEntry(entry);
-  entry->setGroup(newGroup);
+  db->recycleEntry(entry);
+  saveDatabase(db,dbPath);
+  QSharedPointer<GDriveSyncObject> result=syncRecentDbHelper()->sync(db, dbPath);
 
+  QCOMPARE(result->resultRemoteMissingEntries,0);
+  QCOMPARE(result->resultRemoteOlderEntries,0);
+  QCOMPARE(result->resultRemoteRemovedEntries,1);
 
-  syncRecentDbHelper()->sync(db, dbPath);
+  QCOMPARE(result->resultRemoteMissingGroups,1);
+  QCOMPARE(result->resultRemoteOlderGroups,0);
+  QCOMPARE(result->resultRemoteRemovedGroups,0);
 
+  QCOMPARE(result->resultLocalMissingEntries,0);
+  QCOMPARE(result->resultLocalOlderEntries,0);
+  QCOMPARE(result->resultLocalRemovedEntries,0);
+
+  QCOMPARE(result->resultLocalMissingGroups,0);
+  QCOMPARE(result->resultLocalOlderGroups,0);
+  QCOMPARE(result->resultLocalRemovedGroups,0);
 
   deleteDb(gdrive->getDatabasesSeq(GoogleDriveTools::getDbNameFilter(dbName +
                                                                      ".kdbx")).first());
+  delete db;
 }
+
+
+
+/**
+ * @brief TestDatabaseRemoteSync::testUpdateRemoteEntry - upload database with one entry to the cloud. Then update entry locally and check sync reports that remote database should be updated
+ */
+void TestDatabaseRemoteSync::testUpdateRemoteEntry() {
+  Database *db = createLocalDatabase();
+  QString   dbPath(QDir::tempPath() + QDir::separator() + dbName + ".kdbx");
+  //create new entry
+  Entry* entry=createEntry(db);
+  // create new group
+  Group* group=createGroup(db);
+
+  //save database to file since upload db takes local file
+  saveDatabase(db,dbPath);
+  uploadDb(dbPath);
+
+  Tools::sleep(1000);
+
+  entry->setGroup(group);
+  saveDatabase(db,dbPath);
+  QSharedPointer<GDriveSyncObject> result=syncRecentDbHelper()->sync(db, dbPath);
+  QCOMPARE(result->resultRemoteMissingEntries,0);
+  QCOMPARE(result->resultRemoteOlderEntries,1);
+  QCOMPARE(result->resultRemoteRemovedEntries,0);
+
+  QCOMPARE(result->resultRemoteMissingGroups,1);
+  QCOMPARE(result->resultRemoteOlderGroups,0);
+  QCOMPARE(result->resultRemoteRemovedGroups,0);
+
+  QCOMPARE(result->resultLocalMissingEntries,0);
+  QCOMPARE(result->resultLocalOlderEntries,0);
+  QCOMPARE(result->resultLocalRemovedEntries,0);
+
+  QCOMPARE(result->resultLocalMissingGroups,0);
+  QCOMPARE(result->resultLocalOlderGroups,0);
+  QCOMPARE(result->resultLocalRemovedGroups,0);
+
+  deleteDb(gdrive->getDatabasesSeq(GoogleDriveTools::getDbNameFilter(dbName +
+                                                                  ".kdbx")).first());
+  delete db;
+}
+
+
+
+
 
 /**
  * @brief TestDatabaseRemoteSync::testRemoteDatabaseSyncRemoveEntry - test sync
@@ -155,6 +247,8 @@ void TestDatabaseRemoteSync::testRemoteDatabaseSyncRemoveEntry() {
   entry->setTitle("NewEntry1");
   entry->setPassword("TestPassword");
   entry->setUuid(Uuid::random());
+
+
   uploadDb(dbPath);
 
   Tools::sleep(1000);

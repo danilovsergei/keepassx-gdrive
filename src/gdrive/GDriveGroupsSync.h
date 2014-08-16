@@ -9,7 +9,7 @@
 #include "GDriveDatabaseSync.h"
 #include <QtCore/QDebug>
 #include <QtCore/QObject>
-
+using namespace DatabaseSync;
 class GDriveGroupsSync : public GDriveDatabaseSync
 {
 public:
@@ -21,17 +21,24 @@ public:
      * @param db1  -first source/destination database.Will contain modifications from db2 database after sync
      * @param db2 - second source database.
      */
-    void syncDatabases();
+    QSharedPointer<GDriveSyncObject> syncDatabases();
     static bool compareByUuid(Group* entry1,Group* entry2);
     static bool compareByCreationTime(Group* entry1,Group* entry2);
 private:
     void addMissingEntries(QList<Group*> missingEntries);
-    void updateEntryData(Group* entry, Group* new_data);
-    void updateEntryGroup(Group *entry, Group* new_data);
     void removeEntry(Group* entry);
     bool isItemMoved(Group* entry);
-    QMap<Uuid,Group*> entries1;
-    QMap<Uuid,Group*> entries2;
+    template <typename T>
+    void syncEntry(T* localEntry,T* cloudEntry);
+    void increaseRemoteOlderEntries();
+    void increaseRemoteMissingEntries();
+    void increaseRemoteRemovedEntries();
+    void increaseLocalOlderEntries();
+    void increaseLocalMissingEntries();
+    void increaseLocalRemovedEntries();
+
+
+
 
 
 };
