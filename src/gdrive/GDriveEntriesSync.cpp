@@ -1,59 +1,54 @@
 #include "GDriveEntriesSync.h"
 #include <QtCore/QDebug>
-
+#include "GDriveDatabaseSyncFactory.h"
 GDriveEntriesSync::GDriveEntriesSync(Database *db1, Database *db2,
                                      bool syncGroups)
-  : GDriveGroupsSync(db1, db2), syncGroups(syncGroups) {}
+  : GDriveDatabaseSync<Entry>(db1, db2), syncGroups(syncGroups) {}
 
-
-bool GDriveEntriesSync::compareByUuid(Entry *entry1, Entry *entry2) {
-  return entry1->uuid() < entry2->uuid();
+QSharedPointer<GDriveSyncObject>GDriveEntriesSync::syncDatabases() {
+  // sync groups also if it specified by constructor
+  if (syncGroups) {
+    qDebug() << "Perform whole sync: groups & entries";
+    QSharedPointer<GDriveDatabaseSyncBase> groupSync =
+      GDriveDatabaseSyncFactory::createDatabaseSync(
+        GDriveDatabaseSyncFactory::SyncId::GROUP,
+        db1,
+        db2);
+    syncObject = QSharedPointer<GDriveSyncObject>(new GDriveSyncObject());
+    groupSync->setSyncObject(syncObject);
+    groupSync->syncDatabases();
+  }
+  return GDriveDatabaseSync<Entry>::syncDatabases();
 }
 
-bool GDriveEntriesSync::compareByCreationTime(Entry *entry1, Entry *entry2) {
-  return entry1->timeInfo().creationTime() < entry2->timeInfo().creationTime();
+GDriveEntriesSync::~GDriveEntriesSync() {}
+
+QString GDriveEntriesSync::getType() {
+  return ENTRY_TYPE;
 }
 
-/**
- * @brief GDriveEntriesSync::addMissingEntries - adds missing entries to local
- * db
- * @param db - db to add entries
- * @param sourceEntries -map of local entries
- * @param missingEntries - map of missing entries
- */
-void GDriveEntriesSync::addMissingEntries(QList<Entry *>missingEntries) {
-  // we can not check if item is really a new item because there is no way to
-  // check locally whether it was removed w/o recycle bin
-  if (!db2->metadata()->recycleBinEnabled()) {
-    // TODO show all missingEntries dialog to the user with ability to choose
-    // which items should be really removed
-    // Strongly recommend to the user to enable recycle bin to prevent manual
-    // sync
-    return;
-  }
+bool GDriveEntriesSync::processEntry(Database *db, Entry *entry)  {
+  // put to ignore unused parameter message since its overriden function
+  (void)entry;
+  (void)db;
+  bool result = true;
+  return result;
+}
 
-  // sort by creation time.Parent group always created before child.Sort
-  // guaranties parents will be created before childs
-  qSort(missingEntries.begin(),
-        missingEntries.end(), GDriveEntriesSync::compareByCreationTime);
+void GDriveEntriesSync::setParentGroup(Entry *entry, Group *group) {
+  entry->setGroup(group);
+}
 
-  qDebug() << "Add missing entries";
-  Q_FOREACH(Entry * entry, missingEntries) {
-    // get missing entry group in the source database
-    Group *group =
-      db1->rootGroup()->groupsMapRecursive(true)[entry->group()->uuid()];
+const Group * GDriveEntriesSync::getParentGroup(Entry *entry) {
+  return entry->group();
+}
 
-    Q_ASSERT(group);
+const QString GDriveEntriesSync::getEntryName(Entry *entry) {
+  return entry->attributes()->value("Title");
+}
 
-    // creating new entry
-    Entry* newEntry = new Entry();
-    newEntry->copyDataFrom(entry);
-    newEntry->setGroup(group);
-    newEntry->setTimeInfo(entry->timeInfo());
-    qDebug() << "Add missing entry " + newEntry->attributes()->value("Title") +
-      " to group::" + group->getGroupName();
-    GDriveDatabaseSync::syncObject->resultLocalMissingEntries++;
-  }
+QMap<Uuid, Entry *>GDriveEntriesSync::getEntriesMap(Database *db) {
+  return db->rootGroup()->entriesMapRecursive();
 }
 
 /**
@@ -64,152 +59,10 @@ void GDriveEntriesSync::addMissingEntries(QList<Entry *>missingEntries) {
 void GDriveEntriesSync::removeEntry(Entry *entry) {
     qDebug() << "Recycle entry " + entry->uuid().toBase64();
   db1->recycleEntry(entry);
-  GDriveDatabaseSync::syncObject->resultLocalRemovedEntries++;
+  getResultStat()->increaseLocalRemovedEntries();
 }
 
-/**
- * @brief GDriveEntriesSync::updateEntryData - updates item in local database by
- * copying all the data including data, attachments, attributes from
- * remote item
- * @param entry - local entry to be updated
- * @param new_data - remote entry to copy data from
- */
-void GDriveEntriesSync::updateEntryData(Entry *entry, Entry *new_data) {
-    qDebug() << "Updating the entry";
-  entry->beginUpdate();
-  entry->copyDataFrom(new_data);
-  entry->endUpdate();
-  entry->setTimeInfo(new_data->timeInfo());
-  GDriveDatabaseSync::syncObject->resultLocalOlderEntries++;
-}
-
-/**
- * @brief GDriveEntriesSync::updateEntryGroup - Moves entry to the new
- * group.Called when locationChanged of the new group is higher
- * @param db - Target database entry will be modified
- * @param entry - target entry which will be modified
- * @param new_data - entry with latest data and latest group
- */
-void GDriveEntriesSync::updateEntryGroup(Entry *entry, Entry *new_data) {
-    qDebug() << "Updating entry group";
-  Group *targetGroup = db1->resolveGroup(new_data->group()->uuid());
-  Q_ASSERT(targetGroup);
-  entry->setGroup(targetGroup);
-  entry->setTimeInfo(new_data->timeInfo());
-  GDriveDatabaseSync::syncObject->resultLocalOlderEntries++;
-}
-
-
-void GDriveEntriesSync::syncLocation(Entry* localEntry,Entry* cloudEntry) {
-    // entry location was changed - to another group or recycle bin. It
-    // changes independently from lastModificationTime
-    // updating only in a case if remote entry has newer location change
-    // timestamp
-    if (localEntry->timeInfo().locationChanged().toTime_t() <
-        cloudEntry->timeInfo().locationChanged().toTime_t()) {
-      bool isRemoved =
-        Tools::hasChild(db2->metadata()->recycleBin(), cloudEntry);
-
-      // entry was moved to normal group
-      if (!isRemoved) {
-        updateEntryGroup(localEntry, cloudEntry);
-      }
-
-      // entry was moved to recycle bin which is also group
-      else {
-        removeEntry(localEntry);
-      }
-    }
-
-    // we need to just count changes to decide further whether whole remote
-    // database should be updated
-    else if (localEntry->timeInfo().locationChanged().toTime_t() >
-             cloudEntry->timeInfo().locationChanged().toTime_t()) {
-      bool isRemoved =
-        Tools::hasChild(db1->metadata()->recycleBin(), localEntry);
-
-      // entry was moved to normal group
-      if (!isRemoved) {
-        GDriveDatabaseSync::syncObject->resultRemoteOlderEntries++;
-      }
-
-      // entry was moved to recycle bin which is also group
-      else {
-       GDriveDatabaseSync::syncObject->resultRemoteRemovedEntries++;
-      }
-    }
-}
-
-
-void GDriveEntriesSync::syncEntry(Entry* localEntry,Entry* cloudEntry) {
-    // local entry last update time is older than remote entry.Updating local
-    // database
-    if (localEntry->timeInfo().lastModificationTime().toTime_t() <
-        cloudEntry->timeInfo().lastModificationTime().toTime_t()) {
-      qDebug() << QString(
-        "Source Db has older entry::" + localEntry->uuid().toHex() + "::" +
-        localEntry->attributes()->value(
-          "Title") + ":: Parent::" + localEntry->group()->uuid().toHex());
-      updateEntryData(localEntry, cloudEntry);
-    }
-    // we need to just count changes to decide further whether whole remote
-    // database should be updated
-    else if (localEntry->timeInfo().lastModificationTime().toTime_t() >
-             cloudEntry->timeInfo().lastModificationTime().toTime_t()) {
-      GDriveDatabaseSync::syncObject->resultRemoteOlderEntries++;
-    }
-}
-
-QSharedPointer<GDriveSyncObject> GDriveEntriesSync::syncDatabases() {
-  // sync groups also if it specified by constructor
-  if (syncGroups) {
-    qDebug() << "Perform whole sync: groups & entries";
-    GDriveGroupsSync::syncDatabases();
-  }
-
-  entries1 = db1->rootGroup()->entriesMapRecursive();
-  entries2 = db2->rootGroup()->entriesMapRecursive();
-
-  QList<Entry *> missingEntries;
-  Q_FOREACH(Entry * cloudEntry, entries2) {
-    // remote entry exists also in local database
-    if (entries1.contains(cloudEntry->uuid())) {
-      Entry *localEntry = entries1[cloudEntry->uuid()];
-      qDebug() << "sync entry="+localEntry->uuid().toBase64();
-        qDebug() << "Local last modification time==" + QString::number(
-        localEntry->timeInfo().lastModificationTime().toTime_t());
-        qDebug() << "Remote last modification time==" + QString::number(
-        cloudEntry->timeInfo().lastModificationTime().toTime_t());
-        qDebug() << "Local location changed time==" + QString::number(
-        localEntry->timeInfo().locationChanged().toTime_t());
-        qDebug() << "Remote location changed time==" + QString::number(
-        cloudEntry->timeInfo().locationChanged().toTime_t());
-
-
-
-
-      syncEntry(localEntry,cloudEntry);
-      syncLocation(localEntry,cloudEntry);
-
-
-    }
-
-    // entry exists only in remote database
-    else {
-      missingEntries.append(cloudEntry);
-    }
-  }
-
-  if (missingEntries.length() > 0) {
-    addMissingEntries(missingEntries);
-  }
-
-  // count whether any unique entries exist in local database
-  // to further decide whether we need to update remote db
-  Q_FOREACH(Entry * localEntry, entries1) {
-    if (!entries2.contains(localEntry->uuid())) {
-     GDriveDatabaseSync::syncObject->resultRemoteMissingEntries++;
-    }
-  }
-return GDriveDatabaseSync::syncObject;
+QSharedPointer<SyncEntry> GDriveEntriesSync::getResultStat() {
+  Q_ASSERT(!syncObject.isNull());
+  return syncObject->getResultStat(SyncEntry::ObjectType::Entry);
 }

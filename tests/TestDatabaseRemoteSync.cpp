@@ -137,7 +137,7 @@ Entry* TestDatabaseRemoteSync::createEntry(Database* db,const QString& title,con
 }
 
 Group* TestDatabaseRemoteSync::createGroup(Database* db,const QString& groupName) {
-    Group *newGroup = new Group();
+    Group* newGroup = new Group();
     newGroup->setName(groupName);
     newGroup->setUuid(Uuid::random());
     newGroup->setParent(db->resolveGroup(db->rootGroup()->uuid()));
@@ -169,7 +169,7 @@ void TestDatabaseRemoteSync::testRemoveRemoteEntry() {
   QCOMPARE(result->resultRemoteOlderEntries,0);
   QCOMPARE(result->resultRemoteRemovedEntries,1);
 
-  QCOMPARE(result->resultRemoteMissingGroups,1);
+  QCOMPARE(result->resultRemoteMissingGroups,0);
   QCOMPARE(result->resultRemoteOlderGroups,0);
   QCOMPARE(result->resultRemoteRemovedGroups,0);
 
@@ -212,7 +212,7 @@ void TestDatabaseRemoteSync::testUpdateRemoteEntry() {
   QCOMPARE(result->resultRemoteOlderEntries,1);
   QCOMPARE(result->resultRemoteRemovedEntries,0);
 
-  QCOMPARE(result->resultRemoteMissingGroups,1);
+  QCOMPARE(result->resultRemoteMissingGroups,0);
   QCOMPARE(result->resultRemoteOlderGroups,0);
   QCOMPARE(result->resultRemoteRemovedGroups,0);
 

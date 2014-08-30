@@ -6,29 +6,28 @@
 #include "../core/Tools.h"
 #include "../core/Metadata.h"
 #include  "GDriveGroupsSync.h"
-class GDriveEntriesSync:public GDriveGroupsSync
+#include "QtCore/QSharedPointer"
+using namespace DatabaseSync;
+class GDriveEntriesSync:public GDriveDatabaseSync<Entry>
 {
 public:
     GDriveEntriesSync(Database* db1, Database* db2, bool syncGroups=true);
-    /**
-     * @brief syncDatabases - syncs items between two provided databases
-     * @param db1  -first source/destination database.Will contain modifications from db2 database after sync
-     * @param db2 - second source database.
-     */
+    ~GDriveEntriesSync();
     QSharedPointer<GDriveSyncObject> syncDatabases();
-    static bool compareByUuid(Entry* entry1,Entry* entry2);
-    static bool compareByCreationTime(Entry* entry1,Entry* entry2);
-private:
-    void addMissingEntries(QList<Entry *> missingEntries);
-    void updateEntryData(Entry* entry, Entry* new_data);
-    void updateEntryGroup(Entry* entry, Entry* new_data);
+protected:
     void removeEntry(Entry* entry);
-    bool isItemMoved(Entry* entry);
+    bool processEntry(Database *db,Entry* entry);
+    void setParentGroup(Entry* entry, Group* group);
+    const Group* getParentGroup(Entry* entry);
+    const QString getEntryName(Entry* entry);
+    QMap<Uuid,Entry*> getEntriesMap(Database* db);
+    QString getType();
+    QSharedPointer<SyncEntry> getResultStat();
+
+private:
     bool syncGroups;
-    void syncLocation(Entry* localEntry,Entry* cloudEntry);
-    void syncEntry(Entry* localEntry,Entry* cloudEntry);
-    QMap<Uuid,Entry*> entries1;
-    QMap<Uuid,Entry*> entries2;
+    const QString ENTRY_TYPE="Entry";
+
 
 };
 

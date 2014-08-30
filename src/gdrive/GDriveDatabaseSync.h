@@ -3,80 +3,42 @@
 #include "core/Database.h"
 #include <QtCore/QDebug>
 #include "../core/Tools.h"
+#include "GDriveDatabaseSyncBase.h"
 #include "../core/Metadata.h"
-namespace DatabaseSync {
-struct GDriveSyncObject {
-    //groups/entries missed in local database, but present in remote database
-    int resultLocalMissingEntries=0;
-    int resultLocalMissingGroups=0;
-
-    //groups/entries present in local database but missing in remote database
-    int resultRemoteMissingGroups=0;
-    int resultRemoteMissingEntries=0;
-
-
-
-    //groups/entries which have older timestamp in local database
-    int resultLocalOlderEntries=0;
-    int resultLocalOlderGroups=0;
-
-    void setOlderEntries(int value);
-    //groups/entries which have older timestamp in remote database
-    int resultRemoteOlderEntries=0;
-    int resultRemoteOlderGroups=0;
-
-    //groups/entries which were deleted in local db
-    int resultLocalRemovedEntries=0;
-    int resultLocalRemovedGroups=0;
-
-
-    //groups/entries which were deleted in remote db
-    int resultRemoteRemovedEntries=0;
-    int resultRemoteRemovedGroups=0;
-};
-
-class GDriveDatabaseSync:public QObject
+using namespace DatabaseSync;
+//generalize Entry/Group to template SO - sync object
+template<class SO>
+class GDriveDatabaseSync : public GDriveDatabaseSyncBase
 {
-    Q_OBJECT
 protected:
     Database* db1;
     Database* db2;
     QSharedPointer<GDriveSyncObject> syncObject;
-    QMap<Uuid,Group*> entries1;
-    QMap<Uuid,Group*> entries2;
-    virtual void increaseRemoteOlderEntries()=0;
-    virtual void increaseRemoteMissingEntries()=0;
-    virtual void increaseRemoteRemovedEntries()=0;
+    QMap<Uuid,SO*> entries1;
+    QMap<Uuid,SO*> entries2;
 
-    virtual void increaseLocalOlderEntries()=0;
-    virtual void increaseLocalMissingEntries()=0;
-    virtual void increaseLocalRemovedEntries()=0;
+    void syncEntry(SO* localEntry,SO* cloudEntry);
+    void updateEntryData(SO *entry, SO *new_data);
+    void syncLocation(SO* localEntry,SO* cloudEntry);
+    void updateEntryGroup(SO *entry, SO *new_data);
+    static bool compareByCreationTime(SO *entry1, SO *entry2);
 
-
-    template <typename T>
-    void syncEntry(T* localEntry,T* cloudEntry);
-    template <class T>
-    void updateEntryData(T *entry, T *new_data);
-    template <typename T>
-    void syncLocation(T* localEntry,T* cloudEntry);
-
-    template <typename T>
-    void updateEntryGroup(T *entry, T *new_data);
-    template <class T> void removeEntry(T* entry);
+    void addMissingEntries(QList<SO *>missingEntries);
+    virtual bool processEntry(Database *db, SO* entry)=0;
+    virtual void setParentGroup(SO* entry, Group *group)=0;
+    virtual void removeEntry(SO* entry)=0;
+    virtual const Group* getParentGroup(SO* entry)=0;
+    virtual const QString getEntryName(SO* entry) = 0;
+    virtual  QMap<Uuid,SO*> getEntriesMap(Database* db)=0;
+    virtual QString getType()=0;
+    virtual QSharedPointer<SyncEntry> getResultStat()=0;
 
 
 public:
     GDriveDatabaseSync(Database* db1, Database* db2);
-    virtual QSharedPointer<GDriveSyncObject> syncDatabases()=0;
-    virtual ~GDriveDatabaseSync() {}
-
-
     QSharedPointer<GDriveSyncObject> getSyncObject();
-
-
-
+    QSharedPointer<GDriveSyncObject> syncDatabases();
+    void setSyncObject(QSharedPointer<GDriveSyncObject> syncObject);
 };
-
-}
 
 #endif // GDRIVEDATABASESYNC_H

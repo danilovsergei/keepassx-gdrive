@@ -7,6 +7,7 @@
 #include "gdrive/Errors.h"
 #include "gdrive/GDriveDatabaseSyncFactory.h"
 #include "gdrive/GDriveDatabaseSync.h"
+#include "gdrive/GDriveDatabaseSyncBase.h"
 #include "format/KeePass2Reader.h"
 #include "keys/CompositeKey.h"
 #include "QtCore/QtConcurrentRun"

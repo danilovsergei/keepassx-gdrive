@@ -3,6 +3,7 @@
 #include <QtCore/QObject>
 #include "gdrive/GDriveEntriesSync.h"
 #include "gdrive/GDriveGroupsSync.h"
+#include "gdrive/GDriveDatabaseSyncBase.h"
 #include "gdrive/GDriveDatabaseSyncFactory.h"
 
 class TestDatabaseSync: public QObject
@@ -29,9 +30,9 @@ private Q_SLOTS:
 private:
 Database* db1;
 Database* db2;
-QSharedPointer<GDriveDatabaseSync> groupSync;
-QSharedPointer<GDriveDatabaseSync> entrySync;
-QSharedPointer<GDriveDatabaseSync> allSync;
+QSharedPointer<GDriveDatabaseSyncBase> groupSync;
+QSharedPointer<GDriveDatabaseSyncBase> entrySync;
+QSharedPointer<GDriveDatabaseSyncBase> allSync;
 Group* groupRoot;
 Group* groupRoot2;
 };

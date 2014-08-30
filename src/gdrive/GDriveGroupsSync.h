@@ -10,7 +10,7 @@
 #include <QtCore/QDebug>
 #include <QtCore/QObject>
 using namespace DatabaseSync;
-class GDriveGroupsSync : public GDriveDatabaseSync
+class GDriveGroupsSync : public GDriveDatabaseSync<Group>
 {
 public:
     GDriveGroupsSync(Database* db1, Database* db2);
@@ -22,24 +22,17 @@ public:
      * @param db2 - second source database.
      */
     QSharedPointer<GDriveSyncObject> syncDatabases();
-    static bool compareByUuid(Group* entry1,Group* entry2);
-    static bool compareByCreationTime(Group* entry1,Group* entry2);
-private:
-    void addMissingEntries(QList<Group*> missingEntries);
+protected:
+    bool processEntry(Database *db,Group* entry);
     void removeEntry(Group* entry);
-    bool isItemMoved(Group* entry);
-    template <typename T>
-    void syncEntry(T* localEntry,T* cloudEntry);
-    void increaseRemoteOlderEntries();
-    void increaseRemoteMissingEntries();
-    void increaseRemoteRemovedEntries();
-    void increaseLocalOlderEntries();
-    void increaseLocalMissingEntries();
-    void increaseLocalRemovedEntries();
-
-
-
-
+    void setParentGroup(Group* entry, Group* group);
+    const Group* getParentGroup(Group* entry);
+    QMap<Uuid,Group*> getEntriesMap(Database* db);
+    const QString getEntryName(Group* entry);
+    QString getType();
+    QSharedPointer<SyncEntry> getResultStat();
+private:
+    const QString ENTRY_TYPE="Group";
 
 };
 
