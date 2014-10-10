@@ -8,11 +8,6 @@ GDriveDatabaseSync<SO>::GDriveDatabaseSync(Database *db1, Database *db2)
   : db1(db1), db2(db2) {}
 
 template<typename SO>
-QSharedPointer<GDriveSyncObject>GDriveDatabaseSync<SO>::getSyncObject() {
-  return syncObject;
-}
-
-template<typename SO>
 void GDriveDatabaseSync<SO>::setSyncObject(
   QSharedPointer<GDriveSyncObject>syncObject) {
   Q_ASSERT(!syncObject.isNull());
@@ -35,7 +30,7 @@ void GDriveDatabaseSync<SO>::syncEntry(SO *localEntry, SO *cloudEntry) {
   // database should be updated
   else if (localEntry->timeInfo().lastModificationTime().toTime_t() >
            cloudEntry->timeInfo().lastModificationTime().toTime_t()) {
-    getResultStat()->increaseRemoteOlderEntries();
+    getSyncObject()->increase(SEntry(), SOlder(), SRemote());
   }
 }
 
@@ -49,7 +44,7 @@ void GDriveDatabaseSync<SO>::updateEntryGroup(SO *entry, SO *new_data) {
   Q_ASSERT(targetGroup);
   setParentGroup(entry, targetGroup);
   entry->setTimeInfo(new_data->timeInfo());
-  getResultStat()->increaseLocalOlderEntries();
+  getSyncObject()->increase(SEntry(), SOlder(), SLocal());
 }
 
 template<typename SO>
@@ -84,12 +79,12 @@ void GDriveDatabaseSync<SO>::syncLocation(SO *localEntry, SO *cloudEntry) {
 
     // entry was moved to normal group
     if (!isRemoved) {
-      getResultStat()->increaseRemoteOlderEntries();
+      getSyncObject()->increase(SEntry(), SOlder(), SRemote());
     }
 
     // entry was moved to recycle bin which is also group
     else {
-      getResultStat()->increaseRemoteRemovedEntries();
+      getSyncObject()->increase(SEntry(), SRemoved(), SRemote());
     }
   }
 }
@@ -101,7 +96,7 @@ void GDriveDatabaseSync<SO>::updateEntryData(SO *entry, SO *new_data) {
   Q_ASSERT(new_data);
   entry->copyDataFrom(new_data);
   entry->setTimeInfo(new_data->timeInfo());
-  getResultStat()->increaseLocalOlderEntries();
+  getSyncObject()->increase(SEntry(), SOlder(), SLocal());
 }
 
 template<class SO>
@@ -141,9 +136,9 @@ void GDriveDatabaseSync<SO>::addMissingEntries(QList<SO *>missingEntries) {
     setParentGroup(newEntry, group);
     newEntry->setTimeInfo(entry->timeInfo());
     qDebug() << "Add missing " + getType() + ": " + getEntryName(newEntry) +
-    " to group::" +
+      " to group::" +
       group->getGroupName();
-    getResultStat()->increaseLocalMissingEntries();
+    getSyncObject()->increase(SEntry(), SMissing(), SLocal());
   }
 }
 
@@ -185,7 +180,7 @@ QSharedPointer<GDriveSyncObject>GDriveDatabaseSync<SO>::syncDatabases() {
     if (!processEntry(db1, localEntry)) continue;
 
     if (!entries2.contains(localEntry->uuid())) {
-      getResultStat()->increaseRemoteMissingEntries();
+      getSyncObject()->increase(SEntry(), SMissing(), SRemote());
     }
   }
   return GDriveDatabaseSync::syncObject;

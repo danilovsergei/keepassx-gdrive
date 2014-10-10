@@ -52,21 +52,20 @@ if (remoteDb==Q_NULLPTR)
 QSharedPointer<GDriveDatabaseSyncBase> sync=GDriveDatabaseSyncFactory::createDatabaseSync(GDriveDatabaseSyncFactory::SyncId::ALL,localDb,remoteDb);
 QSharedPointer<GDriveSyncObject> syncObject=sync->syncDatabases();
 qDebug() << "Sync results::";
-QSharedPointer<SyncEntry> entryStat=syncObject->getResultStat(SyncEntry::ObjectType::Entry);
-QSharedPointer<SyncEntry> groupStat=syncObject->getResultStat(SyncEntry::ObjectType::Group);
-qDebug() << "    Local Added missing entries::"+QString::number(entryStat->getLocalMissingEntries());
-qDebug() << "    Local Added missing groups::"+QString::number(groupStat->getLocalMissingEntries());
-qDebug() << "    Local Updated existing entries::"+QString::number(entryStat->getLocalOlderEntries());
-qDebug() << "    Local Updated existing groups::"+QString::number(groupStat->getLocalOlderEntries());
-qDebug() << "    Local Removed entries::"+QString::number(entryStat->getLocalRemovedEntries());
-qDebug() << "    Local Removed groups::"+QString::number(groupStat->getLocalRemovedEntries());
+qDebug() << "    Local Added missing entries::"+QString::number(syncObject->get(SEntry(),SMissing(),SLocal()));
+qDebug() << "    Local Added missing groups::"+QString::number(syncObject->get(SGroup(),SMissing(),SLocal()));
+qDebug() << "    Local Updated existing entries::"+QString::number(syncObject->get(SEntry(),SOlder(),SLocal()));
+qDebug() << "    Local Updated existing groups::"+QString::number(syncObject->get(SGroup(),SOlder(),SLocal()));
+qDebug() << "    Local Removed entries::"+QString::number(syncObject->get(SEntry(),SRemoved(),SLocal()));
+qDebug() << "    Local Removed groups::"+QString::number(syncObject->get(SGroup(),SRemoved(),SLocal()));
 
-qDebug() << "    Remote Added missing entries::"+QString::number(entryStat->getRemoteMissingEntries());
-qDebug() << "    Remote Added missing groups::"+QString::number(groupStat->getRemoteMissingEntries());
-qDebug() << "    Remote Updated existing entries::"+QString::number(entryStat->getRemoteOlderEntries());
-qDebug() << "    Remote Updated existing groups::"+QString::number(groupStat->getRemoteOlderEntries());
-qDebug() << "    Remote Removed entries::"+QString::number(entryStat->getRemoteRemovedEntries());
-qDebug() << "    Remote Removed groups::"+QString::number(groupStat->getRemoteRemovedEntries());
+qDebug() << "    Remote Added missing entries::"+QString::number(syncObject->get(SEntry(),SMissing(),SRemote()));
+qDebug() << "    Remote Added missing groups::"+QString::number(syncObject->get(SGroup(),SMissing(),SRemote()));
+qDebug() << "    Remote Updated existing entries::"+QString::number(syncObject->get(SEntry(),SOlder(),SRemote()));
+qDebug() << "    Remote Updated existing groups::"+QString::number(syncObject->get(SGroup(),SOlder(),SRemote()));
+qDebug() << "    Remote Removed entries::"+QString::number(syncObject->get(SEntry(),SRemoved(),SRemote()));
+qDebug() << "    Remote Removed groups::"+QString::number(syncObject->get(SGroup(),SRemoved(),SRemote()));
+
 Q_EMIT syncDone();
 delete remoteDb;
 return syncObject;

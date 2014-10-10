@@ -1,11 +1,12 @@
 #include "GDriveEntriesSync.h"
 #include <QtCore/QDebug>
 #include "GDriveDatabaseSyncFactory.h"
+
 GDriveEntriesSync::GDriveEntriesSync(Database *db1, Database *db2,
                                      bool syncGroups)
   : GDriveDatabaseSync<Entry>(db1, db2), syncGroups(syncGroups) {}
 
-QSharedPointer<GDriveSyncObject>GDriveEntriesSync::syncDatabases() {
+QSharedPointer<GDriveSyncObject> GDriveEntriesSync::syncDatabases() {
   // sync groups also if it specified by constructor
   if (syncGroups) {
     qDebug() << "Perform whole sync: groups & entries";
@@ -59,10 +60,5 @@ QMap<Uuid, Entry *>GDriveEntriesSync::getEntriesMap(Database *db) {
 void GDriveEntriesSync::removeEntry(Entry *entry) {
     qDebug() << "Recycle entry " + entry->uuid().toBase64();
   db1->recycleEntry(entry);
-  getResultStat()->increaseLocalRemovedEntries();
-}
-
-QSharedPointer<SyncEntry> GDriveEntriesSync::getResultStat() {
-  Q_ASSERT(!syncObject.isNull());
-  return syncObject->getResultStat(SyncEntry::ObjectType::Entry);
+  getSyncObject()->increase(SEntry(),SRemoved(),SLocal());
 }

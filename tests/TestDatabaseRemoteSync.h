@@ -10,11 +10,12 @@
 #include <gdrive/Errors.h>
 #include <core/Entry.h>
 #include <core/Group.h>
+#include <gdrive/GDriveDatabaseSyncBase.h>
 
-
+using namespace DatabaseSync;
 class TestDatabaseRemoteSync: public QObject
 {
-Q_OBJECT
+    Q_OBJECT
 private Q_SLOTS:
     void initTestCase();
     void init();
@@ -28,6 +29,7 @@ private Q_SLOTS:
     void testRemoteDatabaseSyncLoginError();
 
 private:
+    void compareResult(QSharedPointer<GDriveSyncObject> actual, QMap<SyncMapKey, int> expectedMap);
     Database* createLocalDatabase();
     void uploadDb(const QString& dbPath);
     void deleteDb(const FileInfo& db);

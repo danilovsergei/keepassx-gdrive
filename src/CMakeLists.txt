@@ -136,6 +136,7 @@ set(keepassx_SOURCES
     gdrive/helpers/SyncRecentDbHelper.cpp
     gdrive/Errors.cpp
     gdrive/GDriveDatabaseSyncBase.cpp
+    gdrive/GDriveSyncObject.cpp
 )
 
 set(keepassx_SOURCES_MAINEXE
@@ -214,6 +215,7 @@ set(keepassx_MOC
     gdrive/GDriveConstants.h
     gdrive/Errors.h
     gdrive/GDriveDatabaseSyncBase.h
+    gdrive/GDriveSyncObject.h
 )
 
 set(keepassx_FORMS

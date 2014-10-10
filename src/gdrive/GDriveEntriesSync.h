@@ -22,7 +22,6 @@ protected:
     const QString getEntryName(Entry* entry);
     QMap<Uuid,Entry*> getEntriesMap(Database* db);
     QString getType();
-    QSharedPointer<SyncEntry> getResultStat();
 
 private:
     bool syncGroups;

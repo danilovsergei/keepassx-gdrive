@@ -30,7 +30,6 @@ protected:
     QMap<Uuid,Group*> getEntriesMap(Database* db);
     const QString getEntryName(Group* entry);
     QString getType();
-    QSharedPointer<SyncEntry> getResultStat();
 private:
     const QString ENTRY_TYPE="Group";
 

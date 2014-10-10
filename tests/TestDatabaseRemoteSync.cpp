@@ -163,24 +163,11 @@ void TestDatabaseRemoteSync::testRemoveRemoteEntry() {
 
   db->recycleEntry(entry);
   saveDatabase(db,dbPath);
-  QSharedPointer<GDriveSyncObject> result=syncRecentDbHelper()->sync(db, dbPath);
-
-  QCOMPARE(result->resultRemoteMissingEntries,0);
-  QCOMPARE(result->resultRemoteOlderEntries,0);
-  QCOMPARE(result->resultRemoteRemovedEntries,1);
-
-  QCOMPARE(result->resultRemoteMissingGroups,0);
-  QCOMPARE(result->resultRemoteOlderGroups,0);
-  QCOMPARE(result->resultRemoteRemovedGroups,0);
-
-  QCOMPARE(result->resultLocalMissingEntries,0);
-  QCOMPARE(result->resultLocalOlderEntries,0);
-  QCOMPARE(result->resultLocalRemovedEntries,0);
-
-  QCOMPARE(result->resultLocalMissingGroups,0);
-  QCOMPARE(result->resultLocalOlderGroups,0);
-  QCOMPARE(result->resultLocalRemovedGroups,0);
-
+  QSharedPointer<GDriveSyncObject> actual=syncRecentDbHelper()->sync(db, dbPath);
+  QSharedPointer<GDriveSyncObject> expected = QSharedPointer<GDriveSyncObject>(new GDriveSyncObject());
+  expected->set(SEntry(),SRemoved(),SRemote(),1);
+  QMap<SyncMapKey, QPair<int, int> >  result = actual->compare(expected);
+  QCOMPARE(0,result.size());
   deleteDb(gdrive->getDatabasesSeq(GoogleDriveTools::getDbNameFilter(dbName +
                                                                      ".kdbx")).first());
   delete db;
@@ -207,30 +194,31 @@ void TestDatabaseRemoteSync::testUpdateRemoteEntry() {
 
   entry->setGroup(group);
   saveDatabase(db,dbPath);
-  QSharedPointer<GDriveSyncObject> result=syncRecentDbHelper()->sync(db, dbPath);
-  QCOMPARE(result->resultRemoteMissingEntries,0);
-  QCOMPARE(result->resultRemoteOlderEntries,1);
-  QCOMPARE(result->resultRemoteRemovedEntries,0);
-
-  QCOMPARE(result->resultRemoteMissingGroups,0);
-  QCOMPARE(result->resultRemoteOlderGroups,0);
-  QCOMPARE(result->resultRemoteRemovedGroups,0);
-
-  QCOMPARE(result->resultLocalMissingEntries,0);
-  QCOMPARE(result->resultLocalOlderEntries,0);
-  QCOMPARE(result->resultLocalRemovedEntries,0);
-
-  QCOMPARE(result->resultLocalMissingGroups,0);
-  QCOMPARE(result->resultLocalOlderGroups,0);
-  QCOMPARE(result->resultLocalRemovedGroups,0);
-
+  QSharedPointer<GDriveSyncObject> actual=syncRecentDbHelper()->sync(db, dbPath);
+  QMap<SyncMapKey, int> expectedMap;
+  expectedMap.insert(SyncMapKey(SEntry(),SOlder(),SRemote()),1);
+  compareResult(actual,expectedMap);
   deleteDb(gdrive->getDatabasesSeq(GoogleDriveTools::getDbNameFilter(dbName +
                                                                   ".kdbx")).first());
   delete db;
 }
 
-
-
+/**
+ * @brief TestDatabaseRemoteSync::compareResult compares actual and expected results for  database sync
+ * @param actual what actual sync provided
+ * @param expectedMap what is expected
+ */
+void TestDatabaseRemoteSync::compareResult(QSharedPointer<GDriveSyncObject> actual, QMap<SyncMapKey, int> expectedMap) {
+    QSharedPointer<GDriveSyncObject> expected = QSharedPointer<GDriveSyncObject>(new GDriveSyncObject());
+    Q_FOREACH(SyncMapKey key,expectedMap.keys()) {
+    expected->set(static_cast<ObjectType>(key.get(0)),static_cast<ObjectName>(key.get(1)),static_cast<ObjectLocation>(key.get(2)),expectedMap.value(key));
+    }
+    QMap<SyncMapKey, QPair<int, int> >  result = actual->compare(expected);
+    Q_FOREACH(SyncMapKey key,result.keys()) {
+      qDebug() << QString("%1 : %2 <> %3").arg(key.toString(),QString::number(result.value(key).first),QString::number(result.value(key).second));
+    }
+    QCOMPARE(0,result.size());
+}
 
 
 /**

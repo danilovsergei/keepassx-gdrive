@@ -13,7 +13,6 @@ class GDriveDatabaseSync : public GDriveDatabaseSyncBase
 protected:
     Database* db1;
     Database* db2;
-    QSharedPointer<GDriveSyncObject> syncObject;
     QMap<Uuid,SO*> entries1;
     QMap<Uuid,SO*> entries2;
 
@@ -31,12 +30,9 @@ protected:
     virtual const QString getEntryName(SO* entry) = 0;
     virtual  QMap<Uuid,SO*> getEntriesMap(Database* db)=0;
     virtual QString getType()=0;
-    virtual QSharedPointer<SyncEntry> getResultStat()=0;
-
 
 public:
     GDriveDatabaseSync(Database* db1, Database* db2);
-    QSharedPointer<GDriveSyncObject> getSyncObject();
     QSharedPointer<GDriveSyncObject> syncDatabases();
     void setSyncObject(QSharedPointer<GDriveSyncObject> syncObject);
 };

@@ -27,7 +27,7 @@ void GDriveGroupsSync::removeEntry(Group *entry) {
 
   Q_ASSERT(toRecycle);
   db1->recycleGroup(toRecycle);
-  getResultStat()->increaseLocalRemovedEntries();
+  getSyncObject()->increase(SEntry(), SRemoved(), SLocal());
 }
 
 void GDriveGroupsSync::setParentGroup(Group *entry, Group *group) {
@@ -48,9 +48,4 @@ QMap<Uuid, Group *>GDriveGroupsSync::getEntriesMap(Database *db) {
 
 QString GDriveGroupsSync::getType() {
   return ENTRY_TYPE;
-}
-
-QSharedPointer<SyncEntry> GDriveGroupsSync::getResultStat() {
-  Q_ASSERT(!syncObject.isNull());
-  return syncObject->getResultStat(SyncEntry::ObjectType::Group);
 }
