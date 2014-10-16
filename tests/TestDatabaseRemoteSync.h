@@ -20,9 +20,15 @@ private Q_SLOTS:
     void initTestCase();
     void init();
     void cleanup();
+
     void testRemoveRemoteEntry();
     void testUpdateRemoteEntry();
-    void testRemoteDatabaseSyncRemoveEntry();
+    void testMissingRemoteEntry();
+    void testUpdateLocalEntry();
+    void testMissingLocalEntry();
+    void testRemoveLocalEntry();
+    void testRemoveLocalEntryToRecycleBin();
+    void testRemoveRemoteEntrySlots();
     void testRemoteDatabaseSyncDoNothing();
     void testRemoteDatabaseSyncAmbigiousDb();
     void testRemoteDatabaseSyncNoCloudDb();
@@ -30,9 +36,11 @@ private Q_SLOTS:
 
 private:
     void compareResult(QSharedPointer<GDriveSyncObject> actual, QMap<SyncMapKey, int> expectedMap);
+    Database* readDatabase(const CompositeKey& key,const QString& dbPath);
     Database* createLocalDatabase();
     void uploadDb(const QString& dbPath);
     void deleteDb(const FileInfo& db);
+    const CompositeKey getTestCompositeKey();
     void saveDatabase(Database* db, const QString& dbPath);
     Entry* createEntry(Database* db,const QString& title=QString("testTitle"),const QString& password=QString("testPassword"));
     Group* createGroup(Database* db,const QString& groupName=QString("testGroup"));

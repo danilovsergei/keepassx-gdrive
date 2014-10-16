@@ -6,7 +6,7 @@ GDriveEntriesSync::GDriveEntriesSync(Database *db1, Database *db2,
                                      bool syncGroups)
   : GDriveDatabaseSync<Entry>(db1, db2), syncGroups(syncGroups) {}
 
-QSharedPointer<GDriveSyncObject> GDriveEntriesSync::syncDatabases() {
+QSharedPointer<GDriveSyncObject>GDriveEntriesSync::syncDatabases() {
   // sync groups also if it specified by constructor
   if (syncGroups) {
     qDebug() << "Perform whole sync: groups & entries";
@@ -37,7 +37,12 @@ bool GDriveEntriesSync::processEntry(Database *db, Entry *entry)  {
 }
 
 void GDriveEntriesSync::setParentGroup(Entry *entry, Group *group) {
-  entry->setGroup(group);
+  // move entry to recycle bin will perform some extra actions by creating
+  // recycle bin if needed
+  Database *db = group->database();
+  db->metadata()->recycleBin() && group->uuid() ==
+  db->metadata()->recycleBin()->uuid() ? db->recycleEntry(entry) :  entry->
+  setGroup(group);
 }
 
 const Group * GDriveEntriesSync::getParentGroup(Entry *entry) {
@@ -58,7 +63,12 @@ QMap<Uuid, Entry *>GDriveEntriesSync::getEntriesMap(Database *db) {
  * @param entry  - entry to remove
  */
 void GDriveEntriesSync::removeEntry(Entry *entry) {
-    qDebug() << "Recycle entry " + entry->uuid().toBase64();
+  qDebug() << "Recycle entry " + entry->uuid().toBase64();
   db1->recycleEntry(entry);
-  getSyncObject()->increase(SEntry(),SRemoved(),SLocal());
+  getSyncObject()->increase(SEntry(), SRemoved(), SLocal());
+}
+
+
+ObjectType GDriveEntriesSync::getObjectType() {
+    return SEntry();
 }

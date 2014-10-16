@@ -26,6 +26,7 @@ protected:
     bool processEntry(Database *db,Group* entry);
     void removeEntry(Group* entry);
     void setParentGroup(Group* entry, Group* group);
+    ObjectType getObjectType();
     const Group* getParentGroup(Group* entry);
     QMap<Uuid,Group*> getEntriesMap(Database* db);
     const QString getEntryName(Group* entry);

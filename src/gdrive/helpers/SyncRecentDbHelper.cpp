@@ -26,8 +26,9 @@ const FileInfoList dbList=googleDriveApi()->getDatabasesSeq(GoogleDriveTools::ge
 //insted local copy will be uploaded to the cloud
 if (dbList.size()==0) {
     qDebug() << QString("Nothing to sync. There is no remote database with name: %1").arg(QFileInfo(localDbPath).fileName());
-    Q_EMIT syncDone();
-    return QSharedPointer<GDriveSyncObject>();
+    QSharedPointer<GDriveSyncObject> syncObject = QSharedPointer<GDriveSyncObject>(new GDriveSyncObject());
+    Q_EMIT syncDone(syncObject);
+    return QSharedPointer<GDriveSyncObject>(syncObject);
 }
 
 if (dbList.size()>1) {
@@ -66,11 +67,16 @@ qDebug() << "    Remote Updated existing groups::"+QString::number(syncObject->g
 qDebug() << "    Remote Removed entries::"+QString::number(syncObject->get(SEntry(),SRemoved(),SRemote()));
 qDebug() << "    Remote Removed groups::"+QString::number(syncObject->get(SGroup(),SRemoved(),SRemote()));
 
-Q_EMIT syncDone();
+Q_EMIT syncDone(syncObject);
 delete remoteDb;
 return syncObject;
 }
-
+/**
+ * @brief SyncRecentDbHelper::readDatabase reads stored locally remote database into the memory
+ * @param localDb pointer to local database to get key from it
+ * @param remoteDbPath path to stored locally remote database
+ * @return pointer to remote database in memory
+ */
 Database* SyncRecentDbHelper::readDatabase(Database* localDb,const QString& remoteDbPath) {
     KeePass2Reader reader;
     Database* remoteDb=0;
@@ -93,8 +99,8 @@ void SyncRecentDbHelper::emitSyncError(int errorType,const QString& description)
     qDebug() <<description;
 }
 
-void SyncRecentDbHelper::emitSyncDone() {
-    Q_EMIT syncDone();
+void SyncRecentDbHelper::emitSyncDone(const QSharedPointer<GDriveSyncObject>& syncObject) {
+    Q_EMIT syncDone(syncObject);
 }
 
 SyncRecentDbHelper::~SyncRecentDbHelper()

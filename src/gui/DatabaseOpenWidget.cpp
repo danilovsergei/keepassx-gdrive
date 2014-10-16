@@ -159,7 +159,8 @@ void DatabaseOpenWidget::openDatabase()
     if (m_db) {
          //Perfom asyncronous sync of recent database with remote database if GOOGLE_DRIVE_SYNC feature enabled through CMAKE
          if (QString(GOOGLE_DRIVE_SYNC)=="ON") {
-            connect(syncRecentDbHelper().data(),SIGNAL(syncDone()),this,SLOT(syncDone()));
+            qRegisterMetaType<QSharedPointer<GDriveSyncObject>>("QSharedPointer<GDriveSyncObject>");
+            connect(syncRecentDbHelper().data(),SIGNAL(syncDone(QSharedPointer<GDriveSyncObject>)),this,SLOT(syncDone(QSharedPointer<GDriveSyncObject>)));
             connect(syncRecentDbHelper().data(),SIGNAL(syncError(int,QString)),this,SLOT(syncError(int,QString)));
             syncRecentDbHelper()->syncParallel(m_db,m_filename);
 
@@ -244,9 +245,10 @@ void DatabaseOpenWidget::browseKeyFile()
     }
 }
 
-void DatabaseOpenWidget::syncDone() {
+void DatabaseOpenWidget::syncDone(QSharedPointer<GDriveSyncObject> syncObject) {
 Q_EMIT editFinished(true);
 qDebug() << "Successfully synced database on "+QDateTime::currentDateTime().toString();
+//TODO log syncObject information
 }
 
 

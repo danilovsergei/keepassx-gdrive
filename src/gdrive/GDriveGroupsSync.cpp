@@ -15,10 +15,6 @@ bool GDriveGroupsSync::processEntry(Database *db, Group *entry)  {
 
   // avoid to sync root groups. They always supposed to be the same
   if (entry == db->rootGroup()) result = false;
-
-  // avoid to sync recycle bin since it's not a normal group and created
-  // automatically when entries deleted
-  if (entry == db->metadata()->recycleBin()) result = false;
   return result;
 }
 
@@ -31,7 +27,13 @@ void GDriveGroupsSync::removeEntry(Group *entry) {
 }
 
 void GDriveGroupsSync::setParentGroup(Group *entry, Group *group) {
-  entry->setParent(group);
+  // move entry to recycle bin will perform some extra actions by creating
+  // recycle bin if needed
+  Database *db = group->database();
+
+  db->metadata()->recycleBin() && group->uuid() ==
+  db->metadata()->recycleBin()->uuid() ? db->recycleGroup(entry) :  entry->
+  setParent(group);
 }
 
 const Group * GDriveGroupsSync::getParentGroup(Group *entry) {
@@ -43,9 +45,20 @@ const QString GDriveGroupsSync::getEntryName(Group *entry) {
 }
 
 QMap<Uuid, Group *>GDriveGroupsSync::getEntriesMap(Database *db) {
-  return db->rootGroup()->groupsMapRecursive(true);
+  QMap<Uuid, Group *> entries = db->rootGroup()->groupsMapRecursive(true);
+
+  // add recycle bin group since it's also has to be synced if was created at
+  // one of the sources
+  if (db->metadata()->recycleBin()) entries.insert(
+      db->metadata()->recycleBin()->uuid(), db->metadata()->recycleBin());
+  return entries;
 }
 
 QString GDriveGroupsSync::getType() {
   return ENTRY_TYPE;
 }
+
+ObjectType GDriveGroupsSync::getObjectType() {
+    return SGroup();
+}
+

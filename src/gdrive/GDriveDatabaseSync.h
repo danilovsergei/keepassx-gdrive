@@ -30,6 +30,7 @@ protected:
     virtual const QString getEntryName(SO* entry) = 0;
     virtual  QMap<Uuid,SO*> getEntriesMap(Database* db)=0;
     virtual QString getType()=0;
+    virtual ObjectType getObjectType()=0;
 
 public:
     GDriveDatabaseSync(Database* db1, Database* db2);

@@ -17,6 +17,7 @@ public:
 protected:
     void removeEntry(Entry* entry);
     bool processEntry(Database *db,Entry* entry);
+    ObjectType getObjectType();
     void setParentGroup(Entry* entry, Group* group);
     const Group* getParentGroup(Entry* entry);
     const QString getEntryName(Entry* entry);

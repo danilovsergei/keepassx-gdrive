@@ -62,7 +62,7 @@ private Q_SLOTS:
     void setOkButtonEnabled();
     void browseKeyFile();
     void cloudDbLoad();
-    void syncDone();
+    void syncDone(QSharedPointer<GDriveSyncObject> syncObject);
     void syncError(int ErrorType,QString description);
 
 protected:

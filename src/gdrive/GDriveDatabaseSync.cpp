@@ -30,7 +30,7 @@ void GDriveDatabaseSync<SO>::syncEntry(SO *localEntry, SO *cloudEntry) {
   // database should be updated
   else if (localEntry->timeInfo().lastModificationTime().toTime_t() >
            cloudEntry->timeInfo().lastModificationTime().toTime_t()) {
-    getSyncObject()->increase(SEntry(), SOlder(), SRemote());
+    getSyncObject()->increase(getObjectType(), SOlder(), SRemote());
   }
 }
 
@@ -44,7 +44,7 @@ void GDriveDatabaseSync<SO>::updateEntryGroup(SO *entry, SO *new_data) {
   Q_ASSERT(targetGroup);
   setParentGroup(entry, targetGroup);
   entry->setTimeInfo(new_data->timeInfo());
-  getSyncObject()->increase(SEntry(), SOlder(), SLocal());
+  getSyncObject()->increase(getObjectType(), SOlder(), SLocal());
 }
 
 template<typename SO>
@@ -79,12 +79,12 @@ void GDriveDatabaseSync<SO>::syncLocation(SO *localEntry, SO *cloudEntry) {
 
     // entry was moved to normal group
     if (!isRemoved) {
-      getSyncObject()->increase(SEntry(), SOlder(), SRemote());
+      getSyncObject()->increase(getObjectType(), SOlder(), SRemote());
     }
 
     // entry was moved to recycle bin which is also group
     else {
-      getSyncObject()->increase(SEntry(), SRemoved(), SRemote());
+      getSyncObject()->increase(getObjectType(), SRemoved(), SRemote());
     }
   }
 }
@@ -96,7 +96,7 @@ void GDriveDatabaseSync<SO>::updateEntryData(SO *entry, SO *new_data) {
   Q_ASSERT(new_data);
   entry->copyDataFrom(new_data);
   entry->setTimeInfo(new_data->timeInfo());
-  getSyncObject()->increase(SEntry(), SOlder(), SLocal());
+  getSyncObject()->increase(getObjectType(), SOlder(), SLocal());
 }
 
 template<class SO>
@@ -108,9 +108,9 @@ template<class SO>
 void GDriveDatabaseSync<SO>::addMissingEntries(QList<SO *>missingEntries) {
   // we can not check if item is really a new item because there is no way to
   // check locally whether it was removed w/o recycle bin
-  if (!db2->metadata()->recycleBinEnabled()) {
-    // TODO show all missingEntries dialog to the user with ability to choose
-    // which items should be really removed
+  if (!db1->metadata()->recycleBinEnabled()) {
+    // TODO instead of syncing  to recycle bin entries will be removed.
+    // Show user dialog to confirm removal
     // Strongly recommend to the user to enable recycle bin to prevent manual
     // sync
     return;
@@ -124,21 +124,33 @@ void GDriveDatabaseSync<SO>::addMissingEntries(QList<SO *>missingEntries) {
   qDebug() << "Add missing entries of type " + getType();
   Q_FOREACH(SO * entry, missingEntries) {
     const Group *parentGr = getParentGroup(entry);
+    Group *group = Q_NULLPTR;
 
-    // get missing entry group in the source database
-    Group *group = db1->rootGroup()->groupsMapRecursive(true)[parentGr->uuid()];
+    QMap<Uuid, Group *> allGroups = db1->rootGroup()->groupsMapRecursive(true);
 
+    if (allGroups.contains(parentGr->uuid())) {
+      group = allGroups.value(parentGr->uuid());
+    }
+
+    // handle case when missing entry should be created in recycle bin.
+    // Could happen when entry in remote database was created and immeadiately
+    // removed
+    else if (db1->metadata()->recycleBin() &&
+             (db1->metadata()->recycleBin()->uuid() == parentGr->uuid())) {
+      group =  db1->metadata()->recycleBin();
+    }
     Q_ASSERT(group);
 
     // creating new entry
     SO *newEntry = new SO();
+    newEntry->setUuid(entry->uuid());
     newEntry->copyDataFrom(entry);
     setParentGroup(newEntry, group);
     newEntry->setTimeInfo(entry->timeInfo());
     qDebug() << "Add missing " + getType() + ": " + getEntryName(newEntry) +
       " to group::" +
       group->getGroupName();
-    getSyncObject()->increase(SEntry(), SMissing(), SLocal());
+    getSyncObject()->increase(getObjectType(), SMissing(), SLocal());
   }
 }
 
@@ -180,7 +192,7 @@ QSharedPointer<GDriveSyncObject>GDriveDatabaseSync<SO>::syncDatabases() {
     if (!processEntry(db1, localEntry)) continue;
 
     if (!entries2.contains(localEntry->uuid())) {
-      getSyncObject()->increase(SEntry(), SMissing(), SRemote());
+      getSyncObject()->increase(getObjectType(), SMissing(), SRemote());
     }
   }
   return GDriveDatabaseSync::syncObject;

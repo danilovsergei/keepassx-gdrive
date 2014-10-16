@@ -20,7 +20,7 @@ private:
 
     static QSharedPointer<SyncRecentDbHelper> g_instance;
     void emitSyncError(int errorType,const QString& description);
-    void emitSyncDone();
+    void emitSyncDone(const QSharedPointer<GDriveSyncObject>& syncObject);
     Database* localDb=0;
     GoogleDriveApi*   gdrive=0;
     QString localDbPath;
@@ -35,7 +35,7 @@ public:
     void syncParallel(Database* localDb, const QString& localDbPath);
     ~SyncRecentDbHelper();
 Q_SIGNALS:
-    void syncDone();
+    void syncDone(QSharedPointer<GDriveSyncObject>);
     void syncError(int ErrorType,QString description);
 
 
