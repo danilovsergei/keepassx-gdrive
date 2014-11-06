@@ -26,6 +26,7 @@
 #include  "gdrive/GoogleDriveApi.h"
 #include "gdrive/GoogleDriveTools.h"
 #include "gdrive/helpers/SyncRecentDbHelper.h"
+#include <QtGui/QMessageBox>
 class Database;
 class QFile;
 
@@ -62,8 +63,7 @@ private Q_SLOTS:
     void setOkButtonEnabled();
     void browseKeyFile();
     void cloudDbLoad();
-    void syncDone(QSharedPointer<GDriveSyncObject> syncObject);
-    void syncError(int ErrorType,QString description);
+
 
 protected:
     const QScopedPointer<Ui::DatabaseOpenWidget> m_ui;

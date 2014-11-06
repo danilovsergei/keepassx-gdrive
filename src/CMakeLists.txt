@@ -121,7 +121,7 @@ set(keepassx_SOURCES
     streams/qtiocompressor.cpp
     streams/StoreDataStream.cpp
     streams/SymmetricCipherStream.cpp
-    gui/databaseopenwidgetcloud.cpp
+    gui/DatabaseOpenWidgetCloud.cpp
     gdrive/GoogleDriveSession.cpp
     gui/SettingsWidgetCloud.cpp
     gdrive/GoogleDriveApi.cpp
@@ -198,7 +198,7 @@ set(keepassx_MOC
     streams/SymmetricCipherStream.h
     qtdrive/gdrive/gdrive.h
     qtdrive/gdrive/tools.h
-    gui/databaseopenwidgetcloud.h
+    gui/DatabaseOpenWidgetCloud.h
     gui/SettingsWidgetCloud.h
     gdrive/GoogleDriveSession.h
     gdrive/Singleton.h
@@ -237,7 +237,7 @@ set(keepassx_FORMS
     gui/entry/EditEntryWidgetHistory.ui
     gui/entry/EditEntryWidgetMain.ui
     gui/group/EditGroupWidgetMain.ui
-    gui/databaseopenwidgetcloud.ui
+    gui/DatabaseOpenWidgetCloud.ui
     gui/SettingsWidgetCloud.ui
     qtdrive/test/networkaccessmanagerproxy/networkrequests.ui
 )

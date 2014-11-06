@@ -111,6 +111,7 @@ MainWindow::MainWindow()
     m_ui->actionAbout->setIcon(filePath()->icon("actions", "help-about"));
 
     m_ui->actionSearch->setIcon(filePath()->icon("actions", "system-search"));
+    m_ui->actionSync->setIcon(filePath()->icon("actions", "gdrive-sync"));
 
     m_actionMultiplexer.connect(SIGNAL(currentModeChanged(DatabaseWidget::Mode)),
                                 this, SLOT(setMenuActionState(DatabaseWidget::Mode)));
@@ -188,6 +189,8 @@ MainWindow::MainWindow()
 
     m_actionMultiplexer.connect(m_ui->actionSearch, SIGNAL(triggered()),
                                 SLOT(toggleSearch()));
+    m_actionMultiplexer.connect(m_ui->actionSync, SIGNAL(triggered()),
+                                SLOT(syncDatabase()));
 }
 
 MainWindow::~MainWindow()
@@ -286,6 +289,7 @@ void MainWindow::setMenuActionState(DatabaseWidget::Mode mode)
             m_ui->actionChangeDatabaseSettings->setEnabled(true);
             m_ui->actionDatabaseSave->setEnabled(true);
             m_ui->actionDatabaseSaveAs->setEnabled(true);
+            m_ui->actionSync->setEnabled(true);
             break;
         }
         case DatabaseWidget::EditMode:
@@ -305,6 +309,7 @@ void MainWindow::setMenuActionState(DatabaseWidget::Mode mode)
             m_ui->actionChangeDatabaseSettings->setEnabled(false);
             m_ui->actionDatabaseSave->setEnabled(false);
             m_ui->actionDatabaseSaveAs->setEnabled(false);
+            m_ui->actionSync->setEnabled(false);
             break;
         default:
             Q_ASSERT(false);
@@ -327,8 +332,8 @@ void MainWindow::setMenuActionState(DatabaseWidget::Mode mode)
         m_ui->actionChangeDatabaseSettings->setEnabled(false);
         m_ui->actionDatabaseSave->setEnabled(false);
         m_ui->actionDatabaseSaveAs->setEnabled(false);
-
         m_ui->actionDatabaseClose->setEnabled(false);
+        m_ui->actionSync->setEnabled(false);
     }
 
     bool inDatabaseTabWidgetOrWelcomeWidget = inDatabaseTabWidget || inWelcomeWidget;

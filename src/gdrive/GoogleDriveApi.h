@@ -32,6 +32,7 @@ public:
     void updateDatabase(const QString& filePath, const FileInfo& db, const QMap<QString,QString>& urlFields,const QMap<QString,QString>& bodyFields,const QDateTime &lastModified, bool waitForFinish);
     QDateTime getLastModificationDate(const FileInfo& fi);
     static GoogleDriveApi* instance();
+    static QSharedPointer<GoogleDriveApi> newInstance();
 
 
 private:
@@ -56,7 +57,10 @@ public Q_SLOTS:
     void uploadDatabaseProgress(qint64 v, qint64 total);
     void setLastModificationDate(const FileInfo& fi, const QDateTime &lastModified, bool waitForFinish=false);
 };
-
+/**
+ * @brief googleDriveApi used to get singleton instance of google drive api
+ * @return
+ */
 inline GoogleDriveApi* googleDriveApi(){
     return GoogleDriveApi::instance();
 }

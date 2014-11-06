@@ -102,6 +102,16 @@ set(TEST_LIBRARIES
     ${GDRIVE_DEPS}
 )
 
+set(TESTTOOLS_HEADERS
+     GDriveTestUtils.h)
+
+set(TESTTOOLS_MOC
+     GDriveTestUtils.h)
+set(TESTTOOLS_SOURCES
+     GDriveTestUtils.cpp)
+qt4_wrap_cpp(TESTTOOLS_SOURCES ${TESTTOOLS_MOC})
+add_library(test_tools ${TESTTOOLS_SOURCES})
+
 if(UNIX AND NOT APPLE)
   set(TEST_LIBRARIES ${TEST_LIBRARIES} ${QT_QTDBUS_LIBRARY})
 endif()
@@ -109,6 +119,7 @@ endif()
 set(modeltest_SOURCRS modeltest.cpp)
 qt4_wrap_cpp(modeltest_SOURCRS modeltest.h)
 add_library(modeltest STATIC ${modeltest_SOURCRS})
+
 
 add_unit_test(NAME testgroup SOURCES TestGroup.cpp MOCS TestGroup.h
               LIBS ${TEST_LIBRARIES})
@@ -177,8 +188,10 @@ add_unit_test(NAME testgoogledriveapi SOURCES TestGoogleDriveApi.cpp MOCS TestGo
 add_unit_test(NAME testremotedatabasesync SOURCES TestDatabaseRemoteSync.cpp MOCS TestDatabaseRemoteSync.h
               LIBS ${TEST_LIBRARIES})
 
-
+add_subdirectory(gdrive)
 
 if(WITH_GUI_TESTS)
   add_subdirectory(gui)
 endif(WITH_GUI_TESTS)
+
+

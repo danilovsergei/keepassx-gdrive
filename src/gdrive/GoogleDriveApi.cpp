@@ -43,7 +43,7 @@ FileInfoList GoogleDriveApi::getDatabasesTh(const QList<QueryEntry>& queryFilter
   cmd.setFields("items(fileSize,id,title,modifiedDate,description,downloadUrl)");
   QString query = QueryEntry::getEntries(queryFilter);
 
-  // Keepass db folder is set to root in Google drive if use did not customize
+  // Keepass db folder is set to root in Google drive if user did not customize
   // it
   if (config()->get("cloud/GdriveKeepassFolder").toString().length() >
       0) cmd.execForFolder(config()->get(
@@ -61,7 +61,7 @@ FileInfoList GoogleDriveApi::getDatabasesTh(const QList<QueryEntry>& queryFilter
   qRegisterMetaType<GoogleDrive::FileInfoList>("GoogleDrive::FileInfoList");
   qRegisterMetaType<GoogleDrive::FileInfo>(    "GoogleDrive::FileInfo");
   GoogleDrive::FileInfoList dbList = cmd.files();
-  Q_EMIT googleDriveApi()->dbListLoaded(dbList);
+  Q_EMIT this->dbListLoaded(dbList);
   return dbList;
 }
 
@@ -79,6 +79,8 @@ void GoogleDriveApi::downloadDatabase(const FileInfo& fi,
                                            fi,
                                            downloadDir,dbName);
 }
+
+
 
 QString GoogleDriveApi::downloadDatabaseTh(const FileInfo& fi,
                                            const QString & dbDir,const QString& dbName) {
@@ -374,6 +376,11 @@ GoogleDriveApi * GoogleDriveApi::instance() {
   }
   return m_instance;
 }
+
+QSharedPointer<GoogleDriveApi> GoogleDriveApi::newInstance() {
+  return QSharedPointer<GoogleDriveApi>(new GoogleDriveApi());
+}
+
 
 GoogleDriveApi::~GoogleDriveApi() {}
 

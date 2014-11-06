@@ -23,6 +23,7 @@
 #include "core/Metadata.h"
 #include "format/KeePass2RandomStream.h"
 #include "streams/QtIOCompressor"
+#include "QtCore/QDebug"
 
 KeePass2XmlWriter::KeePass2XmlWriter()
     : m_db(Q_NULLPTR)

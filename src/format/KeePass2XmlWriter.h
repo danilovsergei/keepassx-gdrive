@@ -28,6 +28,7 @@
 #include "core/Group.h"
 #include "core/TimeInfo.h"
 #include "core/Uuid.h"
+#include <QtCore/QCryptographicHash>
 
 class KeePass2RandomStream;
 class Metadata;

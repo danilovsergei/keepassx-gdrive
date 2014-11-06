@@ -34,7 +34,7 @@
 #include "gui/ChangeMasterKeyWidget.h"
 #include "gui/Clipboard.h"
 #include "gui/DatabaseOpenWidget.h"
-#include "gui/databaseopenwidgetcloud.h"
+#include "gui/DatabaseOpenWidgetCloud.h"
 #include "gui/DatabaseSettingsWidget.h"
 #include "gui/KeePass1OpenWidget.h"
 #include "gui/UnlockDatabaseWidget.h"
@@ -151,6 +151,7 @@ DatabaseWidget::DatabaseWidget(Database* db, QWidget* parent)
     connect(m_changeMasterKeyWidget, SIGNAL(editFinished(bool)), SLOT(updateMasterKey(bool)));
     connect(m_databaseSettingsWidget, SIGNAL(editFinished(bool)), SLOT(switchToView(bool)));
     connect(m_databaseOpenWidget, SIGNAL(editFinished(bool)), SLOT(openDatabase(bool)));
+    connect(m_databaseOpenWidget, SIGNAL(syncError(int, QString)), this,SLOT(syncError(int, QString)));
     connect(m_keepass1OpenWidget, SIGNAL(editFinished(bool)), SLOT(openDatabase(bool)));
     connect(m_databaseOpenWidgetCloud, SIGNAL(dbRejected()),SLOT(rejectDb()));
     connect(m_databaseOpenWidgetCloud,SIGNAL(dbSelected(const QString&)),this,SLOT(cloudDbOpen(const QString&)));
@@ -162,7 +163,18 @@ DatabaseWidget::DatabaseWidget(Database* db, QWidget* parent)
     connect(m_searchUi->searchRootRadioButton, SIGNAL(toggled(bool)), this, SLOT(startSearch()));
     connect(m_searchTimer, SIGNAL(timeout()), this, SLOT(search()));
     connect(closeAction, SIGNAL(triggered()), this, SLOT(closeSearch()));
-
+    // TODO find better way to check whether cmake google drive is enabled
+    if (QString(GOOGLE_DRIVE_SYNC) == "ON") {
+        // update last db last modification time to use it for sync with remote database
+        connect(m_editEntryWidget, SIGNAL(editFinished(bool)), SLOT(setLastModified(bool)));
+        connect(m_editGroupWidget, SIGNAL(editFinished(bool)), SLOT(setLastModified(bool)));
+        connect(&m_syncHelper,
+                SIGNAL(syncDone(QSharedPointer<GDriveSyncObject>)),      this,
+                SLOT(syncDone(QSharedPointer<GDriveSyncObject>)));
+        connect(&m_syncHelper, SIGNAL(syncError(int,
+                                                              QString)), this,
+                SLOT(syncError(int, QString)));
+    }
     setCurrentWidget(m_mainWidget);
 }
 
@@ -487,24 +499,29 @@ void DatabaseWidget::updateMasterKey(bool accepted)
 }
 
 
-
+void DatabaseWidget::syncDatabase() {
+    // Perfom asyncronous sync of recent database with remote database if
+    // GOOGLE_DRIVE_SYNC feature enabled through CMAKE
+    if (QString(GOOGLE_DRIVE_SYNC) != "ON") return;
+      qRegisterMetaType < QSharedPointer < GDriveSyncObject >>
+      ("QSharedPointer<GDriveSyncObject>");
+      m_syncHelper.syncParallel(m_db, m_filename);
+      //Changes will be applied to the already opened database
+      //typically it will take 1-2 seconds while user will browse to an item
+      //TODO prevent or warn user copy the value if database is still in sync
+}
 
 void DatabaseWidget::openDatabase(bool accepted)
 {
     if (accepted) {
-        Database* oldDb = m_db;
         m_db = static_cast<DatabaseOpenWidget*>(sender())->database();
+        // save the time when initial db opened
+        // will update it each time when database in memory changed and use to decide where to run sync
+        m_db->metadata()->setLastModifiedDate(QFileInfo(m_filename).lastModified());
+        syncDatabase();
         m_groupView->changeDatabase(m_db);
         Q_EMIT databaseChanged(m_db);
-        delete oldDb;
         setCurrentWidget(m_mainWidget);
-
-        // We won't need those anymore and KeePass1OpenWidget closes
-        // the file in its dtor.
-        delete m_databaseOpenWidget;
-        m_databaseOpenWidget = Q_NULLPTR;
-        delete m_keepass1OpenWidget;
-        m_keepass1OpenWidget = Q_NULLPTR;
     }
     else {
         if (m_databaseOpenWidget->database()) {
@@ -561,7 +578,10 @@ void DatabaseWidget::switchToDatabaseSettings()
     m_databaseSettingsWidget->load(m_db);
     setCurrentWidget(m_databaseSettingsWidget);
 }
-
+/**
+ * @brief DatabaseWidget::switchToOpenDatabase passes control to open database widget. Used by DatabaseOpenWidgetCloud
+ * @param fileName - full path of database which used to initialize the widget
+ */
 void DatabaseWidget::switchToOpenDatabase(const QString& fileName)
 {
     updateFilename(fileName);
@@ -729,4 +749,33 @@ void DatabaseWidget::lock()
 void DatabaseWidget::updateFilename(const QString& fileName)
 {
     m_filename = fileName;
+}
+
+
+
+void DatabaseWidget::syncDone(QSharedPointer<GDriveSyncObject>syncObject) {
+    qRegisterMetaType < QSharedPointer < GDriveSyncObject >>
+    ("QSharedPointer<GDriveSyncObject>");
+  qDebug() << "Successfully synced database on " + QDateTime::currentDateTime().toString();
+  // TODO log syncObject information
+}
+
+
+/**
+ * @brief DatabaseOpenWidget::syncError shows warning to user that sync was not done
+ */
+void DatabaseWidget::syncError(int ErrorType, QString description) {
+  Q_ASSERT(ErrorType);
+  Q_ASSERT(!description.isNull());
+  QMessageBox::warning(this, tr("Error"),
+                       tr(
+                         "Unable to sync database with remote source: \n%1: %2").arg(
+                         QString::number(
+                           ErrorType),
+                         description));
+}
+
+
+void DatabaseWidget::setLastModified(bool accepted) {
+  accepted?m_db->metadata()->setLastModifiedDate(QDateTime::currentDateTime()): void();
 }

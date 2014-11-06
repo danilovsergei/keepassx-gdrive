@@ -23,7 +23,7 @@ void GDriveGroupsSync::removeEntry(Group *entry) {
 
   Q_ASSERT(toRecycle);
   db1->recycleGroup(toRecycle);
-  getSyncObject()->increase(SEntry(), SRemoved(), SLocal());
+  getSyncObject()->increase(SGroup(), SRemoved(), SLocal());
 }
 
 void GDriveGroupsSync::setParentGroup(Group *entry, Group *group) {

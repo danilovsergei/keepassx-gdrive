@@ -1,22 +1,14 @@
 #include "SyncRecentDbHelper.h"
 
-//its not enough to define static variable only in the header. To know its object to allocate memory it should be defined in the class as well
-QSharedPointer<SyncRecentDbHelper> SyncRecentDbHelper::g_instance;
-
-SyncRecentDbHelper::SyncRecentDbHelper() {
+SyncRecentDbHelper::SyncRecentDbHelper()
+    :gdrive(new GoogleDriveApi())
+{
 
 }
-
-
 void SyncRecentDbHelper::syncParallel(Database* localDb,const QString& localDbPath) {
     QtConcurrent::run(this,&SyncRecentDbHelper::sync,localDb,localDbPath);
 }
 
-/**
- * @brief SyncRecentDbHelper::sync - executes entries level sync of local abd google drive database
- * @param localDb - pointer to local database
- * @param localDbPath - path to local database
- */
 QSharedPointer<GDriveSyncObject> SyncRecentDbHelper::sync(Database* localDb, const QString& localDbPath) {
 Q_ASSERT(localDb);
 Q_ASSERT(localDbPath.length()>0);
@@ -35,13 +27,23 @@ if (dbList.size()>1) {
     emitSyncError(Errors::SyncError::AMBIGIOUS_DB,QString("There are more than one database with name %1. Keepassx requires to have only unique databases in the folder").arg(dbName));
     return QSharedPointer<GDriveSyncObject>();
     }
+FileInfo remoteDbInfo = dbList.value(0);
+qDebug() << "remote db date = "+QString::number(remoteDbInfo.modifiedDate().toLocalTime().toTime_t());
+qDebug() << "local db date  = "+QString::number(localDb->metadata()->lastModifiedDate().toLocalTime().toTime_t());
+// compare seconds because milliseconds ommited while saving db file on filesystem
+if (remoteDbInfo.modifiedDate().toLocalTime().toTime_t()==localDb->metadata()->lastModifiedDate().toLocalTime().toTime_t()) {
+    qDebug() << QString("Databases have the same modification time %1. Will skip sync").arg(localDb->metadata()->lastModifiedDate().toLocalTime().toString());
+    QSharedPointer<GDriveSyncObject> syncObject = QSharedPointer<GDriveSyncObject>(new GDriveSyncObject());
+    Q_EMIT syncDone(syncObject);
+    return QSharedPointer<GDriveSyncObject>(syncObject);
+}
+
 const QString remoteDbPath=gdrive->downloadDatabaseSeq(dbList.first(),QDir::tempPath(),QString::number(QDateTime::currentMSecsSinceEpoch())+"-"+dbName);
 if (remoteDbPath.length()==0) {
     emitSyncError(Errors::DownloadError::COMMON_DOWNLOAD_PROBLEM,QString("There is a problem to download remote database %1").arg(dbName));
     return QSharedPointer<GDriveSyncObject>();
 }
 Q_ASSERT(localDbPath!=remoteDbPath);
-qDebug() << "we are here!!!";
 qDebug() <<"downloaded db to  "+remoteDbPath;
 qDebug() <<"start syncronization of ::  ";
 qDebug() <<"    remote database:"+remoteDbPath;
@@ -51,7 +53,8 @@ Database* remoteDb=readDatabase(localDb,remoteDbPath);
 if (remoteDb==Q_NULLPTR)
     return QSharedPointer<GDriveSyncObject>();
 QSharedPointer<GDriveDatabaseSyncBase> sync=GDriveDatabaseSyncFactory::createDatabaseSync(GDriveDatabaseSyncFactory::SyncId::ALL,localDb,remoteDb);
-QSharedPointer<GDriveSyncObject> syncObject=sync->syncDatabases();
+QSharedPointer<GDriveSyncObject> syncObject;
+syncObject = sync->syncDatabases();
 qDebug() << "Sync results::";
 qDebug() << "    Local Added missing entries::"+QString::number(syncObject->get(SEntry(),SMissing(),SLocal()));
 qDebug() << "    Local Added missing groups::"+QString::number(syncObject->get(SGroup(),SMissing(),SLocal()));
@@ -66,9 +69,13 @@ qDebug() << "    Remote Updated existing entries::"+QString::number(syncObject->
 qDebug() << "    Remote Updated existing groups::"+QString::number(syncObject->get(SGroup(),SOlder(),SRemote()));
 qDebug() << "    Remote Removed entries::"+QString::number(syncObject->get(SEntry(),SRemoved(),SRemote()));
 qDebug() << "    Remote Removed groups::"+QString::number(syncObject->get(SGroup(),SRemoved(),SRemote()));
-
+// store time to check it again with remote db during further syncs
+// it will help to run sync when both local and remote database were modified simultaneously and remote database has older timestamp
+remoteDbLastModified = remoteDbInfo.modifiedDate().toLocalTime();
 Q_EMIT syncDone(syncObject);
 delete remoteDb;
+
+
 return syncObject;
 }
 /**
@@ -96,7 +103,6 @@ Database* SyncRecentDbHelper::readDatabase(Database* localDb,const QString& remo
 
 void SyncRecentDbHelper::emitSyncError(int errorType,const QString& description) {
     Q_EMIT syncError(errorType,description);
-    qDebug() <<description;
 }
 
 void SyncRecentDbHelper::emitSyncDone(const QSharedPointer<GDriveSyncObject>& syncObject) {
@@ -105,13 +111,8 @@ void SyncRecentDbHelper::emitSyncDone(const QSharedPointer<GDriveSyncObject>& sy
 
 SyncRecentDbHelper::~SyncRecentDbHelper()
 {
-
 }
 
-QSharedPointer<SyncRecentDbHelper> SyncRecentDbHelper::instance() {
-    //qRegisterMetaType<SyncRecentDbHelper>("SyncRecentDbHelper");
-    if (g_instance.isNull())
-        g_instance=QSharedPointer<SyncRecentDbHelper>(new SyncRecentDbHelper());
-    return g_instance;
+QSharedPointer<SyncRecentDbHelper> SyncRecentDbHelper::newInstance() {
+    return QSharedPointer<SyncRecentDbHelper>(new SyncRecentDbHelper);
 }
-

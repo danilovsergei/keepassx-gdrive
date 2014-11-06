@@ -111,7 +111,7 @@ void DatabaseTabWidget::openCloudDatabase()
     insertDatabase(db, dbStruct);
 
     //Expect CloudDbSelected signal which will be emmited when cloud database will be selected and downloaded locally.
-    //Pass also database pointer to use it as key for struct extraction from m_dbList
+    //Pass also database pointer to use it as key for struct extraction from m_dbList.Database pointer does not contain any real db yet
     connect(dbStruct.dbWidget,SIGNAL(cloudDbSelected(const QString&,Database*)),this,SLOT(openDatabaseDownloadedFromCloud(const QString&,Database*)));
 
     //Destoy created in advance empty database if user cancels download db dialog
@@ -183,6 +183,7 @@ void DatabaseTabWidget::openDatabaseDownloadedFromCloud(const QString& fileName,
     dbStruct.fileName = fileInfo.fileName();
 
     updateLastDatabases(dbStruct.filePath);
+    //pass control to open database widget which reads locally downloaded database
     dbStruct.dbWidget->switchToOpenDatabase(dbStruct.filePath);
 
 }

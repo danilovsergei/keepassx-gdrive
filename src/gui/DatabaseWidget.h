@@ -24,6 +24,8 @@
 #include "core/Global.h"
 
 #include "gui/entry/EntryModel.h"
+#include "gdrive/GDriveSyncObject.h"
+#include "gdrive/helpers/SyncRecentDbHelper.h"
 
 class ChangeMasterKeyWidget;
 class DatabaseOpenWidget;
@@ -40,7 +42,7 @@ class QFile;
 class QMenu;
 class UnlockDatabaseWidget;
 class DatabaseOpenWidgetCloud;
-
+using namespace DatabaseSync;
 namespace Ui {
     class SearchWidget;
 }
@@ -109,6 +111,8 @@ public Q_SLOTS:
     void emitGroupContextMenuRequested(const QPoint& pos);
     void emitEntryContextMenuRequested(const QPoint& pos);
     void cloudDbOpen(const QString& dbName);
+    void syncDone(QSharedPointer<GDriveSyncObject>syncObject);
+    void syncError(int ErrorType, QString description);
 
 private Q_SLOTS:
     void entryActivationSignalReceived(Entry* entry, EntryModel::ModelColumn column);
@@ -129,6 +133,9 @@ private Q_SLOTS:
     void startSearchTimer();
     void showSearch();
     void closeSearch();
+    void syncDatabase();
+    // set last modification time of database when entry/group was changed
+    void setLastModified(bool accepted);
 
 private:
     Database* m_db;
@@ -154,6 +161,7 @@ private:
     QTimer* m_searchTimer;
     QWidget* widgetBeforeLock;
     QString m_filename;
+    SyncRecentDbHelper m_syncHelper;
 };
 
 #endif // KEEPASSX_DATABASEWIDGET_H
