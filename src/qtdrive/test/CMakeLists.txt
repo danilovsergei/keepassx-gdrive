@@ -3,7 +3,7 @@ project(${TARGET})
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-find_package(Qt4 REQUIRED QtCore QtGui QtNetwork)
+find_package(Qt4 REQUIRED QtCore QtGui QtNetwork QtWebKit)
 include(${QT_USE_FILE})
 add_subdirectory(networkaccessmanagerproxy)
 set(HEADERS

@@ -40,6 +40,7 @@ public Q_SLOTS:
     void openDatabase(const QString& fileName, const QString& pw = QString(),
                       const QString& keyFile = QString());
 
+
 protected:
      void closeEvent(QCloseEvent* event) Q_DECL_OVERRIDE;
 

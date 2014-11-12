@@ -24,6 +24,7 @@
 #include "format/KeePass2Writer.h"
 #include "gui/DatabaseWidget.h"
 #include "gdrive/GoogleDriveApi.h"
+#include "config-keepassx.h"
 
 class DatabaseWidget;
 class DatabaseOpenWidget;
@@ -109,6 +110,7 @@ private:
 
     KeePass2Writer m_writer;
     QHash<Database*, DatabaseManagerStruct> m_dbList;
+    GDriveLoginPage* m_gdriveLoginPage;
 };
 
 #endif // KEEPASSX_DATABASETABWIDGET_H

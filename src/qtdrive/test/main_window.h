@@ -9,6 +9,7 @@
 #include "../lib/session.h"
 #include "../lib/command.h"
 #include "../lib/file_info.h"
+#include <QtWebKit/QWebView>
 
 namespace Ui {
 class MainWindow;
@@ -44,6 +45,8 @@ private Q_SLOTS:
 
     void deleteFile();
     void updateFile();
+    void urlChanged(const QUrl& url);
+    void loadFinished(const bool& finished);
 
 private:
     void writeInfo(const QString& msg, bool time = true);
@@ -60,6 +63,7 @@ private:
     QNetworkAccessManager* manager_;
     GoogleDrive::Session* session_;
     QSet<GoogleDrive::Command*> executingCommands_;
+    QWebView* view;
 };
 
 #endif // MAIN_WINDOW_H

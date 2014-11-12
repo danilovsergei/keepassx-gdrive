@@ -779,3 +779,8 @@ void DatabaseWidget::syncError(int ErrorType, QString description) {
 void DatabaseWidget::setLastModified(bool accepted) {
   accepted?m_db->metadata()->setLastModifiedDate(QDateTime::currentDateTime()): void();
 }
+
+
+//void DatabaseWidget::showSyncLoginPage(QWebView* view) {
+//view->show();
+//}

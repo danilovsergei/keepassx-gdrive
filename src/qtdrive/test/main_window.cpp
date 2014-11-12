@@ -24,6 +24,7 @@
 #include "../lib/command_delete.h"
 #include "../lib/command_update.h"
 
+
 #include "options_dialog.h"
 #include "ui_main_window.h"
 #include "options.h"
@@ -49,7 +50,6 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionDelete_test_file, SIGNAL(triggered()), SLOT(deleteFile()));
     connect(ui->actionUpdate_test_file, SIGNAL(triggered()), SLOT(updateFile()));
     writeText(tr("<p><h1>Welcome to the Qt Google Drive API test</h1></p><br>"));
-
     QSettings s;
     QString clientId = s.value(cClientId).toString();
     QString clientSecret = s.value(cClientSecret).toString();
@@ -102,6 +102,19 @@ void MainWindow::showOptionsDialog()
     session_->setClientSecret(clientSecret);
     session_->setRefreshToken(refreshToken);
 }
+void MainWindow::urlChanged(const QUrl& url)
+ {
+
+
+}
+
+void MainWindow::loadFinished(const bool& finished) {
+    if (finished && view->url().toString().contains("https://accounts.google.com/o/oauth2/approval")) {
+            qDebug() << view->url().toString();
+         qDebug() << view->title();
+         view->close();
+}
+}
 
 void MainWindow::login()
 {
@@ -121,11 +134,19 @@ void MainWindow::login()
 
     CommandOAuth2 cmd(session_);
     cmd.setScope(CommandOAuth2::FullAccessScope);
+    view = new QWebView;
+    connect(view,SIGNAL(urlChanged(QUrl)),this,SLOT(urlChanged(const QUrl&)));
+    connect(view,SIGNAL(loadFinished(bool)),this,SLOT(loadFinished(const bool&)));
+    view->show();
+    view->setGeometry(0,0,800,800);
+    view->load(cmd.getLoginUrl());
 
-    QDesktopServices::openUrl(cmd.getLoginUrl());
+    QString code;
+    //QDesktopServices::openUrl(cmd.getLoginUrl());
 
-    QString code = QInputDialog::getText(this, tr("Login"),
-                                         tr("Enter the authorization code from web browser"));
+    //QString code = QInputDialog::getText(this, tr("Login"),
+    //                                     tr("Enter the authorization code from web browser"));
+
     if (code.isEmpty())
         return;
 

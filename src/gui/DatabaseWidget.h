@@ -113,6 +113,7 @@ public Q_SLOTS:
     void cloudDbOpen(const QString& dbName);
     void syncDone(QSharedPointer<GDriveSyncObject>syncObject);
     void syncError(int ErrorType, QString description);
+    //void showSyncLoginPage();
 
 private Q_SLOTS:
     void entryActivationSignalReceived(Entry* entry, EntryModel::ModelColumn column);

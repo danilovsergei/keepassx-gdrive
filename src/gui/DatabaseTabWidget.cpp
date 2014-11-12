@@ -55,6 +55,12 @@ DatabaseTabWidget::DatabaseTabWidget(QWidget* parent)
     connect(this, SIGNAL(tabCloseRequested(int)), SLOT(closeDatabase(int)));
     connect(autoType(), SIGNAL(globalShortcutTriggered()), SLOT(performGlobalAutoType()));
     connect(this,SIGNAL(databaseSavedLocally(Database*)),this,SLOT(saveDatabaseToCloud(Database*)));
+    // initialize google drive login page  in gui thread.
+    // it might call UI web dialog to request user approve access
+    m_gdriveLoginPage = QString(GOOGLE_DRIVE_SYNC) == "ON" ? new GDriveLoginPage() : Q_NULLPTR;
+    GoogleDriveSession* session = GoogleDriveSession::getEmptySession();
+    connect(session, SIGNAL(refreshSession(Session*)),m_gdriveLoginPage, SLOT(refreshSession(Session*)));
+    connect(m_gdriveLoginPage, SIGNAL(finished()),session,SLOT(refreshTokenFinished()));
 }
 
 DatabaseTabWidget::~DatabaseTabWidget()

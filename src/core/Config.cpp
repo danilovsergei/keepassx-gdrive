@@ -104,6 +104,7 @@ void Config::init(const QString& fileName)
     m_defaults.insert("cloud/dbdir",QDir::toNativeSeparators(QFileInfo(fileName).path()+"/cloud"));
     //default value means all keepass databases will stored in the Google drive root folder
     m_defaults.insert("cloud/GdriveKeepassFolder","");
+    m_defaults.insert("cloud/refresh_token","");
 }
 
 Config* Config::instance()
