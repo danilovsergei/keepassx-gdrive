@@ -5,10 +5,8 @@
 #include "../qtdrive/lib/session.h"
 #include "QtNetwork/QNetworkAccessManager"
 #include "../qtdrive/lib/command_file_list.h"
-#include "../qtdrive/test/options.h"
 
-#include "../gdrive/Singleton.h"
-#include "../gdrive/GoogleDriveSession.h"
+#include "gdrive/GoogleDriveSession.h"
 
 #include <iostream>
 #include <QtGui/QMessageBox>

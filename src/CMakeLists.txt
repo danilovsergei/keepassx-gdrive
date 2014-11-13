@@ -17,7 +17,7 @@
 
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-find_package(Qt4 REQUIRED QtCore QtNetwork QtGui)
+find_package(Qt4 REQUIRED QtCore QtNetwork QtGui QtWebKit)
 configure_file(config-keepassx.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config-keepassx.h)
 
 add_subdirectory(qtdrive)
@@ -25,7 +25,6 @@ add_subdirectory(gdrive)
 
 set(GDRIVE_DEPS
     google_drive
-    google_drive_proxy
 )
 
 set(keepassx_SOURCES
@@ -197,12 +196,9 @@ set(keepassx_MOC
     streams/qtiocompressor.h
     streams/StoreDataStream.h
     streams/SymmetricCipherStream.h
-    qtdrive/gdrive/gdrive.h
-    qtdrive/gdrive/tools.h
     gui/DatabaseOpenWidgetCloud.h
     gui/SettingsWidgetCloud.h
     gdrive/GoogleDriveSession.h
-    gdrive/Singleton.h
     gdrive/GoogleDriveApi.h
     gdrive/GDriveEntriesSync.h
     gdrive/GDriveGroupsSync.h
@@ -241,7 +237,6 @@ set(keepassx_FORMS
     gui/group/EditGroupWidgetMain.ui
     gui/DatabaseOpenWidgetCloud.ui
     gui/SettingsWidgetCloud.ui
-    qtdrive/test/networkaccessmanagerproxy/networkrequests.ui
 )
 
 if(MINGW)

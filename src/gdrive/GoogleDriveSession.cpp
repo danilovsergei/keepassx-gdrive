@@ -1,11 +1,8 @@
 #include "GoogleDriveSession.h"
 #include  <QtCore/QStringList>
 #include <QtCore/QSettings>
-#include "../qtdrive/test/options.h"
 #include "QtNetwork/QNetworkAccessManager"
 #include <QtCore/QDebug>
-#include "../qtdrive/test/networkaccessmanagerproxy/networkaccessmanagerproxy.h"
-#include "../qtdrive/test/networkaccessmanagerproxy/networkaccessviewer.h"
 #include <QtCore/QDir>;
 #include "core/Config.h"
 

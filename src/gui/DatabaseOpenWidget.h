@@ -22,7 +22,6 @@
 #include <QtCore/QScopedPointer>
 #include "gui/DialogyWidget.h"
 #include "keys/CompositeKey.h"
-#include "../qtdrive/gdrive/gdrive.h"
 #include  "gdrive/GoogleDriveApi.h"
 #include "gdrive/GoogleDriveTools.h"
 #include "gdrive/helpers/SyncRecentDbHelper.h"

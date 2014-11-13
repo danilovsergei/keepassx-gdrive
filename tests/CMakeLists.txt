@@ -89,7 +89,6 @@ endmacro(add_unit_test)
 
 set(GDRIVE_DEPS
     google_drive
-    google_drive_proxy
 )
 
 set(TEST_LIBRARIES
