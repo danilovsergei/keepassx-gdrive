@@ -43,6 +43,7 @@
 #include "gui/group/EditGroupWidget.h"
 #include "gui/group/GroupView.h"
 #include <QtCore/QDebug>
+#include "config-keepassx.h"
 
 DatabaseWidget::DatabaseWidget(Database* db, QWidget* parent)
     : QStackedWidget(parent)
@@ -757,7 +758,27 @@ void DatabaseWidget::syncDone(QSharedPointer<GDriveSyncObject>syncObject) {
     qRegisterMetaType < QSharedPointer < GDriveSyncObject >>
     ("QSharedPointer<GDriveSyncObject>");
   qDebug() << "Successfully synced database on " + QDateTime::currentDateTime().toString();
-  // TODO log syncObject information
+  // number of entries which was modified locally.
+  int localModifiedEntries = syncObject->get(SEntry(), SMissing(),SLocal()) +
+  syncObject->get(SGroup(), SMissing(),SLocal()) +
+  syncObject->get(SEntry(), SOlder(),SLocal()) +
+  syncObject->get(SGroup(), SOlder(),SLocal()) +
+  syncObject->get(SEntry(), SRemoved(),SLocal()) +
+  syncObject->get(SGroup(), SRemoved(),SLocal());
+  // number of entries which should be modified remotely
+  int remoteModifiedEntries = syncObject->get(SEntry(), SMissing(),SLocal()) +
+  syncObject->get(SGroup(), SMissing(),SRemote()) +
+  syncObject->get(SEntry(), SOlder(),SRemote()) +
+  syncObject->get(SGroup(), SOlder(),SRemote()) +
+  syncObject->get(SEntry(), SRemoved(),SRemote()) +
+  syncObject->get(SGroup(), SRemoved(),SRemote());
+
+  // upload the database remotely since it's some entries need to be updated
+  // remoteModifiedEntries>0 ? Q_EMIT modified() : void();
+
+  // just update remote database modification time without uploading new revision
+  // since only local database was update
+  //remoteModifiedEntries==0 && localModifiedEntries>0 ?
 }
 
 

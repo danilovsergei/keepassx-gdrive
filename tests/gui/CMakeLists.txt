@@ -16,3 +16,4 @@
 add_unit_test(NAME testgui SOURCES TestGui.cpp MOCS TestGui.h LIBS ${TEST_LIBRARIES})
 
 add_unit_test(NAME testguipixmaps SOURCES TestGuiPixmaps.cpp MOCS TestGuiPixmaps.h LIBS ${TEST_LIBRARIES})
+add_unit_test(NAME testdatabasewidget SOURCES TestDatabaseWidget.cpp MOCS TestDatabaseWidget.h LIBS ${TEST_LIBRARIES})
