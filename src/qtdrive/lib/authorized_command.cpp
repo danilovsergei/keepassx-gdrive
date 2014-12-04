@@ -26,6 +26,12 @@ AuthorizedCommand::AuthorizedCommand(Session* session)
 {
 }
 
+AuthorizedCommand::AuthorizedCommand(CommandPrivate* d, Session* s)
+    : Command(d, s)
+{
+}
+
+
 bool AuthorizedCommand::checkForRefreshToken(const QVariantMap& map)
 {
     const QString cError("error");
@@ -81,10 +87,7 @@ void AuthorizedCommand::refreshToken()
     connect(cmd, SIGNAL(finished()), SLOT(refreshTokenFinished()));
 }
 
-AuthorizedCommand::AuthorizedCommand(CommandPrivate* d, Session* s)
-    : Command(d, s)
-{
-}
+
 
 void AuthorizedCommand::refreshTokenFinished()
 {

@@ -49,7 +49,9 @@ class CommandDownloadFile : public AuthorizedCommand
 {
     Q_OBJECT
 public:
+    CommandDownloadFile(QObject *parent, Session* session);
     CommandDownloadFile(Session* session);
+    ~CommandDownloadFile();
 
     /**
      * This method returns current receive buffer size. By default receive buffer

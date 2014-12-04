@@ -1,5 +1,5 @@
-#ifndef GDRIVELOGINPAGE_H
-#define GDRIVELOGINPAGE_H
+#ifndef LOGINPAGE_H
+#define LOGINPAGE_H
 #include <QtCore/QObject>
 #include <QtCore/QPair>
 #include <QtWebKit/QWebView>
@@ -7,12 +7,12 @@
 #include <QtCore/QEventLoop>
 #include <QtCore/QTimer>
 #include <qtdrive/lib/command_oauth2.h>
-#include "../qtdrive/lib/session.h"
-#include <gdrive/Errors.h>
+#include "qtdrive/lib/session.h"
+#include <remotedrive/Errors.h>
 #include <QtGui/QApplication>
 #include "GDriveConstants.h"
 using namespace GoogleDrive;
-class GDriveLoginPage : public QObject
+class LoginPage : public QObject
 {
 Q_OBJECT
 private:
@@ -26,11 +26,11 @@ private:
     QString authorizationCode;
     bool approved = false;
 public:
-    GDriveLoginPage();
+    LoginPage();
     QString errorString();
     Errors::AuthorizationError error();
 public Q_SLOTS:
-    void refreshSession(Session *session);
+    void updateCredentials(Session &session);
 private Q_SLOTS:
     void loadFinished(const bool& finished);
     void waitForUserApproval();
@@ -41,4 +41,4 @@ Q_SIGNALS:
 
 };
 
-#endif // GDRIVELOGINPAGE_H
+#endif // LoginPage_H

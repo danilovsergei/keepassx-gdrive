@@ -5,7 +5,7 @@
 #include <gdrive/QueryEntry.h>
 #include <core/Database.h>
 #include <core/Metadata.h>
-#include "../core/Config.h"
+#include "core/Config.h"
 #include <QtCore/QDir>
 #include <QtCore/QEventLoop>
 #include <QtCore/QTimer>

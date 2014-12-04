@@ -21,8 +21,6 @@
 #include <QtGui/QStackedWidget>
 #include "core/Global.h"
 #include "gui/entry/EntryModel.h"
-#include "gdrive/GDriveSyncObject.h"
-#include "gdrive/helpers/SyncRecentDbHelper.h"
 
 
 class ChangeMasterKeyWidget;

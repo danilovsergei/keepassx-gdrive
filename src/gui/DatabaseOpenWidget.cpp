@@ -29,7 +29,6 @@
 #include "../qtdrive/lib/command_file_list.h"
 #include "core/Group.h"
 #include <QtCore/QDebug>
-#include "gdrive/GDriveDatabaseSyncFactory.h"
 
 using namespace GoogleDrive;
 

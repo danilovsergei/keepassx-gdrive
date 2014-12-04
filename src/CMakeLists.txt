@@ -21,7 +21,8 @@ find_package(Qt4 REQUIRED QtCore QtNetwork QtGui QtWebKit)
 configure_file(config-keepassx.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config-keepassx.h)
 
 add_subdirectory(qtdrive)
-add_subdirectory(gdrive)
+#add_subdirectory(gdrive)
+add_subdirectory(remotedrive)
 
 set(GDRIVE_DEPS
     google_drive
@@ -121,24 +122,32 @@ set(keepassx_SOURCES
     streams/StoreDataStream.cpp
     streams/SymmetricCipherStream.cpp
     gui/DatabaseOpenWidgetCloud.cpp
-    gdrive/GoogleDriveSession.cpp
     gui/SettingsWidgetCloud.cpp
-    gdrive/GoogleDriveApi.cpp
-    gdrive/GDriveEntriesSync.cpp
-    gdrive/GDriveGroupsSync.cpp
-    gdrive/GDriveDatabaseSync.cpp
-    gdrive/GDriveDatabaseSyncFactory.cpp
-    gdrive/GoogleDriveTools.cpp
-    gdrive/QueryEntry.cpp
-    gdrive/helpers/GDriveDbDownloadHelper.cpp
-    gdrive/helpers/GDriveGetDbHelper.cpp
-    gdrive/helpers/SyncRecentDbHelper.cpp
-    gdrive/Errors.cpp
-    gdrive/GDriveDatabaseSyncBase.cpp
-    gdrive/GDriveSyncObject.cpp
-    gdrive/GDriveLoginPage.cpp
-    gdrive/commands/Command.cpp
-    gdrive/commands/DownloadCommand.cpp
+
+    #gdrive/GoogleDriveApi.cpp
+    #gdrive/GDriveEntriesSync.cpp
+    #gdrive/GDriveGroupsSync.cpp
+    #gdrive/GDriveDatabaseSync.cpp
+    #gdrive/GDriveDatabaseSyncFactory.cpp
+    #gdrive/QueryEntry.cpp
+    #gdrive/helpers/GDriveDbDownloadHelper.cpp
+    #gdrive/helpers/GDriveGetDbHelper.cpp
+    #gdrive/helpers/SyncRecentDbHelper.cpp
+    #gdrive/GDriveDatabaseSyncBase.cpp
+    #gdrive/GDriveSyncObject.cpp
+
+    remotedrive/CommandsFactory.cpp
+    remotedrive/Command.cpp
+    remotedrive/AuthCredentials.cpp
+    remotedrive/RemoteDriveApi.cpp
+    remotedrive/Errors.cpp
+    remotedrive/gdrive/LoginPage.cpp
+    remotedrive/gdrive/GoogleDriveCredentials.cpp
+    remotedrive/gdrive/CommandsFactoryImpl.cpp
+    remotedrive/gdrive/GoogleDriveTools.cpp
+
+    remotedrive/gdrive/commands/DownloadCommand.cpp
+    remotedrive/gdrive/commands/SyncCommand.cpp
 )
 
 set(keepassx_SOURCES_MAINEXE
@@ -200,25 +209,35 @@ set(keepassx_MOC
     streams/SymmetricCipherStream.h
     gui/DatabaseOpenWidgetCloud.h
     gui/SettingsWidgetCloud.h
-    gdrive/GoogleDriveSession.h
-    gdrive/GoogleDriveApi.h
-    gdrive/GDriveEntriesSync.h
-    gdrive/GDriveGroupsSync.h
-    gdrive/GDriveDatabaseSync.h
-    gdrive/GDriveDatabaseSyncFactory.h
-    gdrive/GoogleDriveTools.h
-    gdrive/QueryEntry.h
-    gdrive/helpers/GDriveDbDownloadHelper.h
-    gdrive/helpers/GDriveGetDbHelper.h
-    gdrive/helpers/SyncRecentDbHelper.h
-    gdrive/GDriveConstants.h
-    gdrive/Errors.h
-    gdrive/GDriveDatabaseSyncBase.h
-    gdrive/GDriveSyncObject.h
-    gdrive/GDriveLoginPage.h
-    gdrive/commands/Command.h
-    gdrive/commands/DownloadCommand.h
-    gdrive/GDriveConstants.h
+
+    #gdrive/GoogleDriveApi.h
+    #gdrive/GDriveEntriesSync.h
+    #gdrive/GDriveGroupsSync.h
+    #gdrive/GDriveDatabaseSync.h
+    #gdrive/GDriveDatabaseSyncFactory.h
+    #gdrive/QueryEntry.h
+    #gdrive/helpers/GDriveDbDownloadHelper.h
+    #gdrive/helpers/GDriveGetDbHelper.h
+    #gdrive/helpers/SyncRecentDbHelper.h
+    #gdrive/GDriveDatabaseSyncBase.h
+    #gdrive/GDriveSyncObject.h
+
+
+
+    remotedrive/Command.h
+    remotedrive/RemoteDriveApi.h
+    remotedrive/CommandsFactory.h
+    remotedrive/AuthCredentials.h
+    remotedrive/Errors.h
+    remotedrive/gdrive/LoginPage.h
+    remotedrive/gdrive/GDriveConstants.h
+    remotedrive/gdrive/GoogleDriveCredentials.h
+    remotedrive/gdrive/CommandsFactoryImpl.h
+    remotedrive/gdrive/GoogleDriveTools.h
+
+    remotedrive/gdrive/commands/DownloadCommand.h
+    remotedrive/gdrive/commands/SyncCommand.h
+
 )
 
 set(keepassx_FORMS

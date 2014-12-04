@@ -30,7 +30,7 @@
 
 #ifndef GOOGLE_DRIVE_COMMAND_PRIVATE_H
 #define GOOGLE_DRIVE_COMMAND_PRIVATE_H
-
+#include "QtCore/QDebug";
 #include "command.h"
 
 class QEventLoop;

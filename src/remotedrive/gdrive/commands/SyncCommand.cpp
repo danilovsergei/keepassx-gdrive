@@ -1,15 +1,13 @@
-#include "SyncRecentDbHelper.h"
+#include "SyncCommand.h"
 
-SyncRecentDbHelper::SyncRecentDbHelper()
+SyncCommand::SyncCommand()
     :gdrive(new GoogleDriveApi())
-{
-
-}
-void SyncRecentDbHelper::syncParallel(Database* localDb,const QString& localDbPath) {
-    QtConcurrent::run(this,&SyncRecentDbHelper::sync,localDb,localDbPath);
+{}
+void SyncCommand::syncParallel(Database* localDb,const QString& localDbPath) {
+    QtConcurrent::run(this,&SyncCommand::sync,localDb,localDbPath);
 }
 
-QSharedPointer<GDriveSyncObject> SyncRecentDbHelper::sync(Database* localDb, const QString& localDbPath) {
+QSharedPointer<GDriveSyncObject> SyncCommand::sync(Database* localDb, const QString& localDbPath) {
 Q_ASSERT(localDb);
 Q_ASSERT(localDbPath.length()>0);
 QString dbName=QFileInfo(localDbPath).fileName();
@@ -79,12 +77,12 @@ delete remoteDb;
 return syncObject;
 }
 /**
- * @brief SyncRecentDbHelper::readDatabase reads stored locally remote database into the memory
+ * @brief SyncCommand::readDatabase reads stored locally remote database into the memory
  * @param localDb pointer to local database to get key from it
  * @param remoteDbPath path to stored locally remote database
  * @return pointer to remote database in memory
  */
-Database* SyncRecentDbHelper::readDatabase(Database* localDb,const QString& remoteDbPath) {
+Database* SyncCommand::readDatabase(Database* localDb,const QString& remoteDbPath) {
     KeePass2Reader reader;
     Database* remoteDb=0;
     QFile file(remoteDbPath);
@@ -101,18 +99,18 @@ Database* SyncRecentDbHelper::readDatabase(Database* localDb,const QString& remo
 
 }
 
-void SyncRecentDbHelper::emitSyncError(int errorType,const QString& description) {
+void SyncCommand::emitSyncError(int errorType,const QString& description) {
     Q_EMIT syncError(errorType,description);
 }
 
-void SyncRecentDbHelper::emitSyncDone(const QSharedPointer<GDriveSyncObject>& syncObject) {
+void SyncCommand::emitSyncDone(const QSharedPointer<GDriveSyncObject>& syncObject) {
     Q_EMIT syncDone(syncObject);
 }
 
-SyncRecentDbHelper::~SyncRecentDbHelper()
+SyncCommand::~SyncCommand()
 {
 }
 
-QSharedPointer<SyncRecentDbHelper> SyncRecentDbHelper::newInstance() {
-    return QSharedPointer<SyncRecentDbHelper>(new SyncRecentDbHelper);
+QSharedPointer<SyncCommand> SyncCommand::newInstance() {
+    return QSharedPointer<SyncCommand>(new SyncCommand);
 }

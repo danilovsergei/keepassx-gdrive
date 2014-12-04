@@ -33,8 +33,8 @@ public:
 CommandDownloadFile::CommandDownloadFile(Session* session)
     : AuthorizedCommand(new CommandDownloadFilePrivate, session)
 {
+     qDebug() << "drive download api thread =" << this->thread();
 }
-
 
 qint64 CommandDownloadFile::bufferSize() const
 {
@@ -103,6 +103,9 @@ void CommandDownloadFile::readyRead()
 
     QIODevice* out = d->out;
     out->write(ba);
+}
+CommandDownloadFile::~CommandDownloadFile() {
+qDebug() <<"destoy CommandDownloadFile.h";
 }
 
 }

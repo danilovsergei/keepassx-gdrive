@@ -117,6 +117,7 @@ protected:
 protected:
     CommandPrivate* const d_ptr;
     Command(CommandPrivate* dd, Session* session);
+    Command(QObject* parent,CommandPrivate* d, Session *session);
 
 private:
     Q_DECLARE_PRIVATE(Command)

@@ -44,6 +44,8 @@ class AuthorizedCommand : public Command
     Q_OBJECT
 public:
     AuthorizedCommand(Session* session);
+    AuthorizedCommand(QObject* parent, Session* session);
+    AuthorizedCommand(QObject* parent,CommandPrivate* d, Session* s);
 
 protected:
     void executeQuery();

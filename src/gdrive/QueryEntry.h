@@ -3,7 +3,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QString>
 #include <QtCore/QMap>
-#include "GDriveConstants.h"
+#include "remotedrive/gdrive/GDriveConstants.h"
 class QueryEntry{
 public:
     enum class QueryFilter {DBNAME,LAST_MODIFIED};
