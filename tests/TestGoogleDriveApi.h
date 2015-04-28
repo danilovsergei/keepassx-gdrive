@@ -1,7 +1,6 @@
 #ifndef TESTGOOGLEDRIVEAPI_H
 #define TESTGOOGLEDRIVEAPI_H
 #include <QtCore/QObject>
-#include "gdrive/GoogleDriveApi.h"
 #include "qtdrive/lib/file_info.h"
 
 /**

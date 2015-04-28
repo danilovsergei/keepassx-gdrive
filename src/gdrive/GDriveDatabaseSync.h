@@ -34,8 +34,8 @@ protected:
 
 public:
     GDriveDatabaseSync(Database* db1, Database* db2);
-    QSharedPointer<GDriveSyncObject> syncDatabases();
-    void setSyncObject(QSharedPointer<GDriveSyncObject> syncObject);
+    QSharedPointer<SyncObject> syncDatabases();
+    void setSyncObject(QSharedPointer<SyncObject> syncObject);
 };
 
 #endif // GDRIVEDATABASESYNC_H

@@ -1,6 +1,6 @@
 #include "GDriveDatabaseSyncFactory.h"
 
-QSharedPointer<GDriveDatabaseSyncBase> GDriveDatabaseSyncFactory::createDatabaseSync(SyncId id,Database* db1,Database* db2) {
+QSharedPointer<GDriveDatabaseSyncBase> GDriveDatabaseSyncFactory::createDatabaseSync(SyncId id,const Database* db1,const Database* db2) {
 QSharedPointer<GDriveDatabaseSyncBase> p;
 switch(id) {
 case SyncId::ENTRY:

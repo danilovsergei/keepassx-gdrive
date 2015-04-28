@@ -5,20 +5,27 @@
 #include <QtCore/QVariantMap>
 #include <QtCore/QThread>
 #include "Errors.h"
-
-class RemoteDriveApi
+#include "remotedrive/Command.h"
+#include "core/Global.h"
+using namespace KeePassxDriveSync;
+class RemoteDriveApi : QObject
 {
+    Q_OBJECT
+
 public:
-    void init(CommandsFactory* factoryImpl);
-    void download(const QVariantMap& args);
+
+    RemoteDriveApi(QObject *parent, CommandsFactory *factoryImpl);
+    void     init();
+    void     executeAsync(Command *cmd, const QVariantMap &args);
+    Command *download();
+    void     upload(const QVariantMap &args);
+    Command *list();
+    Command *sync();
 
 private:
-    RemoteDriveApi();
-    QScopedPointer<CommandsFactory> factoryImpl;
-    void raiseError(Errors::AuthorizationError errorType,const QString& description);
-    QScopedPointer<CommandsFactory> getFactory();
-
-
+    CommandsFactory *factoryImpl = Q_NULLPTR;
+    CommandsFactory *getFactory();
+    void raiseError(int errorType, const QString &description);
 };
 
 #endif // REMOTEDRIVEAPI_H

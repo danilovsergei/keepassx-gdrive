@@ -14,13 +14,13 @@
 using namespace GoogleDrive;
 class LoginPage : public QObject
 {
-Q_OBJECT
+    Q_OBJECT
 private:
     const QString approvalPageName = "https://accounts.google.com/o/oauth2/approval";
-    const QPair<int,int> geometry = QPair<int,int>(800,800);
+    const QPair<int, int> geometry = QPair<int, int>(800, 800);
 
-    QWebView* approvalView;
-    GoogleDrive::Session* session;
+    QWebView *approvalView;
+    GoogleDrive::Session *session;
     QString errorStringValue;
     Errors::AuthorizationError errorValue;
     QString authorizationCode;
@@ -32,13 +32,12 @@ public:
 public Q_SLOTS:
     void updateCredentials(Session &session);
 private Q_SLOTS:
-    void loadFinished(const bool& finished);
+    void loadFinished(const bool &finished);
     void waitForUserApproval();
-    void raiseError(Errors::AuthorizationError errorType, const QString& description);
+    void raiseError(Errors::AuthorizationError errorType, const QString &description);
 Q_SIGNALS:
     void pageApproved();
     void finished();
-
 };
 
 #endif // LoginPage_H

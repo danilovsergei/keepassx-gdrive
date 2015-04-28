@@ -2,23 +2,16 @@
 #include "ui_databaseopenwidgetcloud.h"
 
 #include <QtCore/QSettings>
-#include "../qtdrive/lib/session.h"
-#include "QtNetwork/QNetworkAccessManager"
-#include "../qtdrive/lib/command_file_list.h"
-
-#include "gdrive/GoogleDriveSession.h"
-
 #include <iostream>
 #include <QtGui/QMessageBox>
 #include <QtCore/QDebug>
-#include "../gdrive/GoogleDriveApi.h"
 
 #include <QtCore/QMetaType>
 
 
 using namespace GoogleDrive;
-Q_DECLARE_METATYPE(GoogleDrive::FileInfo)
-Q_DECLARE_METATYPE(GoogleDrive::FileInfoList)
+Q_DECLARE_METATYPE(RemoteFile)
+Q_DECLARE_METATYPE(RemoteFileList)
 bool firstTimeDownload = false;
 QString fullDbName;
 
@@ -29,8 +22,10 @@ DatabaseOpenWidgetCloud::DatabaseOpenWidgetCloud(QWidget *parent) :
   ui->setupUi(this);
   connect(ui->buttonBox, SIGNAL(rejected()), SIGNAL(dbRejected()));
   connect(ui->buttonBox, SIGNAL(accepted()), SLOT(downloadDb()));
-  googleDrive    = GoogleDriveApi::newInstance();
-  downloadHelper = GDriveDbDownloadHelper::newInstance();
+  AuthCredentials* creds = new GoogleDriveCredentials(this);
+  CommandsFactory* commandsFactory = new CommandsFactoryImpl(this,creds);
+  // remote drive will be used to call all remote drive functions like sync , upload, download
+  remoteDrive = new RemoteDriveApi(this,commandsFactory);
 }
 
 /**
@@ -38,20 +33,23 @@ DatabaseOpenWidgetCloud::DatabaseOpenWidgetCloud(QWidget *parent) :
  *each available database with unique name
  * @param db_files - list all databases available including all revisions
  */
-void DatabaseOpenWidgetCloud::cloudDbLoad(GoogleDrive::FileInfoList db_files)
+void DatabaseOpenWidgetCloud::cloudDbLoad()
 {
-  QMap<QString, FileInfo> files;
-  Q_FOREACH(const FileInfo &fi, db_files) {
-    if (!files.contains(fi.title()) ||
-        (files.contains(fi.title()) &&
-         (fi.modifiedDate().toMSecsSinceEpoch() >=
-      files[fi.title()].modifiedDate().toMSecsSinceEpoch()))) {
-      files[fi.title()] = fi;
+  Q_ASSERT(listCommand->getErrorCode()!=static_cast<int>(Errors::NO_ERROR));
+  qRegisterMetaType<RemoteFileList>("RemoteFileList");
+  const RemoteFileList db_files = listCommand->getResult().at(0).value<RemoteFileList>();
+  QMap<QString, RemoteFile> files;
+  Q_FOREACH(const RemoteFile& fi, db_files) {
+    if (!files.contains(fi.getTitle()) ||
+        (files.contains(fi.getTitle()) &&
+         (fi.getModifiedDate().toMSecsSinceEpoch() >=
+      files[fi.getTitle()].getModifiedDate().toMSecsSinceEpoch()))) {
+      files[fi.getTitle()] = fi;
     }
   }
-  Q_FOREACH(const QString &db_name, files.keys()) {
+  Q_FOREACH(const QString db_name, files.keys()) {
     ui->comboCloudDbLatest->addItem(files.value(
-                                      db_name).modifiedDate().toString() + "----" + db_name,
+                                      db_name).getModifiedDate().toString() + "----" + db_name,
                                     QVariant::fromValue(files.value(db_name)));
   }
 }
@@ -68,16 +66,6 @@ void DatabaseOpenWidgetCloud::reject()
   // QFile(fullDbName).remove();
 }
 
-void DatabaseOpenWidgetCloud::startWorkInAThread()
-{
-  qRegisterMetaType<GoogleDrive::FileInfoList>("GoogleDrive::FileInfoList");
-  connect(googleDrive.data(), SIGNAL(dbListLoaded(
-                                       GoogleDrive::FileInfoList)), this,
-          SLOT(cloudDbLoad(
-                 GoogleDrive
-                 ::FileInfoList)));
-  googleDrive->getDatabasesPar();
-}
 
 void DatabaseOpenWidgetCloud::selectCloud(int cloud) {
   // if (cloud==0) {
@@ -90,7 +78,9 @@ void DatabaseOpenWidgetCloud::loadSupportedCloudEngines() {
   // TODO load list of supported engines from config file
   ui->comboCloudEngine->addItem("Google Drive");
   ui->comboCloudEngine->setCurrentIndex(0);
-  startWorkInAThread();
+  connect(listCommand, SIGNAL(finished()),this, SLOT(cloudDbLoad()));
+  listCommand = remoteDrive->list();
+  remoteDrive->executeAsync(listCommand,OptionsBuilder().build());
 }
 
 DatabaseOpenWidgetCloud::~DatabaseOpenWidgetCloud()
@@ -101,35 +91,30 @@ DatabaseOpenWidgetCloud::~DatabaseOpenWidgetCloud()
  *cloud and emits dbSelected signal
  */
 void DatabaseOpenWidgetCloud::downloadDb() {
-  FileInfo fi = ui->comboCloudDbLatest->itemData(
+  RemoteFile fi = ui->comboCloudDbLatest->itemData(
     ui->comboCloudDbLatest->currentIndex(),
-    Qt::UserRole).value<FileInfo>();
+    Qt::UserRole).value<RemoteFile>();
 
   // Avoid unnecessary downloading of cloud db if it exists locally.Instead call
   // sync further
-  if (GoogleDriveTools::hasLocalDatabase(fi.title())) {
+  if (GoogleDriveTools::hasLocalDatabase(fi.getTitle())) {
     qDebug() << QString(
       "Database %1 already exists locally.Open it and sync with cloud revision of ").arg(
-      fi.title());
-    Q_EMIT dbSelected(GoogleDriveTools::getLocalDatabasePath(fi.title()));
+      fi.getTitle());
+    Q_EMIT dbSelected(GoogleDriveTools::getLocalDatabasePath(fi.getTitle()));
   } else {
     // download cloud db to the database folder
     qDebug() << QString("Database %1 downloaded locally first time.").arg(
-      fi.title());
-    connect(downloadHelper.data(), SIGNAL(downloadDatabaseDone(
-                                            const QString &)),         this,
-            SIGNAL(dbSelected(const QString &)));
-    connect(downloadHelper.data(),
-            SIGNAL(downloadDatabaseError(int,const QString&)), this,
-            SIGNAL(downloadDbError(int, const QString&)));
-    downloadHelper->downloadDatabaseParallel(fi);
+      fi.getTitle());
+    connect(downloadCommand, SIGNAL(finished()),         this,
+          SLOT(downloadDbFinished()) );
+    remoteDrive->executeAsync(downloadCommand, OptionsBuilder().addOption(OPTION_FI, fi).build());
   }
   Q_EMIT editFinished(true);
 }
 
-void DatabaseOpenWidgetCloud::downloadDbError(int            ErrorType,
-                                              const QString& description) {
-  QMessageBox::warning(this, tr("Error"),
-                       tr("Unable to download cloud database.\n%1:%2")
-                       .arg(QString::number(ErrorType), description));
+void DatabaseOpenWidgetCloud::downloadDbFinished() {
+    Q_ASSERT(downloadCommand->getErrorCode()!=static_cast<int>(Errors::NO_ERROR));
+    QString dbPath = downloadCommand->getResult().at(0).toString();
+    Q_EMIT dbSelected(dbPath);
 }

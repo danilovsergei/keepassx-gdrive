@@ -2,18 +2,16 @@
 #define TESTDATABASEREMOTESYNC_H
 #include <QtCore/QObject>
 #include <core/Database.h>
-#include <gdrive/GoogleDriveApi.h>
 #include <core/Tools.h>
-#include <gdrive/GoogleDriveTools.h>
+#include <remotedrive/gdrive/GoogleDriveTools.h>
 #include <qtdrive/lib/command_delete.h>
 #include <QtTest/QSignalSpy>
-#include <gdrive/Errors.h>
+#include <remotedrive/Errors.h>
 #include <core/Entry.h>
 #include <core/Group.h>
 #include <gdrive/GDriveDatabaseSyncBase.h>
-#include <gdrive/helpers/SyncRecentDbHelper.h>
 
-using namespace DatabaseSync;
+using namespace DatabaseSyncObject;
 class TestDatabaseRemoteSync: public QObject
 {
     Q_OBJECT
@@ -53,7 +51,7 @@ private:
     Group *rootGroup;
     QSharedPointer<SyncRecentDbHelper> syncHelper;
 
-    void compareResult(QSharedPointer<GDriveSyncObject> actual, QMap<SyncMapKey, int> expectedMap);
+    void compareResult(QSharedPointer<SyncObject> actual, QMap<SyncMapKey, int> expectedMap);
     Database* readDatabase(const CompositeKey& key,const QString& dbPath);
     Database* createLocalDatabase();
     void uploadDb(const QString& dbPath);
@@ -78,12 +76,12 @@ private:
     template<typename T>  void setRemoveRemote();
     template<typename T>  void setMissingRemote();
     template<typename T>  void setUpdateRemote();
-    template<typename T> void validateUpdateLocal(const QSharedPointer<GDriveSyncObject>& actual);
-    template<typename T> void validateRemoveLocal(const QSharedPointer<GDriveSyncObject>& actual);
-    template<typename T> void validateMissingLocal(const QSharedPointer<GDriveSyncObject>& actual);
-    template<typename T> void validateRemoveRemote(const QSharedPointer<GDriveSyncObject>& actual);
-    template<typename T> void validateMissingRemote(const QSharedPointer<GDriveSyncObject>& actual);
-    template<typename T> void validateUpdateRemote(const QSharedPointer<GDriveSyncObject>& actual);
+    template<typename T> void validateUpdateLocal(const QSharedPointer<SyncObject>& actual);
+    template<typename T> void validateRemoveLocal(const QSharedPointer<SyncObject>& actual);
+    template<typename T> void validateMissingLocal(const QSharedPointer<SyncObject>& actual);
+    template<typename T> void validateRemoveRemote(const QSharedPointer<SyncObject>& actual);
+    template<typename T> void validateMissingRemote(const QSharedPointer<SyncObject>& actual);
+    template<typename T> void validateUpdateRemote(const QSharedPointer<SyncObject>& actual);
 };
 
 #endif // TESTDATABASEREMOTESYNC_H

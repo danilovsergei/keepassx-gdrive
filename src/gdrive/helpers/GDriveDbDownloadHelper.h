@@ -1,17 +1,15 @@
 #ifndef GDRIVEDBDOWNLOADHELPER_H
 #define GDRIVEDBDOWNLOADHELPER_H
-#include "../GDriveSyncObject.h"
 #include "../../qtdrive/lib/file_info.h"
 #include "../../qtdrive/lib/command_download_file.h"
 #include <QtCore/QDebug>
 #include <QtCore/QtConcurrentRun>
 #include <QtCore/QUrl>
-#include "../GoogleDriveSession.h"
 #include <QtCore/QDir>
 #include <QtCore/QFile>
 #include "../../core/Config.h"
-#include "../Errors.h"
-#include "../GoogleDriveTools.h"
+#include "remotedrive/Errors.h"
+#include "remotedrive/gdrive/GoogleDriveTools.h"
 
 using namespace GoogleDrive;
 using namespace DatabaseSync;

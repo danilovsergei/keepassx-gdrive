@@ -1,12 +1,11 @@
 #ifndef GDRIVETESTUTILS_H
 #define GDRIVETESTUTILS_H
 #include <QtCore/QSharedPointer>
-#include "gdrive/GDriveSyncObject.h"
+#include "remotedrive/SyncObject.h"
 #include "core/Database.h"
 #include "core/Entry.h"
 #include "core/Group.h"
-#include "gdrive/GoogleDriveApi.h"
-#include "gdrive/GoogleDriveTools.h"
+#include "remotedrive/gdrive/GoogleDriveTools.h"
 #include "qtdrive/lib/file_info.h"
 #include "qtdrive/lib/command_delete.h"
 #include <QtCore/QDebug>
@@ -19,13 +18,13 @@
 #include <QtTest/QSignalSpy>
 #include <QtTest/QTest>
 
-using namespace DatabaseSync;
+using namespace DatabaseSyncObject;
 using namespace GoogleDrive;
 class GDriveTestUtils
 {
 public:
     GDriveTestUtils();
-    bool compareResult(QSharedPointer<GDriveSyncObject> actual, QMap<SyncMapKey, int> expectedMap);
+    bool compareResult(QSharedPointer<SyncObject> actual, QMap<SyncMapKey, int> expectedMap);
     Database* readDatabase(const CompositeKey& key,const QString& dbPath);
     Database* createLocalDatabase(const QString& dbPath);
     bool uploadDb(const QString& dbPath);

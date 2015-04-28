@@ -21,7 +21,12 @@
 #include <QtGui/QStackedWidget>
 #include "core/Global.h"
 #include "gui/entry/EntryModel.h"
-
+#include "remotedrive/SyncObject.h"
+#include "remotedrive/RemoteDriveApi.h"
+#include "remotedrive/gdrive/CommandsFactoryImpl.h"
+#include "remotedrive/gdrive/GoogleDriveCredentials.h"
+#include "remotedrive/Errors.h"
+#include "remotedrive/OptionsBuilder.h"
 
 class ChangeMasterKeyWidget;
 class DatabaseOpenWidget;
@@ -38,7 +43,7 @@ class QFile;
 class QMenu;
 class UnlockDatabaseWidget;
 class DatabaseOpenWidgetCloud;
-using namespace DatabaseSync;
+using namespace DatabaseSyncObject;
 namespace Ui {
     class SearchWidget;
 }
@@ -106,8 +111,8 @@ public Q_SLOTS:
     void toggleSearch();
     void emitGroupContextMenuRequested(const QPoint& pos);
     void emitEntryContextMenuRequested(const QPoint& pos);
-    void cloudDbOpen(const QString& dbName);
-    void syncDone(QSharedPointer<GDriveSyncObject>syncObject);
+    void cloudDbOpen(QString dbPath);
+    void syncDone();
     void syncError(int ErrorType, QString description);
     //void showSyncLoginPage();
 
@@ -158,7 +163,8 @@ private:
     QTimer* m_searchTimer;
     QWidget* widgetBeforeLock;
     QString m_filename;
-    SyncRecentDbHelper m_syncHelper;
+    RemoteDriveApi* remoteDrive;
+    KeePassxDriveSync::Command* syncCommand;
 };
 
 #endif // KEEPASSX_DATABASEWIDGET_H

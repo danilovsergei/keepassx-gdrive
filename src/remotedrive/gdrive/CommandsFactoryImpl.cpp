@@ -1,22 +1,21 @@
 #include "CommandsFactoryImpl.h"
 
-CommandsFactoryImpl::CommandsFactoryImpl(AuthCredentials *creds)
-  : creds(creds)
+CommandsFactoryImpl::CommandsFactoryImpl(QObject *parent, AuthCredentials *creds) : CommandsFactory(
+        parent), creds(creds)
 {
-  // creds are living in the GUI thread while this in worker thread.
-  connect(this, signal(updateCredentials), creds, SLOT(update()));
+    // creds are living in the GUI thread while this in worker thread.
+    connect(this, SIGNAL(updateCredentials), creds, SLOT(update()));
 }
 
-AuthCredentials * CommandsFactoryImpl::getCreds() {
+// AuthCredentials * CommandsFactoryImpl::getCreds() {}
 
-}
-
-
-Session* CommandsFactoryImpl::getSession() {
+Session *CommandsFactoryImpl::getSession()
+{
     if (creds->getCredentials()->value(REFRESH_TOKEN).toString().isEmpty()) {
-      Q_EMIT updateCredentials();
-      waitForCredsRefresh();
+        Q_EMIT updateCredentials();
+        waitForCredsRefresh();
     }
+
     if (session == Q_NULLPTR) {
         QNetworkAccessManager *manager = new QNetworkAccessManager(this);
         session = new Session(manager, this);
@@ -28,22 +27,29 @@ Session* CommandsFactoryImpl::getSession() {
     return session;
 }
 
-CommandsFactoryImpl::waitForCredsRefresh() {
+void CommandsFactoryImpl::waitForCredsRefresh()
+{
     QEventLoop qE;
-    QTimer     tT;
+    QTimer tT;
 
     tT.setSingleShot(true);
-    connect(&tT,  SIGNAL(timeout()),      &qE, SLOT(quit()));
+    connect(&tT, SIGNAL(timeout()), &qE, SLOT(quit()));
     connect(creds, SIGNAL(updated()), &qE, SLOT(quit()));
     tT.start(LOGIN_WAIT_TIMEOUT);
     qE.exec();
 }
 
-
-CommandsFactoryImpl::download(QVariantMap arg1s) {
-  DownloadCommand cmd(getSession());
-
-  cmd.execute(args);
+KeePassxDriveSync::Command *CommandsFactoryImpl::download()
+{
+    return new DownloadCommand(getSession());
 }
 
+KeePassxDriveSync::Command *CommandsFactoryImpl::sync()
+{
+    return new SyncCommand(getSession());
+}
 
+KeePassxDriveSync::Command *CommandsFactoryImpl::list()
+{
+    return new ListCommand(getSession());
+}

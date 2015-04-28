@@ -3,13 +3,12 @@
 #include <QtCore/QObject>
 #include <QtTest/QTest>
 #include "../../tests.h"
-#include "gdrive/GoogleDriveApi.h"
 #include "GDriveTestUtils.h"
 #include "crypto/Crypto.h"
-#include "gdrive/Errors.h"
+#include "remotedrive/Errors.h"
 #include <QtTest/QSignalSpy>
-#include "gdrive/Errors.h"
-#include "gdrive/commands/DownloadCommand.h"
+#include "remotedrive/Errors.h"
+#include "remotedrive/gdrive/commands/DownloadCommand.h"
 
 using namespace KeePassxDriveSync;
 class DownloadCommandTest : public QObject {

@@ -1,20 +1,20 @@
-#ifndef GDRIVEGROUPSSYNC_H
-#define GDRIVEGROUPSSYNC_H
+#ifndef GROUPSSYNC_H
+#define GROUPSSYNC_H
 
-#include "../core/Database.h"
-#include "../core/Group.h"
-#include "../core/Entry.h"
-#include "../core/Tools.h"
-#include "../core/Metadata.h"
-#include "GDriveDatabaseSync.h"
+#include "core/Database.h"
+#include "core/Group.h"
+#include "core/Entry.h"
+#include "core/Tools.h"
+#include "core/Metadata.h"
+#include "DatabaseSync.h"
 #include <QtCore/QDebug>
 #include <QtCore/QObject>
-using namespace DatabaseSync;
-class GDriveGroupsSync : public GDriveDatabaseSync<Group>
+using namespace DatabaseSyncObject;
+class GroupsSync : public DatabaseSync<Group>
 {
 public:
-    GDriveGroupsSync(Database* db1, Database* db2);
-    ~GDriveGroupsSync();
+    GroupsSync(Database *db1, Database *db2);
+    ~GroupsSync();
 
     /**
      * @brief syncDatabases - syncs groups between two provided databases
@@ -36,4 +36,4 @@ private:
 
 };
 
-#endif // GDRIVEGROUPSSYNC_H
+#endif //GROUPSSYNC_H

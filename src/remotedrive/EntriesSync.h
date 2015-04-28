@@ -1,18 +1,18 @@
-#ifndef GDRIVEENTRIESSYNC_H
-#define GDRIVEENTRIESSYNC_H
-#include "../core/Database.h"
-#include "../core/Group.h"
-#include "../core/Entry.h"
-#include "../core/Tools.h"
-#include "../core/Metadata.h"
-#include  "GDriveGroupsSync.h"
+#ifndef ENTRIESSYNC_H
+#define ENTRIESSYNC_H
+#include "core/Database.h"
+#include "core/Group.h"
+#include "core/Entry.h"
+#include "core/Tools.h"
+#include "core/Metadata.h"
+#include  "GroupsSync.h"
 #include "QtCore/QSharedPointer"
-using namespace DatabaseSync;
-class GDriveEntriesSync:public GDriveDatabaseSync<Entry>
+using namespace DatabaseSyncObject;
+class EntriesSync:public DatabaseSync<Entry>
 {
 public:
-    GDriveEntriesSync(Database* db1, Database* db2, bool syncGroups=true);
-    ~GDriveEntriesSync();
+    EntriesSync(Database *db1, Database *db2, bool syncGroups=true);
+    ~EntriesSync();
     QSharedPointer<SyncObject> syncDatabases();
 protected:
     void removeEntry(Entry* entry);
@@ -31,4 +31,4 @@ private:
 
 };
 
-#endif // GDRIVEENTRIESSYNC_H
+#endif // ENTRIESSYNC_H

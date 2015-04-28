@@ -24,13 +24,8 @@
 #include "keys/FileKey.h"
 #include "keys/PasswordKey.h"
 #include <QtCore/QSettings>
-#include "../qtdrive/lib/session.h"
-#include "QtNetwork/QNetworkAccessManager"
-#include "../qtdrive/lib/command_file_list.h"
 #include "core/Group.h"
 #include <QtCore/QDebug>
-
-using namespace GoogleDrive;
 
 DatabaseOpenWidget::DatabaseOpenWidget(QWidget *parent)
   : DialogyWidget(parent)

@@ -56,16 +56,6 @@ DatabaseTabWidget::DatabaseTabWidget(QWidget* parent)
     connect(this, SIGNAL(tabCloseRequested(int)), SLOT(closeDatabase(int)));
     connect(autoType(), SIGNAL(globalShortcutTriggered()), SLOT(performGlobalAutoType()));
     connect(this,SIGNAL(databaseSavedLocally(Database*)),this,SLOT(saveDatabaseToCloud(Database*)));
-    if (QString(GOOGLE_DRIVE_SYNC) == "ON") {
-        // initialize google drive login page  in gui thread.
-        // it might call UI web dialog to request user approve access
-        AuthCredentials auth = GoogleDriveCredentials().newInstance();
-
-        m_gdriveLoginPage = QString(GOOGLE_DRIVE_SYNC) == "ON" ? new GDriveLoginPage() : Q_NULLPTR;
-        GoogleDriveSession* session = GoogleDriveSession::getEmptySession();
-        connect(session, SIGNAL(refreshSession(Session*)),m_gdriveLoginPage, SLOT(refreshSession(Session*)));
-        connect(m_gdriveLoginPage, SIGNAL(finished()),session,SLOT(refreshTokenFinished()));
-    }
 }
 
 DatabaseTabWidget::~DatabaseTabWidget()
@@ -361,8 +351,15 @@ bool DatabaseTabWidget::closeAllDatabases()
 void DatabaseTabWidget::saveDatabaseToCloud(Database* db) {
 qDebug() << "Saving database to cloud with modification date:"+db->metadata()->lastModifiedDate().toString();
 DatabaseManagerStruct& dbStruct = m_dbList[db];
-
-googleDriveApi()->uploadDatabase(dbStruct.filePath,db->metadata()->lastModifiedDate());
+// It's just a upload stub which does not work for now.
+// TODO remove extra initialization of google api from tabwidget.It should be specific only for DatabaseWidget
+AuthCredentials* creds = new GoogleDriveCredentials(this);
+CommandsFactory* commandsFactory = new CommandsFactoryImpl(this,creds);
+RemoteDriveApi* remoteDrive = new RemoteDriveApi(this,commandsFactory);
+remoteDrive->upload(OptionsBuilder().addOption(OPTION_ABSOLUTE_DB_NAME,dbStruct.filePath).addOption(OPTION_LAST_MODIFIED_TIME,db->metadata()->lastModifiedDate()).build());
+delete remoteDrive;
+delete commandsFactory;
+delete creds;
 }
 
 void DatabaseTabWidget::saveDatabase(Database* db)

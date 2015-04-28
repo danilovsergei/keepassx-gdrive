@@ -44,6 +44,8 @@
 #include "gui/group/GroupView.h"
 #include <QtCore/QDebug>
 #include "config-keepassx.h"
+Q_DECLARE_METATYPE(Database*)
+Q_DECLARE_METATYPE(QSharedPointer<SyncObject >)
 
 DatabaseWidget::DatabaseWidget(Database* db, QWidget* parent)
     : QStackedWidget(parent)
@@ -155,7 +157,7 @@ DatabaseWidget::DatabaseWidget(Database* db, QWidget* parent)
     connect(m_databaseOpenWidget, SIGNAL(syncError(int, QString)), this,SLOT(syncError(int, QString)));
     connect(m_keepass1OpenWidget, SIGNAL(editFinished(bool)), SLOT(openDatabase(bool)));
     connect(m_databaseOpenWidgetCloud, SIGNAL(dbRejected()),SLOT(rejectDb()));
-    connect(m_databaseOpenWidgetCloud,SIGNAL(dbSelected(const QString&)),this,SLOT(cloudDbOpen(const QString&)));
+    connect(m_databaseOpenWidgetCloud,SIGNAL(dbSelected(QString)),this,SLOT(cloudDbOpen(QString)));
     connect(m_unlockDatabaseWidget, SIGNAL(editFinished(bool)), SLOT(unlockDatabase(bool)));
     connect(this, SIGNAL(currentChanged(int)), this, SLOT(emitCurrentModeChanged()));
     connect(m_searchUi->searchEdit, SIGNAL(textChanged(QString)), this, SLOT(startSearchTimer()));
@@ -166,23 +168,26 @@ DatabaseWidget::DatabaseWidget(Database* db, QWidget* parent)
     connect(closeAction, SIGNAL(triggered()), this, SLOT(closeSearch()));
     // TODO find better way to check whether cmake google drive is enabled
     if (QString(GOOGLE_DRIVE_SYNC) == "ON") {
+        // initialize credentials in gui thread because it could contain UI pages
+        // to let user approve access to accounts like GMAIL
+        AuthCredentials* creds = new GoogleDriveCredentials(this);
+        CommandsFactory* commandsFactory = new CommandsFactoryImpl(this,creds);
+        // remote drive will be used to call all remote drive functions like sync , upload, download
+        remoteDrive = new RemoteDriveApi(this,commandsFactory);
+        syncCommand = remoteDrive->sync();
         // update last db last modification time to use it for sync with remote database
         connect(m_editEntryWidget, SIGNAL(editFinished(bool)), SLOT(setLastModified(bool)));
         connect(m_editGroupWidget, SIGNAL(editFinished(bool)), SLOT(setLastModified(bool)));
-        connect(&m_syncHelper,
-                SIGNAL(syncDone(QSharedPointer<GDriveSyncObject>)),      this,
-                SLOT(syncDone(QSharedPointer<GDriveSyncObject>)));
-        connect(&m_syncHelper, SIGNAL(syncError(int,
-                                                              QString)), this,
-                SLOT(syncError(int, QString)));
+        connect(syncCommand, SIGNAL(finished()),      this, SLOT(syncDone()));
     }
     setCurrentWidget(m_mainWidget);
 }
 
-void DatabaseWidget::cloudDbOpen(const QString& dbName) {
-qDebug() <<"DB was selected and passed to slot::"+dbName;
+void DatabaseWidget::cloudDbOpen(QString dbPath) {
+Q_ASSERT(!dbPath.isNull() && !dbPath.isEmpty());
+qDebug() <<"DB was selected and passed to slot::"+dbPath;
 //Pass path to the downloaded database and key to dbStruct array to get this struct from another widget
-Q_EMIT cloudDbSelected(dbName,m_db);
+Q_EMIT cloudDbSelected(dbPath,m_db);
 
 }
 
@@ -504,9 +509,8 @@ void DatabaseWidget::syncDatabase() {
     // Perfom asyncronous sync of recent database with remote database if
     // GOOGLE_DRIVE_SYNC feature enabled through CMAKE
     if (QString(GOOGLE_DRIVE_SYNC) != "ON") return;
-      qRegisterMetaType < QSharedPointer < GDriveSyncObject >>
-      ("QSharedPointer<GDriveSyncObject>");
-      m_syncHelper.syncParallel(m_db, m_filename);
+      // write general method to run commands in thread
+      remoteDrive->executeAsync(syncCommand,OptionsBuilder().addOption(OPTION_DB_POINTER,m_db).addOption(OPTION_ABSOLUTE_DB_NAME,m_filename).build());
       //Changes will be applied to the already opened database
       //typically it will take 1-2 seconds while user will browse to an item
       //TODO prevent or warn user copy the value if database is still in sync
@@ -754,9 +758,18 @@ void DatabaseWidget::updateFilename(const QString& fileName)
 
 
 
-void DatabaseWidget::syncDone(QSharedPointer<GDriveSyncObject>syncObject) {
-    qRegisterMetaType < QSharedPointer < GDriveSyncObject >>
-    ("QSharedPointer<GDriveSyncObject>");
+void DatabaseWidget::syncDone() {
+   if (syncCommand->getErrorCode()!=static_cast<int>(Errors::NO_ERROR)) {
+       syncError(syncCommand->getErrorCode(), syncCommand->getErrorString());
+   }
+  typedef QSharedPointer < DatabaseSyncObject::SyncObject > SyncType;
+   qRegisterMetaType < QSharedPointer < DatabaseSyncObject::SyncObject >>
+    ("QSharedPointer<SyncObject>");
+    qRegisterMetaType<SyncType>("SyncType");
+
+  QVariant vSyncObject = syncCommand->getResult().at(0);
+  QSharedPointer<SyncObject> syncObject = vSyncObject.value<SyncType>();
+
   qDebug() << "Successfully synced database on " + QDateTime::currentDateTime().toString();
   // number of entries which was modified locally.
   int localModifiedEntries = syncObject->get(SEntry(), SMissing(),SLocal()) +

@@ -1,16 +1,16 @@
-#include "GDriveGroupsSync.h"
+#include "GroupsSync.h"
 
 
-GDriveGroupsSync::GDriveGroupsSync(Database *db1, Database *db2)
-  : GDriveDatabaseSync<Group>(db1, db2) {}
+GroupsSync::GroupsSync(Database *db1, Database *db2)
+  : DatabaseSync<Group>(db1, db2) {}
 
-QSharedPointer<SyncObject>GDriveGroupsSync::syncDatabases() {
-  return GDriveDatabaseSync<Group>::syncDatabases();
+QSharedPointer<SyncObject>GroupsSync::syncDatabases() {
+  return DatabaseSync<Group>::syncDatabases();
 }
 
-GDriveGroupsSync::~GDriveGroupsSync() {}
+GroupsSync::~GroupsSync() {}
 
-bool GDriveGroupsSync::processEntry(Database *db, Group *entry)  {
+bool GroupsSync::processEntry(Database *db, Group *entry)  {
   bool result = true;
 
   // avoid to sync root groups. They always supposed to be the same
@@ -18,7 +18,7 @@ bool GDriveGroupsSync::processEntry(Database *db, Group *entry)  {
   return result;
 }
 
-void GDriveGroupsSync::removeEntry(Group *entry) {
+void GroupsSync::removeEntry(Group *entry) {
   Group *toRecycle = entries1[entry->uuid()];
 
   Q_ASSERT(toRecycle);
@@ -26,7 +26,7 @@ void GDriveGroupsSync::removeEntry(Group *entry) {
   getSyncObject()->increase(SGroup(), SRemoved(), SLocal());
 }
 
-void GDriveGroupsSync::setParentGroup(Group *entry, Group *group) {
+void GroupsSync::setParentGroup(Group *entry, Group *group) {
   // move entry to recycle bin will perform some extra actions by creating
   // recycle bin if needed
   Database *db = group->database();
@@ -36,15 +36,15 @@ void GDriveGroupsSync::setParentGroup(Group *entry, Group *group) {
   setParent(group);
 }
 
-const Group * GDriveGroupsSync::getParentGroup(Group *entry) {
+const Group * GroupsSync::getParentGroup(Group *entry) {
   return entry->parentGroup();
 }
 
-const QString GDriveGroupsSync::getEntryName(Group *entry) {
+const QString GroupsSync::getEntryName(Group *entry) {
   return entry->name();
 }
 
-QMap<Uuid, Group *>GDriveGroupsSync::getEntriesMap(Database *db) {
+QMap<Uuid, Group *>GroupsSync::getEntriesMap(Database *db) {
   QMap<Uuid, Group *> entries = db->rootGroup()->groupsMapRecursive(true);
 
   // add recycle bin group since it's also has to be synced if was created at
@@ -54,11 +54,11 @@ QMap<Uuid, Group *>GDriveGroupsSync::getEntriesMap(Database *db) {
   return entries;
 }
 
-QString GDriveGroupsSync::getType() {
+QString GroupsSync::getType() {
   return ENTRY_TYPE;
 }
 
-ObjectType GDriveGroupsSync::getObjectType() {
+ObjectType GroupsSync::getObjectType() {
     return SGroup();
 }
 

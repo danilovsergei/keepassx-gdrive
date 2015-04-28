@@ -9,7 +9,7 @@ GDriveDatabaseSync<SO>::GDriveDatabaseSync(Database *db1, Database *db2)
 
 template<typename SO>
 void GDriveDatabaseSync<SO>::setSyncObject(
-  QSharedPointer<GDriveSyncObject>syncObject) {
+  QSharedPointer<SyncObject>syncObject) {
   Q_ASSERT(!syncObject.isNull());
   GDriveDatabaseSync<SO>::syncObject = syncObject;
 }
@@ -155,7 +155,7 @@ void GDriveDatabaseSync<SO>::addMissingEntries(QList<SO *>missingEntries) {
 }
 
 template<typename SO>
-QSharedPointer<GDriveSyncObject>GDriveDatabaseSync<SO>::syncDatabases() {
+QSharedPointer<SyncObject>GDriveDatabaseSync<SO>::syncDatabases() {
   qDebug() << "Running sync for type: " + getType();
 
   // make sure root groups are the same.It has to be if we are syncing the same

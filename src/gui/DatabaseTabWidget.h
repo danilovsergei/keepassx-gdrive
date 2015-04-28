@@ -23,7 +23,13 @@
 
 #include "format/KeePass2Writer.h"
 #include "gui/DatabaseWidget.h"
-#include "gdrive/GoogleDriveApi.h"
+// TODO remove these includes with google part from tabwidget
+#include "remotedrive/AuthCredentials.h"
+#include "remotedrive/CommandsFactory.h"
+#include "remotedrive/gdrive/CommandsFactoryImpl.h"
+#include "remotedrive/gdrive/GoogleDriveCredentials.h"
+#include "remotedrive/OptionsBuilder.h"
+#include "remotedrive/gdrive/GDriveConstants.h"
 
 class DatabaseWidget;
 class DatabaseOpenWidget;
@@ -109,7 +115,6 @@ private:
 
     KeePass2Writer m_writer;
     QHash<Database*, DatabaseManagerStruct> m_dbList;
-    GDriveLoginPage* m_gdriveLoginPage;
 };
 
 #endif // KEEPASSX_DATABASETABWIDGET_H

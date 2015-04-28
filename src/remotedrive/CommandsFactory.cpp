@@ -1,5 +1,5 @@
 #include "CommandsFactory.h"
 
-CommandsFactory::CommandsFactory()
+CommandsFactory::CommandsFactory(QObject *parent) : QObject(parent)
 {
 }

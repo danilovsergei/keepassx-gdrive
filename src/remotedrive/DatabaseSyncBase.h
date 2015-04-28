@@ -1,17 +1,16 @@
-#ifndef GDRIVEDATABASESYNCBASE_H
-#define GDRIVEDATABASESYNCBASE_H
+#ifndef DATABASESYNCBASE_H
+#define DATABASESYNCBASE_H
 #include <QtCore/QSharedPointer>
 #include <QtCore/QMap>
 #include <QtCore/QList>
 #include <QtCore/QMutableMapIterator>
 #include "remotedrive/SyncObject.h"
 using namespace DatabaseSyncObject;
-
-class GDriveDatabaseSyncBase {
+class DatabaseSyncBase {
 public:
 
-  GDriveDatabaseSyncBase();
-  virtual ~GDriveDatabaseSyncBase() {}
+  DatabaseSyncBase();
+  virtual ~DatabaseSyncBase() {}
 
   /**
    * @brief syncDatabases - syncs items between two provided by derived class
@@ -28,4 +27,4 @@ protected:
     Q_ASSERT(!syncObject.isNull());  return syncObject;
   }
 };
-#endif // GDRIVEDATABASESYNCBASE_H
+#endif // DATABASESYNCBASE_H

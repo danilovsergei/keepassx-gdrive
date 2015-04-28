@@ -5,7 +5,6 @@
 #include <QtCore/QDebug>
 #include "crypto/Crypto.h"
 #include "core/Tools.h"
-#include "gdrive/GoogleDriveApi.h"
 
 void TestDatabaseSync::initTestCase() {
     Crypto::init();

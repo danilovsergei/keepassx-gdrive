@@ -174,10 +174,10 @@ Group * GDriveTestUtils::createGroup(Database      *db,
  * @param actual what actual sync provided
  * @param expectedMap what is expected
  */
-bool GDriveTestUtils::compareResult(QSharedPointer<GDriveSyncObject>actual,
+bool GDriveTestUtils::compareResult(QSharedPointer<SyncObject>actual,
                                     QMap<SyncMapKey, int>expectedMap) {
-  QSharedPointer<GDriveSyncObject>expected = QSharedPointer<GDriveSyncObject>(
-    new GDriveSyncObject());
+  QSharedPointer<SyncObject>expected = QSharedPointer<SyncObject>(
+    new SyncObject());
   Q_FOREACH(SyncMapKey key, expectedMap.keys()) {
     expected->set(static_cast<ObjectType>(key.get(0)),
                   static_cast<ObjectName>(key.get(

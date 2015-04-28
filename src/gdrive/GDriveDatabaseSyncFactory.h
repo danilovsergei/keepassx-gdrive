@@ -10,8 +10,8 @@ public:
 
   enum class SyncId { ENTRY, GROUP, ALL };
   static  QSharedPointer<GDriveDatabaseSyncBase>createDatabaseSync(SyncId    id,
-                                                                   Database *db1,
-                                                                   Database *db2);
+                                                                   const Database *db1,
+                                                                   const Database *db2);
 };
 
 #endif // GDRIVEDATABASESYNCFACTORY_H
