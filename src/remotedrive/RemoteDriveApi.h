@@ -17,6 +17,8 @@ public:
     RemoteDriveApi(QObject *parent, CommandsFactory *factoryImpl);
     void     init();
     void     executeAsync(Command *cmd, const QVariantMap &args);
+    void     execute(Command *cmd, const QVariantMap &args);
+
     Command *download();
     void     upload(const QVariantMap &args);
     Command *list();

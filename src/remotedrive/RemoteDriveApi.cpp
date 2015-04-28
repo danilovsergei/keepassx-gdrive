@@ -52,6 +52,11 @@ void RemoteDriveApi::raiseError(int errorType, const QString &description)
     Q_ASSERT(false);
 }
 
+void RemoteDriveApi::execute(Command *cmd, const QVariantMap &args)
+{
+    cmd->execute(args);
+}
+
 void RemoteDriveApi::executeAsync(Command *cmd, const QVariantMap &args)
 {
     QMetaObject::invokeMethod(cmd, "executeAsync", Q_ARG(QVariantMap, args));

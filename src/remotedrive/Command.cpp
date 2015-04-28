@@ -3,8 +3,8 @@ namespace KeePassxDriveSync {
 Command::Command()
 {
     // executeAsync signal designed to be emmited from another thread that given function
-    connect(this, SIGNAL(executeAsync(const QVariantMap &)), this, SLOT(execute(
-                                                                            const QVariantMap &)));
+//    connect(this, SIGNAL(executeAsync(const QVariantMap &)), this, SLOT(execute(
+//                                                                            const QVariantMap &)));
 }
 
 void Command::emitError(const int errorCode, const QString &errorString)

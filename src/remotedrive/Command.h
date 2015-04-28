@@ -19,6 +19,7 @@ public:
     // result of command execution if it requires something other than void. result variable must be initialized in derived class in that case
     const QVariantList getResult();
 public Q_SLOTS:
+
     /**
      * @brief execute used to execute execute() functions in derived classes with concrete implementation.
      * ex: DownloadCommand execute()
@@ -66,10 +67,10 @@ protected:
 private:
     QString errorString;
     int errorCode = Errors::NO_ERROR;
+    void executeAsync(const QVariantMap &options);
 
 Q_SIGNALS:
     void finished();
-    void executeAsync(const QVariantMap &options);
 };
 }
 #endif // Command_H

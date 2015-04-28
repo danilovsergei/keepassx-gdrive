@@ -1,7 +1,7 @@
 #ifndef DownloadCommand_H
 #define DownloadCommand_H
 
-#include "remotedrive/gdrive/commands/Command.h"
+#include "remotedrive/Command.h"
 #include "qtdrive/lib/file_info.h"
 #include "qtdrive/lib/command_download_file.h"
 #include <QtCore/QDir>

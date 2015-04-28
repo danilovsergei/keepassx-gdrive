@@ -1,6 +1,8 @@
 #include "DownloadCommand.h"
 using namespace KeePassxDriveSync;
 
+Q_DECLARE_METATYPE(RemoteFile)
+
 DownloadCommand::DownloadCommand(Session *session) : session(session)
 {
 }
