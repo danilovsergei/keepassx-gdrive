@@ -1,10 +1,16 @@
 #include "GDriveTestUtils.h"
+Q_DECLARE_METATYPE(QList<QueryEntry>)
 
 GDriveTestUtils::GDriveTestUtils()
-{}
+{
+  AuthCredentials *creds = new GoogleDriveCredentials(this);
+  CommandsFactory *commandsFactory = new CommandsFactoryImpl(this, creds);
+  // remote drive will be used to call all remote drive functions like sync , upload, download
+  remoteDrive = new RemoteDriveApi(this, commandsFactory);
+}
 
-Entry * GDriveTestUtils::createEntry(const QString& title,
-                                     const QString& password) {
+Entry *GDriveTestUtils::createEntry(const QString &title, const QString &password)
+{
   Entry *entry = new Entry;
 
   entry->setTitle(title);
@@ -13,7 +19,8 @@ Entry * GDriveTestUtils::createEntry(const QString& title,
   return entry;
 }
 
-Group * GDriveTestUtils::createGroup(const QString& groupName) {
+Group *GDriveTestUtils::createGroup(const QString &groupName)
+{
   Group *newGroup = new Group;
 
   newGroup->setName(groupName);
@@ -21,35 +28,45 @@ Group * GDriveTestUtils::createGroup(const QString& groupName) {
   return newGroup;
 }
 
-bool GDriveTestUtils::uploadDb(const QString& dbPath) {
+bool GDriveTestUtils::uploadDb(const QString &dbPath)
+{
   // List all databases with name test.kdbx at google drive
   qRegisterMetaType<GoogleDrive::FileInfoList>("GoogleDrive::FileInfoList");
   QString dbName = QFileInfo(dbPath).fileName();
   const QList<QueryEntry> filter = GoogleDriveTools::getDbNameFilter(dbName);
-  int expected = gdrive->getDatabasesSeq(filter).size() + 1;
+  KeePassxDriveSync::Command* listCommand = remoteDrive->list();
+  QVariantMap options = OptionsBuilder().addOption(OPTION_DB_FILTER, filter).build();
+  remoteDrive->execute(listCommand, options);
+  RemoteFileList fileList = listCommand->getResult().at(0).value<RemoteFileList>();
+  int expected = fileList.size() + 1;
+
 
   // QVERIFY2(gdrive->getDatabasesSeq(filter).size()==0,"Test db exists in
   // google drive before test, but it should not");
 
   // upload new database or update existing one with revision if it exists
   QFileInfo file(dbPath);
+  KeePassxDriveSync::Command* uploadCommand = remoteDrive->upload();
   gdrive->uploadDatabase(dbPath, file.lastModified(), true, parentDir);
 
   // verify db was loaded successfully. Using >0 because in some cases i will
   // expect 2 databases
-  int actual = gdrive->getDatabasesSeq(filter).size();
+  remoteDrive->execute(listCommand, options);
+  fileList = listCommand->getResult().at(0).value<RemoteFileList>;
+  int actual = fileList.size();
   Q_ASSERT(actual == expected);
   return actual == expected ? true : false;
 }
 
-bool GDriveTestUtils::deleteAllDb(const QString& dbTitle) {
+bool GDriveTestUtils::deleteAllDb(const QString &dbTitle)
+{
   const FileInfoList dbList = gdrive->getDatabasesSeq(GoogleDriveTools::getDbNameFilter(
                                                         dbTitle));
-  bool result=true;
+  bool result = true;
   Q_FOREACH(FileInfo dbRec, dbList) {
-    deleteDb(dbRec)==false? result=false: true;
+    deleteDb(dbRec) == false ? result = false : true;
   }
-   Q_ASSERT(result);
+  Q_ASSERT(result);
   return result;
 }
 
@@ -58,14 +75,14 @@ bool GDriveTestUtils::deleteAllDb(const QString& dbTitle) {
  * database from cloud. Not needed yet by Keepassx application
  * @param db
  */
-bool GDriveTestUtils::deleteDb(const FileInfo& db) {
+bool GDriveTestUtils::deleteDb(const FileInfo &db)
+{
   CommandDelete *deleteCmd = new CommandDelete(getSession());
 
   deleteCmd->exec(db.id());
 
-  if (!deleteCmd->waitForFinish(false)) {
+  if (!deleteCmd->waitForFinish(false))
     return false;
-  }
 
   const FileInfoList dbList = gdrive->getDatabasesSeq(GoogleDriveTools::getDbNameFilter(
                                                         db.title()));
@@ -80,21 +97,22 @@ bool GDriveTestUtils::deleteDb(const FileInfo& db) {
   return true;
 }
 
-bool GDriveTestUtils::deleteLocalDb(const QString& dbPath) {
-return QFile(dbPath).exists()&& QFile::remove(dbPath);
+bool GDriveTestUtils::deleteLocalDb(const QString &dbPath)
+{
+  return QFile(dbPath).exists() && QFile::remove(dbPath);
 }
 
-bool GDriveTestUtils::saveDatabase(Database *db, const QString& dbPath) {
+bool GDriveTestUtils::saveDatabase(Database *db, const QString &dbPath)
+{
   // save fake database locally
   KeePass2Writer m_writer;
   QString fileName(dbPath);
 
-      qDebug() << "saving to " + fileName;
+  qDebug() << "saving to " + fileName;
   QFile qFile(fileName);
 
-  if (qFile.exists()) {
+  if (qFile.exists())
     qFile.remove();
-  }
   Q_ASSERT(qFile.exists() == false);
   QSaveFile saveFile(fileName);
   bool result = false;
@@ -108,14 +126,16 @@ bool GDriveTestUtils::saveDatabase(Database *db, const QString& dbPath) {
   return result && qFile.exists();
 }
 
-const CompositeKey GDriveTestUtils::getTestCompositeKey() {
+const CompositeKey GDriveTestUtils::getTestCompositeKey()
+{
   CompositeKey key;
 
   key.addKey(PasswordKey("test"));
   return key;
 }
 
-Database * GDriveTestUtils::createLocalDatabase(const QString& dbPath) {
+Database *GDriveTestUtils::createLocalDatabase(const QString &dbPath)
+{
   Database *db1 = new Database();
 
   db1->setKey(getTestCompositeKey());
@@ -128,9 +148,8 @@ Database * GDriveTestUtils::createLocalDatabase(const QString& dbPath) {
   qDebug() << "saving to " + fileName;
   QFile qFile(fileName);
 
-  if (qFile.exists()) {
+  if (qFile.exists())
     qFile.remove();
-  }
   Q_ASSERT(qFile.exists() == false);
   QSaveFile saveFile(fileName);
   bool result = false;
@@ -146,9 +165,8 @@ Database * GDriveTestUtils::createLocalDatabase(const QString& dbPath) {
   return db1;
 }
 
-Entry * GDriveTestUtils::createEntry(Database      *db,
-                                     const QString& title,
-                                     const QString& password) {
+Entry *GDriveTestUtils::createEntry(Database *db, const QString &title, const QString &password)
+{
   Entry *entry = new Entry();
 
   entry->setGroup(db->resolveGroup(db->rootGroup()->uuid()));
@@ -158,8 +176,8 @@ Entry * GDriveTestUtils::createEntry(Database      *db,
   return entry;
 }
 
-Group * GDriveTestUtils::createGroup(Database      *db,
-                                     const QString& groupName) {
+Group *GDriveTestUtils::createGroup(Database *db, const QString &groupName)
+{
   Group *newGroup = new Group;
 
   newGroup->setName(groupName);
@@ -174,9 +192,10 @@ Group * GDriveTestUtils::createGroup(Database      *db,
  * @param actual what actual sync provided
  * @param expectedMap what is expected
  */
-bool GDriveTestUtils::compareResult(QSharedPointer<SyncObject>actual,
-                                    QMap<SyncMapKey, int>expectedMap) {
-  QSharedPointer<SyncObject>expected = QSharedPointer<SyncObject>(
+bool GDriveTestUtils::compareResult(QSharedPointer<SyncObject> actual, QMap<SyncMapKey,
+                                                                            int> expectedMap)
+{
+  QSharedPointer<SyncObject> expected = QSharedPointer<SyncObject>(
     new SyncObject());
   Q_FOREACH(SyncMapKey key, expectedMap.keys()) {
     expected->set(static_cast<ObjectType>(key.get(0)),
@@ -186,12 +205,12 @@ bool GDriveTestUtils::compareResult(QSharedPointer<SyncObject>actual,
                                                 2)),
                   expectedMap.value(key));
   }
-  QMap<SyncMapKey, QPair<int, int> >result = actual->compare(expected);
+  QMap<SyncMapKey, QPair<int, int> > result = actual->compare(expected);
   Q_FOREACH(SyncMapKey key, result.keys()) {
-    qDebug() <<
-      QString("%1 : %2 <> %3").arg(key.toString(),
-                                   QString::number(result.value(key).first),
-                                   QString::number(result.value(key).second));
+    qDebug()
+      <<QString("%1 : %2 <> %3").arg(key.toString(),
+                                     QString::number(result.value(key).first),
+                                     QString::number(result.value(key).second));
   }
   Q_ASSERT(0 == result.size());
   return 0 == result.size();
@@ -201,11 +220,11 @@ bool GDriveTestUtils::compareResult(QSharedPointer<SyncObject>actual,
  * @brief SyncRecentDbHelper::readDatabase reads stored locally database into
  * the memory
  */
-Database * GDriveTestUtils::readDatabase(const CompositeKey& key,
-                                         const QString     & dbPath) {
+Database *GDriveTestUtils::readDatabase(const CompositeKey &key, const QString &dbPath)
+{
   KeePass2Reader reader;
   Database *db = Q_NULLPTR;
-  QFile     file(dbPath);
+  QFile file(dbPath);
 
   Q_ASSERT(file.open(QIODevice::ReadOnly));
   db = reader.readDatabase(dbPath, key);
@@ -213,11 +232,11 @@ Database * GDriveTestUtils::readDatabase(const CompositeKey& key,
   return db;
 }
 
-void GDriveTestUtils::waitForSignal(const QSignalSpy& spy, const int timeout) {
-    int waitTime = 0;
-    while (spy.count() == 0 && waitTime < timeout) {
-      QTest::qWait(200);
-      waitTime += 200;
-    }
+void GDriveTestUtils::waitForSignal(const QSignalSpy &spy, const int timeout)
+{
+  int waitTime = 0;
+  while (spy.count() == 0 && waitTime < timeout) {
+    QTest::qWait(200);
+    waitTime += 200;
+  }
 }
-

@@ -15,7 +15,6 @@ class ListCommand : public KeePassxDriveSync::Command
 public:
     ListCommand(Session *session);
     void execute(const QVariantMap &options);
-    static Command *newInstance();
 private:
     Session *session;
 };

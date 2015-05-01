@@ -159,6 +159,7 @@ set(keepassx_SOURCES
     remotedrive/gdrive/commands/DownloadCommand.cpp
     remotedrive/gdrive/commands/SyncCommand.cpp
     remotedrive/gdrive/commands/ListCommand.cpp
+    remotedrive/gdrive/commands/UploadCommand.cpp
 )
 
 set(keepassx_SOURCES_MAINEXE
@@ -260,6 +261,7 @@ set(keepassx_MOC
     remotedrive/gdrive/commands/DownloadCommand.h
     remotedrive/gdrive/commands/SyncCommand.h
     remotedrive/gdrive/commands/ListCommand.h
+    remotedrive/gdrive/commands/UploadCommand.h
 
 )
 

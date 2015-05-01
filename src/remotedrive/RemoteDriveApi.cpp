@@ -1,7 +1,8 @@
 #include "RemoteDriveApi.h"
 static const int EXECUTION_TIMEOUT = 60 * 1000;
-RemoteDriveApi::RemoteDriveApi(QObject *parent,
-                               CommandsFactory *factoryImpl) : QObject(parent), factoryImpl(
+
+RemoteDriveApi::RemoteDriveApi(QObject *parent, CommandsFactory *factoryImpl) : QObject(parent),
+    factoryImpl(
         factoryImpl)
 {
     // thread will execute all remote drive commands like upload , download etc

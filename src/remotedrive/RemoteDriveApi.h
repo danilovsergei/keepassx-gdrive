@@ -7,7 +7,7 @@
 #include "Errors.h"
 #include "remotedrive/Command.h"
 #include "core/Global.h"
-using namespace KeePassxDriveSync;
+//using namespace KeePassxDriveSync;
 class RemoteDriveApi : QObject
 {
     Q_OBJECT
@@ -16,13 +16,13 @@ public:
 
     RemoteDriveApi(QObject *parent, CommandsFactory *factoryImpl);
     void     init();
-    void     executeAsync(Command *cmd, const QVariantMap &args);
-    void     execute(Command *cmd, const QVariantMap &args);
+    void     executeAsync(KeePassxDriveSync::Command *cmd, const QVariantMap &args);
+    void     execute(KeePassxDriveSync::Command *cmd, const QVariantMap &args);
 
-    Command *download();
+    KeePassxDriveSync::Command *download();
     void     upload(const QVariantMap &args);
-    Command *list();
-    Command *sync();
+    KeePassxDriveSync::Command *list();
+    KeePassxDriveSync::Command *sync();
 
 private:
     CommandsFactory *factoryImpl = Q_NULLPTR;

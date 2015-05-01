@@ -27,8 +27,6 @@ class SyncCommand : public KeePassxDriveSync::Command
     Q_OBJECT
 private:
     void printSyncSymmary(QSharedPointer<SyncObject> syncObject);
-    //void emitSyncError(int errorType, const QString &description);
-    //void emitSyncDone(const QSharedPointer<SyncObject> &syncObject);
     Database *localDb = 0;
     QString localDbPath;
     CompositeKey localDbKey;
