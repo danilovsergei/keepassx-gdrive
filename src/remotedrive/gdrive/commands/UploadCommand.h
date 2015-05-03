@@ -4,6 +4,21 @@
 #include <remotedrive/Command.h>
 #include "qtdrive/lib/session.h"
 #include <remotedrive/gdrive/GDriveConstants.h>
+#include <QtCore/QDateTime>
+#include <core/Database.h>
+#include <QtCore/QDebug>
+
+#include <qtdrive/lib/command_upload_file.h>
+#include <qtdrive/lib/command_update.h>
+
+#include  "remotedrive/gdrive/QueryEntry.h"
+#include "qtdrive/lib/file_info.h"
+#include "remotedrive/gdrive/GoogleDriveTools.h"
+#include "remotedrive/gdrive/commands/ListCommand.h"
+#include  <remotedrive/RemoteFile.h>
+#include "remotedrive/OptionsBuilder.h"
+
+using namespace GoogleDrive;
 class UploadCommand : public KeePassxDriveSync::Command
 {
   Q_OBJECT
@@ -22,6 +37,7 @@ public:
   ~UploadCommand();
 private:
   Session *session;
+  void setLastModificationDate(const FileInfo & fi, const QDateTime& lastModified);
 };
 
 #endif // UPLOADCOMMAND_H

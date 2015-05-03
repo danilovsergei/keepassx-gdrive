@@ -34,20 +34,22 @@ bool GDriveTestUtils::uploadDb(const QString &dbPath)
   qRegisterMetaType<GoogleDrive::FileInfoList>("GoogleDrive::FileInfoList");
   QString dbName = QFileInfo(dbPath).fileName();
   const QList<QueryEntry> filter = GoogleDriveTools::getDbNameFilter(dbName);
-  KeePassxDriveSync::Command* listCommand = remoteDrive->list();
+  KeePassxDriveSync::Command *listCommand = remoteDrive->list();
   QVariantMap options = OptionsBuilder().addOption(OPTION_DB_FILTER, filter).build();
   remoteDrive->execute(listCommand, options);
   RemoteFileList fileList = listCommand->getResult().at(0).value<RemoteFileList>();
   int expected = fileList.size() + 1;
-
 
   // QVERIFY2(gdrive->getDatabasesSeq(filter).size()==0,"Test db exists in
   // google drive before test, but it should not");
 
   // upload new database or update existing one with revision if it exists
   QFileInfo file(dbPath);
-  KeePassxDriveSync::Command* uploadCommand = remoteDrive->upload();
-  gdrive->uploadDatabase(dbPath, file.lastModified(), true, parentDir);
+  KeePassxDriveSync::Command *uploadCommand = remoteDrive->upload();
+  remoteDrive->execute(uploadCommand, OptionsBuilder().addOption(OPTION_ABSOLUTE_DB_NAME,
+                                                                 dbPath).addOption(
+                         OPTION_LAST_MODIFIED_TIME,
+                         file.lastModified()).addOption(OPTION_PARENT_NAME, parentDir));
 
   // verify db was loaded successfully. Using >0 because in some cases i will
   // expect 2 databases

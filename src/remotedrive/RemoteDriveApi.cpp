@@ -36,13 +36,12 @@ Command *RemoteDriveApi::list()
     return factoryImpl->list();
 }
 
-void RemoteDriveApi::upload(const QVariantMap &args)
+Command *RemoteDriveApi::upload()
 {
-    // TODO add implementation
-    qFatal("No implementation for upload yet");
+    return factoryImpl->upload();
 }
 
-KeePassxDriveSync::Command *RemoteDriveApi::sync()
+Command *RemoteDriveApi::sync()
 {
     return factoryImpl->sync();
 }

@@ -53,3 +53,9 @@ KeePassxDriveSync::Command *CommandsFactoryImpl::list()
 {
     return new ListCommand(getSession());
 }
+
+KeePassxDriveSync::Command *CommandsFactoryImpl::upload()
+{
+    return new UploadCommand(getSession());
+}
+

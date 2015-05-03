@@ -11,6 +11,7 @@
 #include "remotedrive/gdrive/commands/DownloadCommand.h"
 #include "remotedrive/gdrive/commands/SyncCommand.h"
 #include "remotedrive/gdrive/commands/ListCommand.h"
+#include "remotedrive/gdrive/commands/UploadCommand.h"
 #include "remotedrive/Command.h"
 
 using namespace GoogleDrive;
@@ -22,6 +23,7 @@ public:
     KeePassxDriveSync::Command *download();
     KeePassxDriveSync::Command *sync();
     KeePassxDriveSync::Command *list();
+    KeePassxDriveSync::Command *upload();
 private:
     Session *session = Q_NULLPTR;
     AuthCredentials *creds;

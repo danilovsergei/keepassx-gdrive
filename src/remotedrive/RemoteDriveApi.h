@@ -20,7 +20,7 @@ public:
     void     execute(KeePassxDriveSync::Command *cmd, const QVariantMap &args);
 
     KeePassxDriveSync::Command *download();
-    void     upload(const QVariantMap &args);
+    KeePassxDriveSync::Command *upload();
     KeePassxDriveSync::Command *list();
     KeePassxDriveSync::Command *sync();
 
