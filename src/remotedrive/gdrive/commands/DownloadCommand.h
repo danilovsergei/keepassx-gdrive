@@ -15,10 +15,13 @@
 Q_DECLARE_METATYPE(GoogleDrive::FileInfo)
 using namespace KeePassxDriveSync;
 using namespace GoogleDrive;
+
 class DownloadCommand : public KeePassxDriveSync::Command
 {
+    Q_OBJECT
 public:
     DownloadCommand(Session *session);
+    ~DownloadCommand();
     void execute(const QVariantMap &options);
     static KeePassxDriveSync::Command *newInstance(Session *session);
 private:

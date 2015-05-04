@@ -7,6 +7,10 @@ ListCommand::ListCommand(Session *session) : session(session)
 {
 }
 
+ListCommand::~ListCommand() {
+
+}
+
 void ListCommand::execute(const QVariantMap &options)
 {
     DbFilter queryFilter = options.value(OPTION_DB_FILTER).value<DbFilter>();

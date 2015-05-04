@@ -1,5 +1,6 @@
 #include "GDriveTestUtils.h"
 Q_DECLARE_METATYPE(QList<QueryEntry>)
+Q_DECLARE_METATYPE(RemoteFileList)
 
 GDriveTestUtils::GDriveTestUtils()
 {
@@ -49,12 +50,12 @@ bool GDriveTestUtils::uploadDb(const QString &dbPath)
   remoteDrive->execute(uploadCommand, OptionsBuilder().addOption(OPTION_ABSOLUTE_DB_NAME,
                                                                  dbPath).addOption(
                          OPTION_LAST_MODIFIED_TIME,
-                         file.lastModified()).addOption(OPTION_PARENT_NAME, parentDir));
+                         file.lastModified()).addOption(OPTION_PARENT_NAME, parentDir).build());
 
   // verify db was loaded successfully. Using >0 because in some cases i will
   // expect 2 databases
   remoteDrive->execute(listCommand, options);
-  fileList = listCommand->getResult().at(0).value<RemoteFileList>;
+  fileList = listCommand->getResult().at(0).value<RemoteFileList>();
   int actual = fileList.size();
   Q_ASSERT(actual == expected);
   return actual == expected ? true : false;
@@ -62,11 +63,14 @@ bool GDriveTestUtils::uploadDb(const QString &dbPath)
 
 bool GDriveTestUtils::deleteAllDb(const QString &dbTitle)
 {
-  const FileInfoList dbList = gdrive->getDatabasesSeq(GoogleDriveTools::getDbNameFilter(
-                                                        dbTitle));
+  KeePassxDriveSync::Command *listCommand = remoteDrive->list();
+  QVariantMap options = OptionsBuilder().addOption(OPTION_DB_FILTER, GoogleDriveTools::getDbNameFilter(
+                                                       dbTitle)).build();
+  remoteDrive->execute(listCommand, options);
+  const RemoteFileList dbList = listCommand->getResult().at(0).value<RemoteFileList>();
   bool result = true;
-  Q_FOREACH(FileInfo dbRec, dbList) {
-    deleteDb(dbRec) == false ? result = false : true;
+  Q_FOREACH(RemoteFile dbRec, dbList) {
+    deleteDb(RemoteFileImpl::toGDriveFileInfo(dbRec)) == false ? result = false : true;
   }
   Q_ASSERT(result);
   return result;
@@ -79,24 +83,13 @@ bool GDriveTestUtils::deleteAllDb(const QString &dbTitle)
  */
 bool GDriveTestUtils::deleteDb(const FileInfo &db)
 {
-  CommandDelete *deleteCmd = new CommandDelete(getSession());
-
-  deleteCmd->exec(db.id());
-
-  if (!deleteCmd->waitForFinish(false))
-    return false;
-
-  const FileInfoList dbList = gdrive->getDatabasesSeq(GoogleDriveTools::getDbNameFilter(
-                                                        db.title()));
-  Q_FOREACH(FileInfo dbRec, dbList) {
-    Q_ASSERT(dbRec.id() != db.id());
-
-    if (dbRec.id() != db.id()) {
-      qDebug() << "Db still exists in Google Drive";
-      return false;
-    }
-  }
-  return true;
+    KeePassxDriveSync::Command *deleteCommand = remoteDrive->list();
+    RemoteFile dbInfo = RemoteFileImpl::fromGDriveFileInfo(db);
+    QVariantMap options = OptionsBuilder().addOption(OPTION_DB_FILTER, GoogleDriveTools::getDbNameFilter(
+                                                         dbInfo.getTitle())).build();
+    remoteDrive->execute(deleteCommand, options);
+    bool result = deleteCommand->getErrorCode() == Errors::NO_ERROR ? true : false;
+    return result;
 }
 
 bool GDriveTestUtils::deleteLocalDb(const QString &dbPath)

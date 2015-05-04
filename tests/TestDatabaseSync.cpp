@@ -18,9 +18,9 @@ void TestDatabaseSync::init()
     groupRoot2 = db2->resolveGroup(db2->rootGroup()->uuid());
     groupRoot2->setUuid(groupRoot->uuid());
     groupRoot2->setTimeInfo(groupRoot->timeInfo());
-    entrySync=GDriveDatabaseSyncFactory::createDatabaseSync(GDriveDatabaseSyncFactory::SyncId::ENTRY,db1,db2);
-    groupSync=GDriveDatabaseSyncFactory::createDatabaseSync(GDriveDatabaseSyncFactory::SyncId::GROUP,db1,db2);
-    allSync=GDriveDatabaseSyncFactory::createDatabaseSync(GDriveDatabaseSyncFactory::SyncId::ALL,db1,db2);
+    entrySync=DatabaseSyncFactory::createDatabaseSync(DatabaseSyncFactory::SyncId::ENTRY,db1,db2);
+    groupSync=DatabaseSyncFactory::createDatabaseSync(DatabaseSyncFactory::SyncId::GROUP,db1,db2);
+    allSync=DatabaseSyncFactory::createDatabaseSync(DatabaseSyncFactory::SyncId::ALL,db1,db2);
 
 }
 

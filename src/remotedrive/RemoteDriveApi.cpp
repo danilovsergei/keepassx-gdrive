@@ -41,6 +41,12 @@ Command *RemoteDriveApi::upload()
     return factoryImpl->upload();
 }
 
+Command *RemoteDriveApi::remove()
+{
+    return factoryImpl->remove();
+}
+
+
 Command *RemoteDriveApi::sync()
 {
     return factoryImpl->sync();

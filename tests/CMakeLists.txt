@@ -181,9 +181,6 @@ add_unit_test(NAME testargumentparser SOURCES TestArgumentParser.cpp MOCS TestAr
 add_unit_test(NAME testdatabasesync SOURCES TestDatabaseSync.cpp MOCS TestDatabaseSync.h
               LIBS ${TEST_LIBRARIES})
 
-add_unit_test(NAME testgoogledriveapi SOURCES TestGoogleDriveApi.cpp MOCS TestGoogleDriveApi.h
-              LIBS ${TEST_LIBRARIES})
-
 add_unit_test(NAME testremotedatabasesync SOURCES TestDatabaseRemoteSync.cpp MOCS TestDatabaseRemoteSync.h
               LIBS ${TEST_LIBRARIES})
 

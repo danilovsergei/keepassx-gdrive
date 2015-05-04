@@ -49,7 +49,6 @@ private:
     Uuid   newEntryUuid;
     Uuid   newGroupUuid;
     Group *rootGroup;
-    QSharedPointer<SyncRecentDbHelper> syncHelper;
 
     void compareResult(QSharedPointer<SyncObject> actual, QMap<SyncMapKey, int> expectedMap);
     Database* readDatabase(const CompositeKey& key,const QString& dbPath);

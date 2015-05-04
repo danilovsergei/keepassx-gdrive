@@ -23,6 +23,7 @@ public:
     KeePassxDriveSync::Command *upload();
     KeePassxDriveSync::Command *list();
     KeePassxDriveSync::Command *sync();
+    KeePassxDriveSync::Command *remove();
 
 private:
     CommandsFactory *factoryImpl = Q_NULLPTR;

@@ -7,7 +7,8 @@
 #include "../core/Metadata.h"
 #include  "GDriveGroupsSync.h"
 #include "QtCore/QSharedPointer"
-using namespace DatabaseSync;
+using namespace DatabaseSyncObject;
+
 class GDriveEntriesSync:public GDriveDatabaseSync<Entry>
 {
 public:

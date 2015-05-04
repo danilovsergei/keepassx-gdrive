@@ -9,7 +9,8 @@
 #include "GDriveDatabaseSync.h"
 #include <QtCore/QDebug>
 #include <QtCore/QObject>
-using namespace DatabaseSync;
+using namespace DatabaseSyncObject;
+
 class GDriveGroupsSync : public GDriveDatabaseSync<Group>
 {
 public:

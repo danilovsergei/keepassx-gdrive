@@ -5,7 +5,8 @@
 #include "../core/Tools.h"
 #include "GDriveDatabaseSyncBase.h"
 #include "../core/Metadata.h"
-using namespace DatabaseSync;
+using namespace DatabaseSyncObject;
+
 //generalize Entry/Group to template SO - sync object
 template<class SO>
 class GDriveDatabaseSync : public GDriveDatabaseSyncBase

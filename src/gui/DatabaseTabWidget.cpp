@@ -35,684 +35,651 @@
 #include <QtCore/QDebug>;
 #include "config-keepassx.h"
 
-DatabaseManagerStruct::DatabaseManagerStruct()
-    : dbWidget(Q_NULLPTR)
-    , saveToFilename(false)
-    , modified(false)
-    , readOnly(false)
+DatabaseManagerStruct::DatabaseManagerStruct() :
+  dbWidget(Q_NULLPTR),
+  saveToFilename(false),
+  modified(false),
+  readOnly(false)
 {
 }
 
-
 const int DatabaseTabWidget::LastDatabasesCount = 5;
 
-DatabaseTabWidget::DatabaseTabWidget(QWidget* parent)
-    : QTabWidget(parent)
+DatabaseTabWidget::DatabaseTabWidget(QWidget *parent) :
+  QTabWidget(parent)
 {
-    DragTabBar* tabBar = new DragTabBar(this);
-    tabBar->setDrawBase(false);
-    setTabBar(tabBar);
+  DragTabBar *tabBar = new DragTabBar(this);
+  tabBar->setDrawBase(false);
+  setTabBar(tabBar);
 
-    connect(this, SIGNAL(tabCloseRequested(int)), SLOT(closeDatabase(int)));
-    connect(autoType(), SIGNAL(globalShortcutTriggered()), SLOT(performGlobalAutoType()));
-    connect(this,SIGNAL(databaseSavedLocally(Database*)),this,SLOT(saveDatabaseToCloud(Database*)));
+  connect(this, SIGNAL(tabCloseRequested(int)), SLOT(closeDatabase(int)));
+  connect(autoType(), SIGNAL(globalShortcutTriggered()), SLOT(performGlobalAutoType()));
+  connect(this, SIGNAL(databaseSavedLocally(Database *)), this, SLOT(saveDatabaseToCloud(
+                                                                       Database *)));
 }
 
 DatabaseTabWidget::~DatabaseTabWidget()
 {
-    QHashIterator<Database*, DatabaseManagerStruct> i(m_dbList);
-    while (i.hasNext()) {
-        i.next();
-        deleteDatabase(i.key());
-    }
+  QHashIterator<Database *, DatabaseManagerStruct> i(m_dbList);
+  while (i.hasNext()) {
+    i.next();
+    deleteDatabase(i.key());
+  }
 }
 
 void DatabaseTabWidget::toggleTabbar()
 {
-    if (count() > 1) {
-        if (!tabBar()->isVisible()) {
-            tabBar()->show();
-        }
-    }
-    else {
-        if (tabBar()->isVisible()) {
-            tabBar()->hide();
-        }
-    }
+  if (count() > 1) {
+    if (!tabBar()->isVisible())
+      tabBar()->show();
+  } else {
+    if (tabBar()->isVisible())
+      tabBar()->hide();
+  }
 }
 
 void DatabaseTabWidget::newDatabase()
 {
-    DatabaseManagerStruct dbStruct;
-    Database* db = new Database();
-    db->rootGroup()->setName(tr("Root"));
-    dbStruct.dbWidget = new DatabaseWidget(db, this);
+  DatabaseManagerStruct dbStruct;
+  Database *db = new Database();
+  db->rootGroup()->setName(tr("Root"));
+  dbStruct.dbWidget = new DatabaseWidget(db, this);
 
-    insertDatabase(db, dbStruct);
+  insertDatabase(db, dbStruct);
 
-    dbStruct.dbWidget->switchToMasterKeyChange();
+  dbStruct.dbWidget->switchToMasterKeyChange();
 }
 
 void DatabaseTabWidget::openDatabase()
 {
-    QString filter = QString("%1 (*.kdbx);;%2 (*)").arg(tr("KeePass 2 Database"), tr("All files"));
-    QString fileName = fileDialog()->getOpenFileName(this, tr("Open database"), QString(),
-                                                     filter);
-    if (!fileName.isEmpty()) {
-        openDatabase(fileName);
-    }
+  QString filter = QString("%1 (*.kdbx);;%2 (*)").arg(tr("KeePass 2 Database"), tr("All files"));
+  QString fileName = fileDialog()->getOpenFileName(this, tr("Open database"), QString(),
+                                                   filter);
+  if (!fileName.isEmpty())
+    openDatabase(fileName);
 }
 
 void DatabaseTabWidget::openCloudDatabase()
 {
-    //Create dbStruct with empty database which will be populated further during database open from local drive
-    DatabaseManagerStruct dbStruct;
-    Database* db = new Database();
-    dbStruct.dbWidget = new DatabaseWidget(db, this);
-    insertDatabase(db, dbStruct);
+  // Create dbStruct with empty database which will be populated further during database open from local drive
+  DatabaseManagerStruct dbStruct;
+  Database *db = new Database();
+  dbStruct.dbWidget = new DatabaseWidget(db, this);
+  insertDatabase(db, dbStruct);
 
-    //Expect CloudDbSelected signal which will be emmited when cloud database will be selected and downloaded locally.
-    //Pass also database pointer to use it as key for struct extraction from m_dbList.Database pointer does not contain any real db yet
-    connect(dbStruct.dbWidget,SIGNAL(cloudDbSelected(const QString&,Database*)),this,SLOT(openDatabaseDownloadedFromCloud(const QString&,Database*)));
+  // Expect CloudDbSelected signal which will be emmited when cloud database will be selected and downloaded locally.
+  // Pass also database pointer to use it as key for struct extraction from m_dbList.Database pointer does not contain any real db yet
+  connect(dbStruct.dbWidget, SIGNAL(cloudDbSelected(const QString &, Database *)), this,
+          SLOT(openDatabaseDownloadedFromCloud(const QString &, Database *)));
 
-    //Destoy created in advance empty database if user cancels download db dialog
-    connect(dbStruct.dbWidget,SIGNAL(cloudDbRejected(Database*)),this,SLOT(destroyCloudDatabaseStub(Database*)));
-    dbStruct.dbWidget->switchToCloudDbOpen();
-
-
+  // Destoy created in advance empty database if user cancels download db dialog
+  connect(dbStruct.dbWidget, SIGNAL(cloudDbRejected(Database *)), this,
+          SLOT(destroyCloudDatabaseStub(Database *)));
+  dbStruct.dbWidget->switchToCloudDbOpen();
 }
 
-void DatabaseTabWidget::destroyCloudDatabaseStub(Database* db)
+void DatabaseTabWidget::destroyCloudDatabaseStub(Database *db)
 {
-qDebug() << "Start destroy cloud database...";
-DatabaseManagerStruct& dbStruct = m_dbList[db];
-//We didn't open any files since user rejected open dialog
-//thus we don't need to destoy any files while deleteDatabase procedure
-dbStruct.saveToFilename=false;
-deleteDatabase(db);
+  qDebug() << "Start destroy cloud database...";
+  DatabaseManagerStruct &dbStruct = m_dbList[db];
+// We didn't open any files since user rejected open dialog
+// thus we don't need to destoy any files while deleteDatabase procedure
+  dbStruct.saveToFilename = false;
+  deleteDatabase(db);
 }
 
-
-void DatabaseTabWidget::openDatabaseDownloadedFromCloud(const QString& fileName,Database* db)
+void DatabaseTabWidget::openDatabaseDownloadedFromCloud(const QString &fileName, Database *db)
 {
-    Q_ASSERT(db);
-    //Reuse already created struct while Cloud Db opening
-    DatabaseManagerStruct& dbStruct = m_dbList[db];
+  Q_ASSERT(db);
+  // Reuse already created struct while Cloud Db opening
+  DatabaseManagerStruct &dbStruct = m_dbList[db];
 
-    qDebug() <<"We are inside tab widget:: "+fileName;
+  qDebug() <<"We are inside tab widget:: "+fileName;
 
-    QFileInfo fileInfo(fileName);
-    QString canonicalFilePath = fileInfo.canonicalFilePath();
-    if (canonicalFilePath.isEmpty()) {
-        QMessageBox::warning(this, tr("Warning"), tr("File not found!"));
-        return;
+  QFileInfo fileInfo(fileName);
+  QString canonicalFilePath = fileInfo.canonicalFilePath();
+  if (canonicalFilePath.isEmpty()) {
+    QMessageBox::warning(this, tr("Warning"), tr("File not found!"));
+    return;
+  }
+
+  // Check if database with given name was already opened
+  // and focus current tab on it if yes
+  QHashIterator<Database *, DatabaseManagerStruct> i(m_dbList);
+  while (i.hasNext()) {
+    i.next();
+    if (i.value().canonicalFilePath == canonicalFilePath) {
+      setCurrentIndex(databaseIndex(i.key()));
+      return;
     }
+  }
 
-    //Check if database with given name was already opened
-    //and focus current tab on it if yes
-    QHashIterator<Database*, DatabaseManagerStruct> i(m_dbList);
-    while (i.hasNext()) {
-        i.next();
-        if (i.value().canonicalFilePath == canonicalFilePath) {
-            setCurrentIndex(databaseIndex(i.key()));
-            return;
-        }
+  // test if we can read/write or read the file
+  QFile file(fileName);
+  // TODO: error handling
+  if (!file.open(QIODevice::ReadWrite)) {
+    if (!file.open(QIODevice::ReadOnly)) {
+      // can't open
+      // TODO: error message
+      return;
+    } else {
+      // can only open read-only
+      dbStruct.readOnly = true;
     }
+  }
+  file.close();
 
+  dbStruct.saveToFilename = !dbStruct.readOnly;
 
+  dbStruct.filePath = fileInfo.absoluteFilePath();
+  dbStruct.canonicalFilePath = canonicalFilePath;
+  dbStruct.fileName = fileInfo.fileName();
 
-    // test if we can read/write or read the file
-    QFile file(fileName);
-    // TODO: error handling
-    if (!file.open(QIODevice::ReadWrite)) {
-        if (!file.open(QIODevice::ReadOnly)) {
-            // can't open
-            // TODO: error message
-            return;
-        }
-        else {
-            // can only open read-only
-            dbStruct.readOnly = true;
-        }
+  updateLastDatabases(dbStruct.filePath);
+  // pass control to open database widget which reads locally downloaded database
+  dbStruct.dbWidget->switchToOpenDatabase(dbStruct.filePath);
+}
+
+void DatabaseTabWidget::openDatabase(const QString &fileName, const QString &pw,
+                                     const QString &keyFile)
+{
+  QFileInfo fileInfo(fileName);
+  QString canonicalFilePath = fileInfo.canonicalFilePath();
+  if (canonicalFilePath.isEmpty()) {
+    QMessageBox::warning(this, tr("Warning"), tr("File not found!"));
+    return;
+  }
+
+  // Check if database with given name was already opened
+  // and focus current tab on it if yes
+  QHashIterator<Database *, DatabaseManagerStruct> i(m_dbList);
+  while (i.hasNext()) {
+    i.next();
+    if (i.value().canonicalFilePath == canonicalFilePath) {
+      setCurrentIndex(databaseIndex(i.key()));
+      return;
     }
-    file.close();
+  }
 
-    dbStruct.saveToFilename = !dbStruct.readOnly;
+  DatabaseManagerStruct dbStruct;
 
-    dbStruct.filePath = fileInfo.absoluteFilePath();
-    dbStruct.canonicalFilePath = canonicalFilePath;
-    dbStruct.fileName = fileInfo.fileName();
+  // test if we can read/write or read the file
+  QFile file(fileName);
+  // TODO: error handling
+  if (!file.open(QIODevice::ReadWrite)) {
+    if (!file.open(QIODevice::ReadOnly)) {
+      // can't open
+      // TODO: error message
+      return;
+    } else {
+      // can only open read-only
+      dbStruct.readOnly = true;
+    }
+  }
+  file.close();
 
-    updateLastDatabases(dbStruct.filePath);
-    //pass control to open database widget which reads locally downloaded database
+  Database *db = new Database();
+  dbStruct.dbWidget = new DatabaseWidget(db, this);
+  dbStruct.saveToFilename = !dbStruct.readOnly;
+
+  dbStruct.filePath = fileInfo.absoluteFilePath();
+  dbStruct.canonicalFilePath = canonicalFilePath;
+  dbStruct.fileName = fileInfo.fileName();
+
+  insertDatabase(db, dbStruct);
+
+  updateLastDatabases(dbStruct.filePath);
+
+  if (!pw.isNull() || !keyFile.isEmpty())
+    dbStruct.dbWidget->switchToOpenDatabase(dbStruct.filePath, pw, keyFile);
+  else
     dbStruct.dbWidget->switchToOpenDatabase(dbStruct.filePath);
-
-}
-
-
-void DatabaseTabWidget::openDatabase(const QString& fileName, const QString& pw,
-                                     const QString& keyFile)
-{
-    QFileInfo fileInfo(fileName);
-    QString canonicalFilePath = fileInfo.canonicalFilePath();
-    if (canonicalFilePath.isEmpty()) {
-        QMessageBox::warning(this, tr("Warning"), tr("File not found!"));
-        return;
-    }
-
-    //Check if database with given name was already opened
-    //and focus current tab on it if yes
-    QHashIterator<Database*, DatabaseManagerStruct> i(m_dbList);
-    while (i.hasNext()) {
-        i.next();
-        if (i.value().canonicalFilePath == canonicalFilePath) {
-            setCurrentIndex(databaseIndex(i.key()));
-            return;
-        }
-    }
-
-    DatabaseManagerStruct dbStruct;
-
-    // test if we can read/write or read the file
-    QFile file(fileName);
-    // TODO: error handling
-    if (!file.open(QIODevice::ReadWrite)) {
-        if (!file.open(QIODevice::ReadOnly)) {
-            // can't open
-            // TODO: error message
-            return;
-        }
-        else {
-            // can only open read-only
-            dbStruct.readOnly = true;
-        }
-    }
-    file.close();
-
-    Database* db = new Database();
-    dbStruct.dbWidget = new DatabaseWidget(db, this);
-    dbStruct.saveToFilename = !dbStruct.readOnly;
-
-    dbStruct.filePath = fileInfo.absoluteFilePath();
-    dbStruct.canonicalFilePath = canonicalFilePath;
-    dbStruct.fileName = fileInfo.fileName();
-
-    insertDatabase(db, dbStruct);
-
-    updateLastDatabases(dbStruct.filePath);
-
-    if (!pw.isNull() || !keyFile.isEmpty()) {
-        dbStruct.dbWidget->switchToOpenDatabase(dbStruct.filePath, pw, keyFile);
-    }
-    else {
-        dbStruct.dbWidget->switchToOpenDatabase(dbStruct.filePath);
-    }
 }
 
 void DatabaseTabWidget::importKeePass1Database()
 {
-    QString fileName = fileDialog()->getOpenFileName(this, tr("Open KeePass 1 database"), QString(),
-            tr("KeePass 1 database") + " (*.kdb);;" + tr("All files (*)"));
+  QString fileName = fileDialog()->getOpenFileName(this, tr("Open KeePass 1 database"), QString(),
+                                                   tr("KeePass 1 database") + " (*.kdb);;"
+                                                   + tr("All files (*)"));
 
-    if (fileName.isEmpty()) {
-        return;
-    }
+  if (fileName.isEmpty())
+    return;
 
-    Database* db = new Database();
-    DatabaseManagerStruct dbStruct;
-    dbStruct.dbWidget = new DatabaseWidget(db, this);
-    dbStruct.modified = true;
+  Database *db = new Database();
+  DatabaseManagerStruct dbStruct;
+  dbStruct.dbWidget = new DatabaseWidget(db, this);
+  dbStruct.modified = true;
 
-    insertDatabase(db, dbStruct);
+  insertDatabase(db, dbStruct);
 
-    dbStruct.dbWidget->switchToImportKeepass1(fileName);
+  dbStruct.dbWidget->switchToImportKeepass1(fileName);
 }
 
-bool DatabaseTabWidget::closeDatabase(Database* db)
+bool DatabaseTabWidget::closeDatabase(Database *db)
 {
-    Q_ASSERT(db);
+  Q_ASSERT(db);
 
-    const DatabaseManagerStruct& dbStruct = m_dbList.value(db);
-    int index = databaseIndex(db);
-    Q_ASSERT(index != -1);
+  const DatabaseManagerStruct &dbStruct = m_dbList.value(db);
+  int index = databaseIndex(db);
+  Q_ASSERT(index != -1);
 
-    QString dbName = tabText(index);
-    if (dbName.right(1) == "*") {
-        dbName.chop(1);
+  QString dbName = tabText(index);
+  if (dbName.right(1) == "*")
+    dbName.chop(1);
+  if (dbStruct.dbWidget->currentMode() == DatabaseWidget::EditMode && db->hasKey()) {
+    QMessageBox::StandardButton result
+      = QMessageBox::question(
+      this, tr("Close?"),
+      tr("\"%1\" is in edit mode.\nClose anyway?").arg(dbName),
+      QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
+    if (result == QMessageBox::No)
+      return false;
+  }
+  if (dbStruct.modified) {
+    if (config()->get("AutoSaveOnExit").toBool()) {
+      saveDatabase(db);
+    } else {
+      QMessageBox::StandardButton result
+        = QMessageBox::question(
+        this, tr("Save changes?"),
+        tr("\"%1\" was modified.\nSave changes?").arg(dbName),
+        QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel, QMessageBox::Yes);
+      if (result == QMessageBox::Yes)
+        saveDatabase(db);
+      else if (result == QMessageBox::Cancel)
+        return false;
     }
-    if (dbStruct.dbWidget->currentMode() == DatabaseWidget::EditMode && db->hasKey()) {
-        QMessageBox::StandardButton result =
-            QMessageBox::question(
-            this, tr("Close?"),
-            tr("\"%1\" is in edit mode.\nClose anyway?").arg(dbName),
-            QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
-        if (result == QMessageBox::No) {
-            return false;
-        }
-    }
-    if (dbStruct.modified) {
-        if (config()->get("AutoSaveOnExit").toBool()) {
-            saveDatabase(db);
-        }
-        else {
-            QMessageBox::StandardButton result =
-                QMessageBox::question(
-                this, tr("Save changes?"),
-                tr("\"%1\" was modified.\nSave changes?").arg(dbName),
-                QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel, QMessageBox::Yes);
-            if (result == QMessageBox::Yes) {
-                saveDatabase(db);
-            }
-            else if (result == QMessageBox::Cancel) {
-                return false;
-            }
-        }
-    }
+  }
 
-    deleteDatabase(db);
+  deleteDatabase(db);
 
-    return true;
+  return true;
 }
 
-void DatabaseTabWidget::deleteDatabase(Database* db)
-
+void DatabaseTabWidget::deleteDatabase(Database *db)
 {
-    qDebug() << "Emitting close database procedure";
-    const DatabaseManagerStruct dbStruct = m_dbList.value(db);
-    bool emitDatabaseWithFileClosed = dbStruct.saveToFilename;
-    QString filePath = dbStruct.filePath;
+  qDebug() << "Emitting close database procedure";
+  const DatabaseManagerStruct dbStruct = m_dbList.value(db);
+  bool emitDatabaseWithFileClosed = dbStruct.saveToFilename;
+  QString filePath = dbStruct.filePath;
 
-    int index = databaseIndex(db);
+  int index = databaseIndex(db);
 
-    removeTab(index);
-    toggleTabbar();
-    m_dbList.remove(db);
-    delete dbStruct.dbWidget;
-    delete db;
+  removeTab(index);
+  toggleTabbar();
+  m_dbList.remove(db);
+  delete dbStruct.dbWidget;
+  delete db;
 
-    if (emitDatabaseWithFileClosed) {
-        Q_EMIT databaseWithFileClosed(filePath);
-    }
+  if (emitDatabaseWithFileClosed)
+    Q_EMIT databaseWithFileClosed(filePath);
 }
 
 bool DatabaseTabWidget::closeAllDatabases()
 {
-    while (!m_dbList.isEmpty()) {
-        if (!closeDatabase()) {
-            return false;
-        }
-    }
-    return true;
+  while (!m_dbList.isEmpty()) {
+    if (!closeDatabase())
+      return false;
+  }
+  return true;
 }
+
 /**
  * @brief DatabaseTabWidget::saveDatabaseToCloud - loads current version of the database to cloud
  * @param db - database which will be loaded to cloud
  */
-void DatabaseTabWidget::saveDatabaseToCloud(Database* db) {
-qDebug() << "Saving database to cloud with modification date:"+db->metadata()->lastModifiedDate().toString();
-DatabaseManagerStruct& dbStruct = m_dbList[db];
-// It's just a upload stub which does not work for now.
-// TODO remove extra initialization of google api from tabwidget.It should be specific only for DatabaseWidget
-AuthCredentials* creds = new GoogleDriveCredentials(this);
-CommandsFactory* commandsFactory = new CommandsFactoryImpl(this,creds);
-RemoteDriveApi* remoteDrive = new RemoteDriveApi(this,commandsFactory);
-remoteDrive->upload(OptionsBuilder().addOption(OPTION_ABSOLUTE_DB_NAME,dbStruct.filePath).addOption(OPTION_LAST_MODIFIED_TIME,db->metadata()->lastModifiedDate()).build());
-delete remoteDrive;
-delete commandsFactory;
-delete creds;
+void DatabaseTabWidget::saveDatabaseToCloud(Database *db)
+{
+  qDebug() << "Saving database to cloud with modification date:"
+    + db->metadata()->lastModifiedDate().toString();
+  DatabaseManagerStruct &dbStruct = m_dbList[db];
+
+   // TODO remove extra initialization of google api from tabwidget.
+  // It should be specific only for DatabaseWidget
+  AuthCredentials *creds = new GoogleDriveCredentials(this);
+  CommandsFactory *commandsFactory = new CommandsFactoryImpl(this, creds);
+  RemoteDriveApi *remoteDrive = new RemoteDriveApi(this, commandsFactory);
+  KeePassxDriveSync::Command* uploadCommand = remoteDrive->upload();
+  remoteDrive->executeAsync(uploadCommand,
+                            OptionsBuilder().addOption(OPTION_ABSOLUTE_DB_NAME,
+                                                       dbStruct.filePath).addOption(
+                              OPTION_LAST_MODIFIED_TIME,
+                              db->metadata()->
+                              lastModifiedDate()).build());
+
+  delete uploadCommand;
+  delete remoteDrive;
+  delete commandsFactory;
+  delete creds;
 }
 
-void DatabaseTabWidget::saveDatabase(Database* db)
+void DatabaseTabWidget::saveDatabase(Database *db)
 {
-    DatabaseManagerStruct& dbStruct = m_dbList[db];
+  DatabaseManagerStruct &dbStruct = m_dbList[db];
 
-    if (dbStruct.saveToFilename) {
-        bool result = false;
+  if (dbStruct.saveToFilename) {
+    bool result = false;
 
-        QSaveFile saveFile(dbStruct.filePath);
-        if (saveFile.open(QIODevice::WriteOnly)) {
-            m_writer.writeDatabase(&saveFile, db);
-            result = saveFile.commit();
-        }
-
-        if (result) {
-            //get local database modification time
-            QFileInfo info(dbStruct.filePath);
-            db->metadata()->setLastModifiedDate(info.lastModified());
-            dbStruct.modified = false;
-
-
-            updateTabName(db);
-            qDebug() << "Emitting Signal databaseSavedLocally ";
-            Q_EMIT databaseSavedLocally(db);
-        }
-        else {
-            QMessageBox::critical(this, tr("Error"), tr("Writing the database failed.") + "\n\n"
-                                  + saveFile.errorString());
-        }
+    QSaveFile saveFile(dbStruct.filePath);
+    if (saveFile.open(QIODevice::WriteOnly)) {
+      m_writer.writeDatabase(&saveFile, db);
+      result = saveFile.commit();
     }
-    else {
-        saveDatabaseAs(db);
+
+    if (result) {
+      // get local database modification time
+      QFileInfo info(dbStruct.filePath);
+      db->metadata()->setLastModifiedDate(info.lastModified());
+      dbStruct.modified = false;
+
+      updateTabName(db);
+      qDebug() << "Emitting Signal databaseSavedLocally ";
+      Q_EMIT databaseSavedLocally(db);
+    } else {
+      QMessageBox::critical(this, tr("Error"), tr("Writing the database failed.") + "\n\n"
+                            + saveFile.errorString());
     }
+  } else {
+    saveDatabaseAs(db);
+  }
 }
 
-void DatabaseTabWidget::saveDatabaseAs(Database* db)
+void DatabaseTabWidget::saveDatabaseAs(Database *db)
 {
-    DatabaseManagerStruct& dbStruct = m_dbList[db];
-    QString oldFileName;
-    if (dbStruct.saveToFilename) {
-        oldFileName = dbStruct.filePath;
-    }
-    QString fileName = fileDialog()->getSaveFileName(this, tr("Save database as"),
-                                                     oldFileName, tr("KeePass 2 Database").append(" (*.kdbx)"));
-    if (!fileName.isEmpty()) {
-        bool result = false;
+  DatabaseManagerStruct &dbStruct = m_dbList[db];
+  QString oldFileName;
+  if (dbStruct.saveToFilename)
+    oldFileName = dbStruct.filePath;
+  QString fileName = fileDialog()->getSaveFileName(this, tr("Save database as"),
+                                                   oldFileName,
+                                                   tr("KeePass 2 Database").append(" (*.kdbx)"));
+  if (!fileName.isEmpty()) {
+    bool result = false;
 
-        QSaveFile saveFile(fileName);
-        if (saveFile.open(QIODevice::WriteOnly)) {
-            m_writer.writeDatabase(&saveFile, db);
-            result = saveFile.commit();
-        }
-
-        if (result) {
-            dbStruct.modified = false;
-            dbStruct.saveToFilename = true;
-            QFileInfo fileInfo(fileName);
-            dbStruct.filePath = fileInfo.absoluteFilePath();
-            dbStruct.canonicalFilePath = fileInfo.canonicalFilePath();
-            dbStruct.fileName = fileInfo.fileName();
-            dbStruct.dbWidget->updateFilename(dbStruct.filePath);
-            updateTabName(db);
-            updateLastDatabases(dbStruct.filePath);
-        }
-        else {
-            QMessageBox::critical(this, tr("Error"), tr("Writing the database failed.") + "\n\n"
-                                  + saveFile.errorString());
-        }
+    QSaveFile saveFile(fileName);
+    if (saveFile.open(QIODevice::WriteOnly)) {
+      m_writer.writeDatabase(&saveFile, db);
+      result = saveFile.commit();
     }
+
+    if (result) {
+      dbStruct.modified = false;
+      dbStruct.saveToFilename = true;
+      QFileInfo fileInfo(fileName);
+      dbStruct.filePath = fileInfo.absoluteFilePath();
+      dbStruct.canonicalFilePath = fileInfo.canonicalFilePath();
+      dbStruct.fileName = fileInfo.fileName();
+      dbStruct.dbWidget->updateFilename(dbStruct.filePath);
+      updateTabName(db);
+      updateLastDatabases(dbStruct.filePath);
+    } else {
+      QMessageBox::critical(this, tr("Error"), tr("Writing the database failed.") + "\n\n"
+                            + saveFile.errorString());
+    }
+  }
 }
 
 bool DatabaseTabWidget::closeDatabase(int index)
 {
-    if (index == -1) {
-        index = currentIndex();
-    }
+  if (index == -1)
+    index = currentIndex();
 
-    setCurrentIndex(index);
+  setCurrentIndex(index);
 
-    return closeDatabase(indexDatabase(index));
+  return closeDatabase(indexDatabase(index));
 }
 
 void DatabaseTabWidget::closeDatabaseFromSender()
 {
-    Q_ASSERT(sender());
-    DatabaseWidget* dbWidget = static_cast<DatabaseWidget*>(sender());
-    Database* db = databaseFromDatabaseWidget(dbWidget);
-    int index = databaseIndex(db);
-    setCurrentIndex(index);
-    closeDatabase(db);
+  Q_ASSERT(sender());
+  DatabaseWidget *dbWidget = static_cast<DatabaseWidget *>(sender());
+  Database *db = databaseFromDatabaseWidget(dbWidget);
+  int index = databaseIndex(db);
+  setCurrentIndex(index);
+  closeDatabase(db);
 }
 
 void DatabaseTabWidget::saveDatabase(int index)
 {
-    if (index == -1) {
-        index = currentIndex();
-    }
+  if (index == -1)
+    index = currentIndex();
 
-    saveDatabase(indexDatabase(index));
+  saveDatabase(indexDatabase(index));
 }
 
 void DatabaseTabWidget::saveDatabaseAs(int index)
 {
-    if (index == -1) {
-        index = currentIndex();
-    }
-    saveDatabaseAs(indexDatabase(index));
+  if (index == -1)
+    index = currentIndex();
+  saveDatabaseAs(indexDatabase(index));
 }
 
 void DatabaseTabWidget::changeMasterKey()
 {
-    currentDatabaseWidget()->switchToMasterKeyChange();
+  currentDatabaseWidget()->switchToMasterKeyChange();
 }
 
 void DatabaseTabWidget::changeDatabaseSettings()
 {
-    currentDatabaseWidget()->switchToDatabaseSettings();
+  currentDatabaseWidget()->switchToDatabaseSettings();
 }
 
 bool DatabaseTabWidget::readOnly(int index)
 {
-    if (index == -1) {
-        index = currentIndex();
-    }
+  if (index == -1)
+    index = currentIndex();
 
-    return indexDatabaseManagerStruct(index).readOnly;
+  return indexDatabaseManagerStruct(index).readOnly;
 }
 
-void DatabaseTabWidget::updateTabName(Database* db)
+void DatabaseTabWidget::updateTabName(Database *db)
 {
-    int index = databaseIndex(db);
-    Q_ASSERT(index != -1);
+  int index = databaseIndex(db);
+  Q_ASSERT(index != -1);
 
-    const DatabaseManagerStruct& dbStruct = m_dbList.value(db);
+  const DatabaseManagerStruct &dbStruct = m_dbList.value(db);
 
-    QString tabName;
+  QString tabName;
 
-    if (dbStruct.saveToFilename) {
-        if (db->metadata()->name().isEmpty()) {
-            tabName = dbStruct.fileName;
-        }
-        else {
-            tabName = db->metadata()->name();
-        }
+  if (dbStruct.saveToFilename) {
+    if (db->metadata()->name().isEmpty())
+      tabName = dbStruct.fileName;
+    else
+      tabName = db->metadata()->name();
 
-        setTabToolTip(index, dbStruct.filePath);
-    }
-    else {
-        if (db->metadata()->name().isEmpty()) {
-            tabName = tr("New database");
-        }
-        else {
-            tabName = QString("%1 [%2]").arg(db->metadata()->name(), tr("New database"));
-        }
-    }
+    setTabToolTip(index, dbStruct.filePath);
+  } else {
+    if (db->metadata()->name().isEmpty())
+      tabName = tr("New database");
+    else
+      tabName = QString("%1 [%2]").arg(db->metadata()->name(), tr("New database"));
+  }
 
-    if (dbStruct.dbWidget->currentMode() == DatabaseWidget::LockedMode) {
-        tabName.append(QString(" [%1]").arg(tr("locked")));
-    }
+  if (dbStruct.dbWidget->currentMode() == DatabaseWidget::LockedMode)
+    tabName.append(QString(" [%1]").arg(tr("locked")));
 
-    if (dbStruct.modified) {
-        tabName.append("*");
-    }
+  if (dbStruct.modified)
+    tabName.append("*");
 
-    setTabText(index, tabName);
-    Q_EMIT tabNameChanged();
+  setTabText(index, tabName);
+  Q_EMIT tabNameChanged();
 }
 
 void DatabaseTabWidget::updateTabNameFromDbSender()
 {
-    Q_ASSERT(qobject_cast<Database*>(sender()));
+  Q_ASSERT(qobject_cast<Database *>(sender()));
 
-    updateTabName(static_cast<Database*>(sender()));
+  updateTabName(static_cast<Database *>(sender()));
 }
 
 void DatabaseTabWidget::updateTabNameFromDbWidgetSender()
 {
-    Q_ASSERT(qobject_cast<DatabaseWidget*>(sender()));
-    Q_ASSERT(databaseFromDatabaseWidget(qobject_cast<DatabaseWidget*>(sender())));
+  Q_ASSERT(qobject_cast<DatabaseWidget *>(sender()));
+  Q_ASSERT(databaseFromDatabaseWidget(qobject_cast<DatabaseWidget *>(sender())));
 
-    DatabaseWidget* dbWidget = static_cast<DatabaseWidget*>(sender());
-    updateTabName(databaseFromDatabaseWidget(dbWidget));
+  DatabaseWidget *dbWidget = static_cast<DatabaseWidget *>(sender());
+  updateTabName(databaseFromDatabaseWidget(dbWidget));
 }
 
-int DatabaseTabWidget::databaseIndex(Database* db)
+int DatabaseTabWidget::databaseIndex(Database *db)
 {
-    QWidget* dbWidget = m_dbList.value(db).dbWidget;
-    return indexOf(dbWidget);
+  QWidget *dbWidget = m_dbList.value(db).dbWidget;
+  return indexOf(dbWidget);
 }
 
-Database* DatabaseTabWidget::indexDatabase(int index)
+Database *DatabaseTabWidget::indexDatabase(int index)
 {
-    QWidget* dbWidget = widget(index);
+  QWidget *dbWidget = widget(index);
 
-    QHashIterator<Database*, DatabaseManagerStruct> i(m_dbList);
-    while (i.hasNext()) {
-        i.next();
-        if (i.value().dbWidget == dbWidget) {
-            return i.key();
-        }
-    }
+  QHashIterator<Database *, DatabaseManagerStruct> i(m_dbList);
+  while (i.hasNext()) {
+    i.next();
+    if (i.value().dbWidget == dbWidget)
+      return i.key();
+  }
 
-    return Q_NULLPTR;
+  return Q_NULLPTR;
 }
 
 DatabaseManagerStruct DatabaseTabWidget::indexDatabaseManagerStruct(int index)
 {
-    QWidget* dbWidget = widget(index);
+  QWidget *dbWidget = widget(index);
 
-    QHashIterator<Database*, DatabaseManagerStruct> i(m_dbList);
-    while (i.hasNext()) {
-        i.next();
-        if (i.value().dbWidget == dbWidget) {
-            return i.value();
-        }
-    }
+  QHashIterator<Database *, DatabaseManagerStruct> i(m_dbList);
+  while (i.hasNext()) {
+    i.next();
+    if (i.value().dbWidget == dbWidget)
+      return i.value();
+  }
 
-    return DatabaseManagerStruct();
+  return DatabaseManagerStruct();
 }
 
-Database* DatabaseTabWidget::databaseFromDatabaseWidget(DatabaseWidget* dbWidget)
+Database *DatabaseTabWidget::databaseFromDatabaseWidget(DatabaseWidget *dbWidget)
 {
-    QHashIterator<Database*, DatabaseManagerStruct> i(m_dbList);
-    while (i.hasNext()) {
-        i.next();
-        if (i.value().dbWidget == dbWidget) {
-            return i.key();
-        }
-    }
+  QHashIterator<Database *, DatabaseManagerStruct> i(m_dbList);
+  while (i.hasNext()) {
+    i.next();
+    if (i.value().dbWidget == dbWidget)
+      return i.key();
+  }
 
+  return Q_NULLPTR;
+}
+
+void DatabaseTabWidget::insertDatabase(Database *db, const DatabaseManagerStruct &dbStruct)
+{
+  m_dbList.insert(db, dbStruct);
+
+  addTab(dbStruct.dbWidget, "");
+  toggleTabbar();
+  updateTabName(db);
+  int index = databaseIndex(db);
+  setCurrentIndex(index);
+  connectDatabase(db);
+  connect(dbStruct.dbWidget, SIGNAL(closeRequest()), SLOT(closeDatabaseFromSender()));
+  connect(dbStruct.dbWidget, SIGNAL(databaseChanged(Database *)), SLOT(changeDatabase(Database *)));
+  connect(dbStruct.dbWidget, SIGNAL(unlockedDatabase()), SLOT(updateTabNameFromDbWidgetSender()));
+}
+
+DatabaseWidget *DatabaseTabWidget::currentDatabaseWidget()
+{
+  Database *db = indexDatabase(currentIndex());
+  if (db)
+    return m_dbList[db].dbWidget;
+  else
     return Q_NULLPTR;
-}
-
-void DatabaseTabWidget::insertDatabase(Database* db, const DatabaseManagerStruct& dbStruct)
-{
-    m_dbList.insert(db, dbStruct);
-
-    addTab(dbStruct.dbWidget, "");
-    toggleTabbar();
-    updateTabName(db);
-    int index = databaseIndex(db);
-    setCurrentIndex(index);
-    connectDatabase(db);
-    connect(dbStruct.dbWidget, SIGNAL(closeRequest()), SLOT(closeDatabaseFromSender()));
-    connect(dbStruct.dbWidget, SIGNAL(databaseChanged(Database*)), SLOT(changeDatabase(Database*)));
-    connect(dbStruct.dbWidget, SIGNAL(unlockedDatabase()), SLOT(updateTabNameFromDbWidgetSender()));
-}
-
-DatabaseWidget* DatabaseTabWidget::currentDatabaseWidget()
-{
-    Database* db = indexDatabase(currentIndex());
-    if (db) {
-        return m_dbList[db].dbWidget;
-    }
-    else {
-        return Q_NULLPTR;
-    }
 }
 
 bool DatabaseTabWidget::hasLockableDatabases()
 {
-    QHashIterator<Database*, DatabaseManagerStruct> i(m_dbList);
-    while (i.hasNext()) {
-        i.next();
-        DatabaseWidget::Mode mode = i.value().dbWidget->currentMode();
+  QHashIterator<Database *, DatabaseManagerStruct> i(m_dbList);
+  while (i.hasNext()) {
+    i.next();
+    DatabaseWidget::Mode mode = i.value().dbWidget->currentMode();
 
-        if ((mode == DatabaseWidget::ViewMode || mode == DatabaseWidget::EditMode)
-                && i.value().dbWidget->dbHasKey()) {
-            return true;
-        }
-    }
+    if ((mode == DatabaseWidget::ViewMode || mode == DatabaseWidget::EditMode)
+        && i.value().dbWidget->dbHasKey())
+      return true;
+  }
 
-    return false;
+  return false;
 }
 
 void DatabaseTabWidget::lockDatabases()
 {
-    QHashIterator<Database*, DatabaseManagerStruct> i(m_dbList);
-    while (i.hasNext()) {
-        i.next();
-        DatabaseWidget::Mode mode = i.value().dbWidget->currentMode();
+  QHashIterator<Database *, DatabaseManagerStruct> i(m_dbList);
+  while (i.hasNext()) {
+    i.next();
+    DatabaseWidget::Mode mode = i.value().dbWidget->currentMode();
 
-        if ((mode == DatabaseWidget::ViewMode || mode == DatabaseWidget::EditMode)
-                && i.value().dbWidget->dbHasKey()) {
-            i.value().dbWidget->lock();
-            updateTabName(i.key());
-        }
+    if ((mode == DatabaseWidget::ViewMode || mode == DatabaseWidget::EditMode)
+        && i.value().dbWidget->dbHasKey()) {
+      i.value().dbWidget->lock();
+      updateTabName(i.key());
     }
+  }
 }
 
 void DatabaseTabWidget::modified()
 {
-    Q_ASSERT(qobject_cast<Database*>(sender()));
+  Q_ASSERT(qobject_cast<Database *>(sender()));
 
-    Database* db = static_cast<Database*>(sender());
-    DatabaseManagerStruct& dbStruct = m_dbList[db];
+  Database *db = static_cast<Database *>(sender());
+  DatabaseManagerStruct &dbStruct = m_dbList[db];
 
-    if (config()->get("AutoSaveAfterEveryChange").toBool() && dbStruct.saveToFilename) {
-        saveDatabase(db);
-        return;
-    }
+  if (config()->get("AutoSaveAfterEveryChange").toBool() && dbStruct.saveToFilename) {
+    saveDatabase(db);
+    return;
+  }
 
-    if (!dbStruct.modified) {
-        dbStruct.modified = true;
-        updateTabName(db);
-    }
+  if (!dbStruct.modified) {
+    dbStruct.modified = true;
+    updateTabName(db);
+  }
 }
 
-void DatabaseTabWidget::updateLastDatabases(const QString& filename)
+void DatabaseTabWidget::updateLastDatabases(const QString &filename)
 {
-    if (!config()->get("RememberLastDatabases").toBool()) {
-        config()->set("LastDatabases", QVariant());
-    }
-    else {
-        QStringList lastDatabases = config()->get("LastDatabases", QVariant()).toStringList();
-        lastDatabases.prepend(filename);
-        lastDatabases.removeDuplicates();
+  if (!config()->get("RememberLastDatabases").toBool()) {
+    config()->set("LastDatabases", QVariant());
+  } else {
+    QStringList lastDatabases = config()->get("LastDatabases", QVariant()).toStringList();
+    lastDatabases.prepend(filename);
+    lastDatabases.removeDuplicates();
 
-        while (lastDatabases.count() > LastDatabasesCount) {
-            lastDatabases.removeLast();
-        }
-        config()->set("LastDatabases", lastDatabases);
-    }
+    while (lastDatabases.count() > LastDatabasesCount)
+      lastDatabases.removeLast();
+    config()->set("LastDatabases", lastDatabases);
+  }
 }
 
-void DatabaseTabWidget::changeDatabase(Database* newDb)
+void DatabaseTabWidget::changeDatabase(Database *newDb)
 {
-    Q_ASSERT(sender());
-    Q_ASSERT(!m_dbList.contains(newDb));
+  Q_ASSERT(sender());
+  Q_ASSERT(!m_dbList.contains(newDb));
 
-    DatabaseWidget* dbWidget = static_cast<DatabaseWidget*>(sender());
-    Database* oldDb = databaseFromDatabaseWidget(dbWidget);
-    DatabaseManagerStruct dbStruct = m_dbList[oldDb];
-    m_dbList.remove(oldDb);
-    m_dbList.insert(newDb, dbStruct);
+  DatabaseWidget *dbWidget = static_cast<DatabaseWidget *>(sender());
+  Database *oldDb = databaseFromDatabaseWidget(dbWidget);
+  DatabaseManagerStruct dbStruct = m_dbList[oldDb];
+  m_dbList.remove(oldDb);
+  m_dbList.insert(newDb, dbStruct);
 
-    updateTabName(newDb);
-    connectDatabase(newDb, oldDb);
+  updateTabName(newDb);
+  connectDatabase(newDb, oldDb);
 }
 
-void DatabaseTabWidget::connectDatabase(Database* newDb, Database* oldDb)
+void DatabaseTabWidget::connectDatabase(Database *newDb, Database *oldDb)
 {
-    if (oldDb) {
-        oldDb->disconnect(this);
-    }
+  if (oldDb)
+    oldDb->disconnect(this);
 
-    connect(newDb, SIGNAL(nameTextChanged()), SLOT(updateTabNameFromDbSender()));
-    connect(newDb, SIGNAL(modified()), SLOT(modified()));
-    newDb->setEmitModified(true);
+  connect(newDb, SIGNAL(nameTextChanged()), SLOT(updateTabNameFromDbSender()));
+  connect(newDb, SIGNAL(modified()), SLOT(modified()));
+  newDb->setEmitModified(true);
 }
 
 void DatabaseTabWidget::performGlobalAutoType()
 {
-    autoType()->performGlobalAutoType(m_dbList.keys());
+  autoType()->performGlobalAutoType(m_dbList.keys());
 }

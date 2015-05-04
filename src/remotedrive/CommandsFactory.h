@@ -12,6 +12,8 @@ public:
     virtual Command *download() = 0;
     virtual Command *sync() = 0;
     virtual Command *list() = 0;
+    virtual Command *upload() = 0;
+    virtual Command *remove() = 0;
 };
 
 #endif // COMMANDSFACTORY_H

@@ -30,6 +30,7 @@
 #include "remotedrive/gdrive/GoogleDriveCredentials.h"
 #include "remotedrive/OptionsBuilder.h"
 #include "remotedrive/gdrive/GDriveConstants.h"
+#include "remotedrive/Command.h"
 
 class DatabaseWidget;
 class DatabaseOpenWidget;

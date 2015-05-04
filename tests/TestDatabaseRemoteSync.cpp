@@ -221,7 +221,7 @@ void TestDatabaseRemoteSync::compareResult(QSharedPointer<SyncObject>actual,
 }
 
 /**
- * @brief SyncRecentDbHelper::readDatabase reads stored locally database into
+ * @brief readDatabase reads stored locally database into
  * the memory
  */
 Database * TestDatabaseRemoteSync::readDatabase(const CompositeKey& key,

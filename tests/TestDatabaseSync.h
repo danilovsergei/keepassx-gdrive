@@ -1,10 +1,10 @@
 #ifndef TESTDATABASESYNC_H
 #define TESTDATABASESYNC_H
 #include <QtCore/QObject>
-#include "gdrive/GDriveEntriesSync.h"
-#include "gdrive/GDriveGroupsSync.h"
-#include "gdrive/GDriveDatabaseSyncBase.h"
-#include "gdrive/GDriveDatabaseSyncFactory.h"
+#include "remotedrive/EntriesSync.h"
+#include "remotedrive/GroupsSync.h"
+#include "remotedrive/DatabaseSyncBase.h"
+#include "remotedrive/DatabaseSyncFactory.h"
 
 class TestDatabaseSync: public QObject
 {
@@ -30,9 +30,9 @@ private Q_SLOTS:
 private:
 Database* db1;
 Database* db2;
-QSharedPointer<GDriveDatabaseSyncBase> groupSync;
-QSharedPointer<GDriveDatabaseSyncBase> entrySync;
-QSharedPointer<GDriveDatabaseSyncBase> allSync;
+QSharedPointer<DatabaseSyncBase> groupSync;
+QSharedPointer<DatabaseSyncBase> entrySync;
+QSharedPointer<DatabaseSyncBase> allSync;
 Group* groupRoot;
 Group* groupRoot2;
 };
