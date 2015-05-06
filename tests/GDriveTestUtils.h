@@ -1,5 +1,6 @@
 #ifndef GDRIVETESTUTILS_H
 #define GDRIVETESTUTILS_H
+
 #include <QtCore/QSharedPointer>
 #include "remotedrive/SyncObject.h"
 #include "core/Database.h"
@@ -15,6 +16,7 @@
 #include <QtCore/qmath.h>
 #include <QtTest/QSignalSpy>
 #include <QtTest/QTest>
+#include <QtCore/QObject>
 
 #include "remotedrive/CommandsFactory.h"
 #include "remotedrive/AuthCredentials.h"
@@ -30,10 +32,11 @@ using KeePassxDriveSync::Command;
 
 class GDriveTestUtils : public QObject
 {
-    Q_OBJECT
+Q_OBJECT
 
 public:
-    GDriveTestUtils();
+    GDriveTestUtils(QObject* parent = 0);
+    ~GDriveTestUtils();
     bool compareResult(QSharedPointer<SyncObject> actual, QMap<SyncMapKey, int> expectedMap);
     Database *readDatabase(const CompositeKey &key, const QString &dbPath);
     Database *createLocalDatabase(const QString &dbPath);
@@ -49,7 +52,10 @@ public:
                        const QString &password = QString("testPassword"));
     Group *createGroup(const QString &groupName = QString("testGroup"));
     bool deleteLocalDb(const QString &dbPath);
+    QSharedPointer<SyncObject> syncDatabase(Database* db, const QString& dbPath);
     static void waitForSignal(const QSignalSpy &spy, const int timeout);
+
+
     RemoteDriveApi *remoteDrive = Q_NULLPTR;
 
 private:

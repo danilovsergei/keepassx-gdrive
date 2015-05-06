@@ -1,13 +1,21 @@
 #include "GDriveTestUtils.h"
+
 Q_DECLARE_METATYPE(QList<QueryEntry>)
 Q_DECLARE_METATYPE(RemoteFileList)
+Q_DECLARE_METATYPE(QSharedPointer<DatabaseSyncObject::SyncObject>)
+Q_DECLARE_METATYPE(Database *)
 
-GDriveTestUtils::GDriveTestUtils()
+GDriveTestUtils::GDriveTestUtils(QObject* parent)
 {
   AuthCredentials *creds = new GoogleDriveCredentials(this);
   CommandsFactory *commandsFactory = new CommandsFactoryImpl(this, creds);
   // remote drive will be used to call all remote drive functions like sync , upload, download
   remoteDrive = new RemoteDriveApi(this, commandsFactory);
+}
+
+GDriveTestUtils::~GDriveTestUtils()
+{
+  delete remoteDrive;
 }
 
 Entry *GDriveTestUtils::createEntry(const QString &title, const QString &password)
@@ -61,11 +69,29 @@ bool GDriveTestUtils::uploadDb(const QString &dbPath)
   return actual == expected ? true : false;
 }
 
+QSharedPointer<SyncObject> GDriveTestUtils::syncDatabase(Database *db, const QString &dbPath)
+{
+  KeePassxDriveSync::Command *syncCommand = remoteDrive->sync();
+  remoteDrive->execute(syncCommand,
+                       OptionsBuilder().addOption(OPTION_DB_POINTER,
+                                                  db).addOption(OPTION_ABSOLUTE_DB_NAME,
+                                                                dbPath).build());
+
+  typedef QSharedPointer < DatabaseSyncObject::SyncObject > SyncType;
+  qRegisterMetaType < QSharedPointer < DatabaseSyncObject::SyncObject > >(
+    "QSharedPointer<SyncObject>");
+  qRegisterMetaType<SyncType>("SyncType");
+  QVariant vSyncObject = syncCommand->getResult().at(0);
+  QSharedPointer<SyncObject> syncObject = vSyncObject.value<SyncType>();
+
+  return syncObject;
+}
+
 bool GDriveTestUtils::deleteAllDb(const QString &dbTitle)
 {
   KeePassxDriveSync::Command *listCommand = remoteDrive->list();
   QVariantMap options = OptionsBuilder().addOption(OPTION_DB_FILTER, GoogleDriveTools::getDbNameFilter(
-                                                       dbTitle)).build();
+                                                     dbTitle)).build();
   remoteDrive->execute(listCommand, options);
   const RemoteFileList dbList = listCommand->getResult().at(0).value<RemoteFileList>();
   bool result = true;
@@ -83,13 +109,13 @@ bool GDriveTestUtils::deleteAllDb(const QString &dbTitle)
  */
 bool GDriveTestUtils::deleteDb(const FileInfo &db)
 {
-    KeePassxDriveSync::Command *deleteCommand = remoteDrive->list();
-    RemoteFile dbInfo = RemoteFileImpl::fromGDriveFileInfo(db);
-    QVariantMap options = OptionsBuilder().addOption(OPTION_DB_FILTER, GoogleDriveTools::getDbNameFilter(
-                                                         dbInfo.getTitle())).build();
-    remoteDrive->execute(deleteCommand, options);
-    bool result = deleteCommand->getErrorCode() == Errors::NO_ERROR ? true : false;
-    return result;
+  KeePassxDriveSync::Command *deleteCommand = remoteDrive->list();
+  RemoteFile dbInfo = RemoteFileImpl::fromGDriveFileInfo(db);
+  QVariantMap options = OptionsBuilder().addOption(OPTION_DB_FILTER, GoogleDriveTools::getDbNameFilter(
+                                                     dbInfo.getTitle())).build();
+  remoteDrive->execute(deleteCommand, options);
+  bool result = deleteCommand->getErrorCode() == Errors::NO_ERROR ? true : false;
+  return result;
 }
 
 bool GDriveTestUtils::deleteLocalDb(const QString &dbPath)

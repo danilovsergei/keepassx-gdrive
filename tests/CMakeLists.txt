@@ -99,6 +99,7 @@ set(TEST_LIBRARIES
     ${GCRYPT_LIBRARIES}
     ${ZLIB_LIBRARIES}
     ${GDRIVE_DEPS}
+    test_tools
 )
 
 set(TESTTOOLS_HEADERS
@@ -183,8 +184,6 @@ add_unit_test(NAME testdatabasesync SOURCES TestDatabaseSync.cpp MOCS TestDataba
 
 add_unit_test(NAME testremotedatabasesync SOURCES TestDatabaseRemoteSync.cpp MOCS TestDatabaseRemoteSync.h
               LIBS ${TEST_LIBRARIES})
-
-add_subdirectory(gdrive)
 
 if(WITH_GUI_TESTS)
   add_subdirectory(gui)

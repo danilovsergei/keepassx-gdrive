@@ -16,6 +16,7 @@ void SyncCommand::execute(const QVariantMap &options)
     Database *localDb = parseOption<Database *>(options, OPTION_DB_POINTER);
     const QString localDbPath = parseOption<QString>(options, OPTION_ABSOLUTE_DB_NAME);
     const QString dbName = QFileInfo(localDbPath).fileName();
+
     ListCommand listCommand(session);
 
     listCommand.execute(OptionsBuilder().addOption(OPTION_DB_FILTER,
@@ -28,7 +29,7 @@ void SyncCommand::execute(const QVariantMap &options)
     if (dbList.size() == 0) {
         qDebug() << QString("Nothing to sync. There is no remote database with name: %1").arg(QFileInfo(
                                                                                                   localDbPath).fileName());
-        Q_EMIT emitSuccess();
+        emitSuccess();
     }
 
     if (dbList.size() > 1) {
@@ -48,7 +49,7 @@ void SyncCommand::execute(const QVariantMap &options)
         == localDb->metadata()->lastModifiedDate().toLocalTime().toTime_t()) {
         qDebug() << QString("Databases have the same modification time %1. Will skip sync").arg(
             localDb->metadata()->lastModifiedDate().toLocalTime().toString());
-        Q_EMIT emitSuccess();
+        emitSuccess();
     }
 
     DownloadCommand downloadCommand(session);
