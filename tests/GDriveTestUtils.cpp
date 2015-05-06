@@ -5,7 +5,7 @@ Q_DECLARE_METATYPE(RemoteFileList)
 Q_DECLARE_METATYPE(QSharedPointer<DatabaseSyncObject::SyncObject>)
 Q_DECLARE_METATYPE(Database *)
 
-GDriveTestUtils::GDriveTestUtils(QObject* parent)
+GDriveTestUtils::GDriveTestUtils()
 {
   AuthCredentials *creds = new GoogleDriveCredentials(this);
   CommandsFactory *commandsFactory = new CommandsFactoryImpl(this, creds);

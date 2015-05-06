@@ -48,6 +48,7 @@ private Q_SLOTS:
     void initTestCase();
     void init();
     void cleanup();
+    void testSingleRun();
     void testRemoveLocalEntryToRecycleBin();
     void testRemoveRemoteEntrySlots();
     void testRemoteDatabaseSyncDoNothing();    
@@ -91,7 +92,7 @@ private:
     Group* createGroup(const QString& groupName=QString("testGroup"));
 
     RemoteDriveApi *remoteDrive = Q_NULLPTR;
-    QScopedPointer<GDriveTestUtils> testUtils;
+    GDriveTestUtils* testUtils;
 
     template <typename T> void templateUpdateLocal();
     template <typename T> void templateRemoveLocal();

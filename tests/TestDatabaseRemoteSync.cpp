@@ -1,12 +1,7 @@
 #include "TestDatabaseRemoteSync.h"
 
-
-
-
 Q_DECLARE_METATYPE(QSharedPointer<SyncObject>)
 Q_DECLARE_METATYPE(Database*)
-
-
 
 /**
  * @brief TestDatabaseRemoteSync::initTestCase executed before class execution
@@ -14,6 +9,18 @@ Q_DECLARE_METATYPE(Database*)
 void TestDatabaseRemoteSync::initTestCase()
 {
   Crypto::init();
+  qDebug() << "Running init testcase";
+
+  AuthCredentials *creds = new GoogleDriveCredentials(this);
+  CommandsFactory *commandsFactory = new CommandsFactoryImpl(this, creds);
+  // remote drive will be used to call all remote drive functions like sync , upload, download
+  //remoteDrive = new RemoteDriveApi(this, commandsFactory);
+  testUtils = new GDriveTestUtils();
+  qDebug() << "finished";
+}
+
+void TestDatabaseRemoteSync::testSingleRun() {
+    qDebug() << "Start singleRun";
 }
 
 /**
@@ -21,11 +28,6 @@ void TestDatabaseRemoteSync::initTestCase()
  */
 void TestDatabaseRemoteSync::init()
 {
-  AuthCredentials *creds = new GoogleDriveCredentials(this);
-  CommandsFactory *commandsFactory = new CommandsFactoryImpl(this, creds);
-  // remote drive will be used to call all remote drive functions like sync , upload, download
-  remoteDrive = new RemoteDriveApi(this, commandsFactory);
-  //testUtils = new GDriveTestUtils(this);
 
   db = createLocalDatabase();
   group = createGroup("Group");
@@ -62,6 +64,12 @@ void TestDatabaseRemoteSync::cleanup()
   testUtils->deleteAllDb(dbName);
 
   // TODO add deletion of psysical db file on disk
+  delete group;
+  delete newGroup;
+
+  delete entry;
+  delete newEntry;
+  delete rootGroup;
   delete db;
 }
 
@@ -597,6 +605,8 @@ template<> void TestDatabaseRemoteSync::validateMissingLocal<Group *>(
  */
 void TestDatabaseRemoteSync::testRemoveLocalEntryToRecycleBin()
 {
+  qDebug() << "testRemoveLocalEntryToRecycleBin started";
+
   Database *db = createLocalDatabase();
   QString oldDbPath(QDir::tempPath() + QDir::separator() + "oldDb.kdbx");
   QString dbPath(QDir::tempPath() + QDir::separator() + dbName + ".kdbx");

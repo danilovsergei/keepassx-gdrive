@@ -4,7 +4,7 @@ CommandsFactoryImpl::CommandsFactoryImpl(QObject *parent, AuthCredentials *creds
         parent), creds(creds)
 {
     // creds are living in the GUI thread while this in worker thread.
-    connect(this, SIGNAL(updateCredentials), creds, SLOT(update()));
+    connect(this, SIGNAL(updateCredentials()), creds, SLOT(update()));
 }
 
 // AuthCredentials * CommandsFactoryImpl::getCreds() {}

@@ -35,7 +35,7 @@ class GDriveTestUtils : public QObject
 Q_OBJECT
 
 public:
-    GDriveTestUtils(QObject* parent = 0);
+    GDriveTestUtils();
     ~GDriveTestUtils();
     bool compareResult(QSharedPointer<SyncObject> actual, QMap<SyncMapKey, int> expectedMap);
     Database *readDatabase(const CompositeKey &key, const QString &dbPath);
