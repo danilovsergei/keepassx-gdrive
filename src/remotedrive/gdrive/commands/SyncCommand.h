@@ -41,7 +41,7 @@ public:
      * @param localDb - pointer to the opened in memory database
      * @param localDbPath - path to local database file on disk.Used to get psycical database name
      */
-    void execute(const QVariantMap &options);
+    void execute(const QVariantMap options);
 
     ~SyncCommand();
     // returns last modification time of remote db

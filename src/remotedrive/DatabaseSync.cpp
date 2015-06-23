@@ -154,7 +154,10 @@ void DatabaseSync<SO>::addMissingEntries(QList<SO *> missingEntries)
         getSyncObject()->increase(getObjectType(), SMissing(), SLocal());
     }
 }
-
+/**
+ * Performs sync of the 2 databases.
+ * SO could be either entry or group
+ */
 template<typename SO>
 QSharedPointer<SyncObject> DatabaseSync<SO>::syncDatabases()
 {

@@ -5,15 +5,16 @@ RemoteDriveApi::RemoteDriveApi(QObject *parent, CommandsFactory *factoryImpl) : 
     factoryImpl(
         factoryImpl)
 {
-    // thread will execute all remote drive commands like upload , download etc
-    QThread driveWorkerThread;
-
-    this->factoryImpl->moveToThread(&driveWorkerThread);
     driveWorkerThread.start();
 }
 
-void RemoteDriveApi::init()
-{
+RemoteDriveApi::~RemoteDriveApi() {
+    driveWorkerThread.quit();
+    if(!driveWorkerThread.wait(3000))
+    {
+        driveWorkerThread.terminate();
+        driveWorkerThread.wait();
+    }
 }
 
 CommandsFactory *RemoteDriveApi::getFactory()
@@ -58,12 +59,3 @@ void RemoteDriveApi::raiseError(int errorType, const QString &description)
     Q_ASSERT(false);
 }
 
-void RemoteDriveApi::execute(Command *cmd, const QVariantMap &args)
-{
-    cmd->execute(args);
-}
-
-void RemoteDriveApi::executeAsync(Command *cmd, const QVariantMap &args)
-{
-    QMetaObject::invokeMethod(cmd, "executeAsync", Q_ARG(QVariantMap, args));
-}

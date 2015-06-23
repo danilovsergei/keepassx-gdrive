@@ -9,7 +9,7 @@ SyncCommand::SyncCommand(Session *session) : session(session)
 {
 }
 
-void SyncCommand::execute(const QVariantMap &options)
+void SyncCommand::execute(const QVariantMap options)
 {
     Q_ASSERT(options.size() >= 1);
 

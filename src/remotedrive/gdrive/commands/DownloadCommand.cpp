@@ -10,7 +10,7 @@ DownloadCommand::DownloadCommand(Session *session) : session(session)
 DownloadCommand::~DownloadCommand() {
 
 }
-void DownloadCommand::execute(const QVariantMap &options)
+void DownloadCommand::execute(const QVariantMap options)
 {
     qRegisterMetaType<RemoteFile>("RemoteFile");
     Q_ASSERT(options.size() >= 1);

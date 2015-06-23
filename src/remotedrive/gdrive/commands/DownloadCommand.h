@@ -22,7 +22,7 @@ class DownloadCommand : public KeePassxDriveSync::Command
 public:
     DownloadCommand(Session *session);
     ~DownloadCommand();
-    void execute(const QVariantMap &options);
+    void execute(const QVariantMap options);
     static KeePassxDriveSync::Command *newInstance(Session *session);
 private:
     Session *session;

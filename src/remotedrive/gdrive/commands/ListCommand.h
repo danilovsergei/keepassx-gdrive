@@ -14,7 +14,7 @@ class ListCommand : public KeePassxDriveSync::Command
     Q_OBJECT
 public:
     ListCommand(Session *session);
-    void execute(const QVariantMap &options);
+    void execute(const QVariantMap options);
     ~ListCommand();
 private:
     Session *session;

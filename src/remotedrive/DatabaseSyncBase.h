@@ -5,6 +5,8 @@
 #include <QtCore/QList>
 #include <QtCore/QMutableMapIterator>
 #include "remotedrive/SyncObject.h"
+#include <QtCore/QDebug>
+
 using namespace DatabaseSyncObject;
 class DatabaseSyncBase
 {
@@ -26,8 +28,13 @@ public:
 protected:
 
   QSharedPointer<SyncObject> syncObject;
+
   QSharedPointer<SyncObject> getSyncObject()
   {
+     // TODO add proper error handling with notifying through UI
+    if (syncObject.isNull()) {
+        qDebug() << "Failed to construct sync object.";
+    }
     Q_ASSERT(!syncObject.isNull());
     return syncObject;
   }

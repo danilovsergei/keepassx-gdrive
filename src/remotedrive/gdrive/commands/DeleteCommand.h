@@ -17,7 +17,7 @@ class DeleteCommand : public KeePassxDriveSync::Command
 Q_OBJECT
 public:
     DeleteCommand(Session *session);
-    void execute(const QVariantMap &options);
+    void execute(const QVariantMap options);
     ~DeleteCommand();
 private:
     Session *session;

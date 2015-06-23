@@ -29,13 +29,6 @@
 #include "remotedrive/gdrive/GoogleDriveCredentials.h"
 #include "GDriveTestUtils.h"
 
-
-
-
-
-
-
-
 using namespace DatabaseSyncObject;
 
 /**

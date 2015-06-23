@@ -18,7 +18,6 @@ public:
     const int getErrorCode();
     // result of command execution if it requires something other than void. result variable must be initialized in derived class in that case
     const QVariantList getResult();
-public Q_SLOTS:
 
     /**
      * @brief execute used to execute execute() functions in derived classes with concrete implementation.
@@ -26,7 +25,11 @@ public Q_SLOTS:
      * For async execution results could be captured via finished() slot and getErrorCode() function
      * @param options map of options which could be constructed by OptionsBuilder.
      */
-    virtual void execute(const QVariantMap &options) = 0;
+
+    void executeAsync(const QVariantMap options);
+public Q_SLOTS:
+    virtual void execute(const QVariantMap options) = 0;
+
 
 protected:
     // generates error messages and emits finished()
@@ -66,11 +69,12 @@ protected:
     QVariantList result;
 private:
     QString errorString;
-    int errorCode = Errors::NO_ERROR;
-    void executeAsync(const QVariantMap &options);
+    // set errorCode to error by default to prevent any mistaken expectations
+    int errorCode = Errors::InternalError::EMPTY_ERROR_CODE;
 
 Q_SIGNALS:
     void finished();
+    void emitExecuteAsync(const QVariantMap options);
 };
 }
 #endif // Command_H

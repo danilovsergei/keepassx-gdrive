@@ -80,7 +80,7 @@ void DatabaseOpenWidgetCloud::loadSupportedCloudEngines() {
   ui->comboCloudEngine->setCurrentIndex(0);
   connect(listCommand, SIGNAL(finished()),this, SLOT(cloudDbLoad()));
   listCommand = remoteDrive->list();
-  remoteDrive->executeAsync(listCommand,OptionsBuilder().build());
+  listCommand->executeAsync(OptionsBuilder().build());
 }
 
 DatabaseOpenWidgetCloud::~DatabaseOpenWidgetCloud()
@@ -108,7 +108,7 @@ void DatabaseOpenWidgetCloud::downloadDb() {
       fi.getTitle());
     connect(downloadCommand, SIGNAL(finished()),         this,
           SLOT(downloadDbFinished()) );
-    remoteDrive->executeAsync(downloadCommand, OptionsBuilder().addOption(OPTION_FI, fi).build());
+    downloadCommand->executeAsync(OptionsBuilder().addOption(OPTION_FI, fi).build());
   }
   Q_EMIT editFinished(true);
 }

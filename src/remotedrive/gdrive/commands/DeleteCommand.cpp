@@ -8,7 +8,7 @@ DeleteCommand::DeleteCommand(Session *session) :
 {
 }
 
-void DeleteCommand::execute(const QVariantMap &options)
+void DeleteCommand::execute(const QVariantMap options)
 {
   Q_ASSERT(options.size() >= 1);
 

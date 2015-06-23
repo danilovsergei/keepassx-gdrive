@@ -7,7 +7,7 @@ UploadCommand::UploadCommand(GoogleDrive::Session *session)
     :session(session)
 {}
 
-void UploadCommand::execute(const QVariantMap &options)
+void UploadCommand::execute(const QVariantMap options)
 {
   const QString filePath = parseOption<QString>(options, OPTION_ABSOLUTE_DB_NAME);
   const QDateTime lastModified = parseOption<QDateTime>(options, OPTION_LAST_MODIFIED_TIME);

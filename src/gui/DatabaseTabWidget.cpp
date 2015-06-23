@@ -340,8 +340,7 @@ void DatabaseTabWidget::saveDatabaseToCloud(Database *db)
   CommandsFactory *commandsFactory = new CommandsFactoryImpl(this, creds);
   RemoteDriveApi *remoteDrive = new RemoteDriveApi(this, commandsFactory);
   KeePassxDriveSync::Command* uploadCommand = remoteDrive->upload();
-  remoteDrive->executeAsync(uploadCommand,
-                            OptionsBuilder().addOption(OPTION_ABSOLUTE_DB_NAME,
+  uploadCommand->executeAsync(OptionsBuilder().addOption(OPTION_ABSOLUTE_DB_NAME,
                                                        dbStruct.filePath).addOption(
                               OPTION_LAST_MODIFIED_TIME,
                               db->metadata()->

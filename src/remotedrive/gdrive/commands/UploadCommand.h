@@ -33,7 +33,7 @@ public:
    * @param lastModified - time when local database was modified last time
    * @param parent - parent directory id in google drive.
    */
-  void execute(const QVariantMap &options);
+  void execute(const QVariantMap options);
   ~UploadCommand();
 private:
   Session *session;

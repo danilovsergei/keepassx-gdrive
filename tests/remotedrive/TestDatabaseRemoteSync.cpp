@@ -1,7 +1,7 @@
 #include "TestDatabaseRemoteSync.h"
 
 Q_DECLARE_METATYPE(QSharedPointer<SyncObject>)
-Q_DECLARE_METATYPE(Database*)
+Q_DECLARE_METATYPE(Database *)
 
 /**
  * @brief TestDatabaseRemoteSync::initTestCase executed before class execution
@@ -14,13 +14,14 @@ void TestDatabaseRemoteSync::initTestCase()
   AuthCredentials *creds = new GoogleDriveCredentials(this);
   CommandsFactory *commandsFactory = new CommandsFactoryImpl(this, creds);
   // remote drive will be used to call all remote drive functions like sync , upload, download
-  //remoteDrive = new RemoteDriveApi(this, commandsFactory);
+  // remoteDrive = new RemoteDriveApi(this, commandsFactory);
   testUtils = new GDriveTestUtils();
   qDebug() << "finished";
 }
 
-void TestDatabaseRemoteSync::testSingleRun() {
-    qDebug() << "Start singleRun";
+void TestDatabaseRemoteSync::testSingleRun()
+{
+  qDebug() << "Start singleRun";
 }
 
 /**
@@ -28,7 +29,6 @@ void TestDatabaseRemoteSync::testSingleRun() {
  */
 void TestDatabaseRemoteSync::init()
 {
-
   db = createLocalDatabase();
   group = createGroup("Group");
   newGroup = createGroup("NewGroup");
@@ -679,7 +679,7 @@ void TestDatabaseRemoteSync::testRemoveRemoteEntrySlots()
 
   KeePassxDriveSync::Command *syncCommand = remoteDrive->sync();
   QSignalSpy spy(syncCommand, SIGNAL(finished()));
-  remoteDrive->executeAsync(syncCommand, OptionsBuilder().addOption(OPTION_DB_POINTER,
+  syncCommand->executeAsync(OptionsBuilder().addOption(OPTION_DB_POINTER,
                                                                     db).addOption(
                               OPTION_ABSOLUTE_DB_NAME, dbPath).build());
 
@@ -737,7 +737,7 @@ void TestDatabaseRemoteSync::testRemoteDatabaseSyncDoNothing()
 
   KeePassxDriveSync::Command *syncCommand = remoteDrive->sync();
   QSignalSpy spy(syncCommand, SIGNAL(finished()));
-  remoteDrive->executeAsync(syncCommand, OptionsBuilder().addOption(OPTION_DB_POINTER,
+  syncCommand->executeAsync(OptionsBuilder().addOption(OPTION_DB_POINTER,
                                                                     db).addOption(
                               OPTION_ABSOLUTE_DB_NAME, dbPath).build());
   int waitTime = 0;
@@ -814,7 +814,7 @@ void TestDatabaseRemoteSync::testRemoteDatabaseSyncNoCloudDb()
 
   KeePassxDriveSync::Command *syncCommand = remoteDrive->sync();
   QSignalSpy spy(syncCommand, SIGNAL(finished()));
-  remoteDrive->executeAsync(syncCommand, OptionsBuilder().addOption(OPTION_DB_POINTER,
+  syncCommand->executeAsync(OptionsBuilder().addOption(OPTION_DB_POINTER,
                                                                     db).addOption(
                               OPTION_ABSOLUTE_DB_NAME, dbPath).build());
 
@@ -832,7 +832,6 @@ void TestDatabaseRemoteSync::testRemoteDatabaseSyncNoCloudDb()
 
   delete syncCommand;
   delete db;
-
 }
 
 void TestDatabaseRemoteSync::testRemoteDatabaseSyncLoginError()
@@ -850,7 +849,7 @@ void TestDatabaseRemoteSync::testRemoteDatabaseSyncLoginError()
 
   KeePassxDriveSync::Command *syncCommand = remoteDrive->sync();
   QSignalSpy spy(syncCommand, SIGNAL(finished()));
-  remoteDrive->executeAsync(syncCommand, OptionsBuilder().addOption(OPTION_DB_POINTER,
+  syncCommand->executeAsync(OptionsBuilder().addOption(OPTION_DB_POINTER,
                                                                     db).addOption(
                               OPTION_ABSOLUTE_DB_NAME, dbPath).build());
 
@@ -860,7 +859,6 @@ void TestDatabaseRemoteSync::testRemoteDatabaseSyncLoginError()
     QTest::qWait(200);
     waitTime += 200;
   }
-
 
   QCOMPARE(spy.count(), 1);
   // make sure syncError was emitted with non zero error code

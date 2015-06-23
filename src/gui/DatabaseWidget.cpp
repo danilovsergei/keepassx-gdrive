@@ -510,7 +510,7 @@ void DatabaseWidget::syncDatabase() {
     // GOOGLE_DRIVE_SYNC feature enabled through CMAKE
     if (QString(GOOGLE_DRIVE_SYNC) != "ON") return;
       // write general method to run commands in thread
-      remoteDrive->executeAsync(syncCommand,OptionsBuilder().addOption(OPTION_DB_POINTER,m_db).addOption(OPTION_ABSOLUTE_DB_NAME,m_filename).build());
+      syncCommand->executeAsync(OptionsBuilder().addOption(OPTION_DB_POINTER,m_db).addOption(OPTION_ABSOLUTE_DB_NAME,m_filename).build());
       //Changes will be applied to the already opened database
       //typically it will take 1-2 seconds while user will browse to an item
       //TODO prevent or warn user copy the value if database is still in sync

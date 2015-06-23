@@ -91,7 +91,7 @@ set(GDRIVE_DEPS
     google_drive
 )
 
-set(TEST_LIBRARIES
+set(PROJECT_DEPS
     keepassx_core
     ${QT_QTCORE_LIBRARY}
     ${QT_QTGUI_LIBRARY}
@@ -99,18 +99,37 @@ set(TEST_LIBRARIES
     ${GCRYPT_LIBRARIES}
     ${ZLIB_LIBRARIES}
     ${GDRIVE_DEPS}
-    test_tools
 )
 
+set(TEST_LIBRARIES
+    ${PROJECT_DEPS}
+    test_tools
+)
+add_subdirectory(remotedrive)
+
 set(TESTTOOLS_HEADERS
-     GDriveTestUtils.h)
+    GDriveTestUtils.h
+     remotedrive/helpers/FakeCommandsFactoryImpl.h
+     remotedrive/helpers/FakeCommand.h
+     remotedrive/helpers/FakeRemoteDriveApi.h
+)
 
 set(TESTTOOLS_MOC
-     GDriveTestUtils.h)
+    GDriveTestUtils.h
+     remotedrive/helpers/FakeCommandsFactoryImpl.h
+     remotedrive/helpers/FakeCommand.h
+     remotedrive/helpers/FakeRemoteDriveApi.h
+)
 set(TESTTOOLS_SOURCES
-     GDriveTestUtils.cpp)
+     GDriveTestUtils.cpp
+     remotedrive/helpers/FakeCommandsFactoryImpl.cpp
+     remotedrive/helpers/FakeCommand.cpp
+     remotedrive/helpers/FakeRemoteDriveApi.cpp
+)
+
 qt4_wrap_cpp(TESTTOOLS_SOURCES ${TESTTOOLS_MOC})
-add_library(test_tools ${TESTTOOLS_SOURCES})
+add_library(test_tools STATIC ${TESTTOOLS_SOURCES})
+target_link_libraries(test_tools ${PROJECT_DEPS})
 
 if(UNIX AND NOT APPLE)
   set(TEST_LIBRARIES ${TEST_LIBRARIES} ${QT_QTDBUS_LIBRARY})
@@ -179,11 +198,8 @@ add_unit_test(NAME testentry SOURCES TestEntry.cpp MOCS TestEntry.h
 add_unit_test(NAME testargumentparser SOURCES TestArgumentParser.cpp MOCS TestArgumentParser.h
               LIBS ${TEST_LIBRARIES})
 
-add_unit_test(NAME testdatabasesync SOURCES TestDatabaseSync.cpp MOCS TestDatabaseSync.h
-              LIBS ${TEST_LIBRARIES})
 
-add_unit_test(NAME testremotedatabasesync SOURCES TestDatabaseRemoteSync.cpp MOCS TestDatabaseRemoteSync.h
-              LIBS ${TEST_LIBRARIES})
+
 
 if(WITH_GUI_TESTS)
   add_subdirectory(gui)

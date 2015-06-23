@@ -21,6 +21,9 @@ public:
     enum RemoteApiError {
         API_INITIALIZATION_PROBLEM = 80
     };
+    enum InternalError {
+        EMPTY_ERROR_CODE = 100
+    };
     Errors();
 };
 
