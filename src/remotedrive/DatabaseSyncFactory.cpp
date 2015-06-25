@@ -7,10 +7,10 @@ QSharedPointer<DatabaseSyncBase> DatabaseSyncFactory::createDatabaseSync(SyncId 
     QSharedPointer<DatabaseSyncBase> p;
     switch (id) {
     case SyncId::ENTRY:
-        p = QSharedPointer<DatabaseSyncBase>(new EntriesSync(db1, db2, false));
+        p = QSharedPointer<DatabaseSyncBase>(new EntriesSync(db1, db2));
         break;
     case SyncId::ALL:
-        p = QSharedPointer<DatabaseSyncBase>(new EntriesSync(db1, db2, true));
+        p = QSharedPointer<DatabaseSyncBase>(new AllSync(db1, db2));
         break;
     case SyncId::GROUP:
         p = QSharedPointer<DatabaseSyncBase>(new GroupsSync(db1, db2));

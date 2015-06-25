@@ -146,6 +146,7 @@ set(keepassx_SOURCES
     remotedrive/DatabaseSyncBase.cpp
     remotedrive/GroupsSync.cpp
     remotedrive/EntriesSync.cpp
+    remotedrive/AllSync.cpp
     remotedrive/DatabaseSync.cpp
 
     remotedrive/gdrive/LoginPage.cpp
@@ -249,6 +250,7 @@ set(keepassx_MOC
     remotedrive/DatabaseSyncFactory.h
     remotedrive/GroupsSync.h
     remotedrive/EntriesSync.h
+    remotedrive/AllSync.h
     remotedrive/DatabaseSync.h
 
     remotedrive/gdrive/LoginPage.h

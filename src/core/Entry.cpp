@@ -462,6 +462,10 @@ void Entry::copyDataFrom(const Entry* other)
     setUpdateTimeinfo(true);
 }
 
+/**
+ * @brief Entry::beginUpdate copies all information from entry under edit to the temp entry
+ * Used to maintain entry history after edits
+ */
 void Entry::beginUpdate()
 {
     Q_ASSERT(!m_tmpHistoryItem);
@@ -476,6 +480,11 @@ void Entry::beginUpdate()
     m_modifiedSinceBegin = false;
 }
 
+/**
+ * @brief Entry::endUpdate adds temporary item created before entry edit
+ * to the history items.
+ * Used to maintain entry history after edits
+ */
 void Entry::endUpdate()
 {
     Q_ASSERT(m_tmpHistoryItem);

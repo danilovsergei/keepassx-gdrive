@@ -6,13 +6,16 @@
 #include <QtCore/QMutableMapIterator>
 #include "remotedrive/SyncObject.h"
 #include <QtCore/QDebug>
+#include <core/Database.h>
+#include <core/Metadata.h>
+#include <core/Group.h>
 
 using namespace DatabaseSyncObject;
 class DatabaseSyncBase
 {
 public:
 
-  DatabaseSyncBase();
+  DatabaseSyncBase(Database *db1, Database *db2);
   virtual ~DatabaseSyncBase()
   {
   }
@@ -22,19 +25,23 @@ public:
    * constructor databases
    */
   virtual QSharedPointer<SyncObject> syncDatabases() = 0;
+  virtual QSharedPointer<SyncObject> syncEntries() = 0;
+
   virtual void                            setSyncObject(
     QSharedPointer<SyncObject> syncObject) = 0;
 
 protected:
-
+  Database *db1;
+  Database *db2;
   QSharedPointer<SyncObject> syncObject;
+  void syncMetadata();
+
 
   QSharedPointer<SyncObject> getSyncObject()
   {
-     // TODO add proper error handling with notifying through UI
-    if (syncObject.isNull()) {
-        qDebug() << "Failed to construct sync object.";
-    }
+    // TODO add proper error handling with notifying through UI
+    if (syncObject.isNull())
+      qDebug() << "Failed to get sync object. It was not constructed";
     Q_ASSERT(!syncObject.isNull());
     return syncObject;
   }

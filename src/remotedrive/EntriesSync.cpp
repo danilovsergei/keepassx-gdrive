@@ -2,28 +2,10 @@
 #include <QtCore/QDebug>
 #include "DatabaseSyncFactory.h"
 
-EntriesSync::EntriesSync(Database *db1, Database *db2, bool syncGroups) :
-  DatabaseSync<Entry>(db1, db2),
-  syncGroups(syncGroups)
-{
-}
+EntriesSync::EntriesSync(Database *db1, Database *db2) :
+  DatabaseSync<Entry>(db1, db2)
+{}
 
-QSharedPointer<SyncObject> EntriesSync::syncDatabases()
-{
-  // sync groups also if it specified by constructor
-  if (syncGroups) {
-    qDebug() << "Perform whole sync: groups & entries";
-    QSharedPointer<DatabaseSyncBase> groupSync
-      = DatabaseSyncFactory::createDatabaseSync(
-      DatabaseSyncFactory::SyncId::GROUP,
-      db1,
-      db2);
-    syncObject = QSharedPointer<SyncObject>(new SyncObject());
-    groupSync->setSyncObject(syncObject);
-    groupSync->syncDatabases();
-  }
-  return DatabaseSync<Entry>::syncDatabases();
-}
 
 EntriesSync::~EntriesSync()
 {
@@ -34,6 +16,12 @@ QString EntriesSync::getType()
   return ENTRY_TYPE;
 }
 
+/**
+ * @brief EntriesSync::processEntry reserved for any special actions needed to do with entry
+ * @param db
+ * @param entry
+ * @return result of operation
+ */
 bool EntriesSync::processEntry(Database *db, Entry *entry)
 {
   // put to ignore unused parameter message since its overriden function
@@ -83,4 +71,17 @@ void EntriesSync::removeEntry(Entry *entry)
 ObjectType EntriesSync::getObjectType()
 {
   return SEntry();
+}
+
+void EntriesSync::updateEntryData(Entry *entry, Entry *newData)
+{
+  qDebug() << "Updating the " + getType() + " data";
+  Q_ASSERT(entry);
+  Q_ASSERT(newData);
+  entry->beginUpdate();
+  entry->copyDataFrom(newData);
+  entry->setTimeInfo(newData->timeInfo());
+  entry->endUpdate();
+
+  getSyncObject()->increase(getObjectType(), SOlder(), SLocal());
 }

@@ -16,12 +16,12 @@ public:
     GroupsSync(Database *db1, Database *db2);
     ~GroupsSync();
 
-    /**
-     * @brief syncDatabases - syncs groups between two provided databases
-     * @param db1  -first source/destination database.Will contain modifications from db2 database after sync
-     * @param db2 - second source database.
-     */
-    QSharedPointer<SyncObject> syncDatabases();
+//    /**
+//     * @brief syncDatabases - syncs groups between two provided databases
+//     * @param db1  -first source/destination database.Will contain modifications from db2 database after sync
+//     * @param db2 - second source database.
+//     */
+//    QSharedPointer<SyncObject> syncDatabases();
 protected:
     bool processEntry(Database *db,Group* entry);
     void removeEntry(Group* entry);
@@ -31,6 +31,7 @@ protected:
     QMap<Uuid,Group*> getEntriesMap(Database* db);
     const QString getEntryName(Group* entry);
     QString getType();
+    void updateEntryData(Group* entry, Group* newData);
 private:
     const QString ENTRY_TYPE="Group";
 

@@ -4,6 +4,7 @@
 #include "GroupsSync.h"
 #include "EntriesSync.h"
 #include "DatabaseSyncBase.h"
+#include "AllSync.h"
 
 class DatabaseSyncFactory {
 public:
