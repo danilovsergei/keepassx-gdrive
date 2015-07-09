@@ -57,7 +57,7 @@ void DownloadCommand::execute(const QVariantMap options)
     f.close();
 
     if (cmd.error() == GoogleDrive::Command::NoError) {
-        result.append(localDb);
+        setResult(KeePassxDriveSync::ResultBuilder().addValue(localDb).build());
         emitSuccess();
     } else {
         emitError(

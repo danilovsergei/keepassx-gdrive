@@ -7,6 +7,7 @@
 #include "Errors.h"
 #include "remotedrive/Command.h"
 #include "core/Global.h"
+using namespace KeePassxDriveSync;
 
 class RemoteDriveApi : public QObject
 {

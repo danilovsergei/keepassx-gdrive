@@ -8,15 +8,14 @@ class AuthCredentials : public QObject
 public:
     AuthCredentials(QObject *parent);
     virtual void init() = 0;
-    // virtual AuthCredentials* newInstance(QObject* parent) = 0;
-    QVariantMap *getCredentials();
+    QVariantMap getCredentials();
     const QString getOption(const QString &option);
 
 public Q_SLOTS:
     virtual void update() = 0;
 
 protected:
-    QVariantMap *creds = Q_NULLPTR;
+    QVariantMap creds ;
 
 public Q_SLOTS:
     void credentialsUpdated();

@@ -5,19 +5,36 @@
 #include <QtCore/QString>
 #include <QtCore/QtConcurrentRun>
 #include <remotedrive/Errors.h>
+#include <QtCore/QEventLoop>
+#include <core/Global.h>
 
 namespace KeePassxDriveSync {
 class Command : public QObject
 {
     Q_OBJECT
 public:
+    enum Status {
+        NotStarted = 0,
+        InProgress = 1,
+    };
     Command();
     // returns error description if error happen. empty otherwise
     const QString getErrorString();
     // returns error code from Errors.h , or Errors:NoError if command was successfull
     const int getErrorCode();
-    // result of command execution if it requires something other than void. result variable must be initialized in derived class in that case
+    /**
+     * @brief getResult result of command execution if it exists
+     * result variable must be initialized in derived class in that case
+     * @return QVariantList with possibly more than one variable
+     */
     const QVariantList getResult();
+    // allows to wait until async execution will finish
+    void waitForFinish();
+    /**
+     * @brief setResult sets result of command execution
+     * @param result QVariantList with possibly more than one variable
+     */
+    void setResult(QVariantList result);
 
     /**
      * @brief execute used to execute execute() functions in derived classes with concrete implementation.
@@ -35,6 +52,7 @@ protected:
     // generates error messages and emits finished()
     void emitError(const int errorCode, const QString &errorString);
     void emitSuccess();
+
     /**
      * @brief parseOption used to extract option by it's value.
      * @param options map of options to extract values from
@@ -65,16 +83,47 @@ protected:
         Q_ASSERT(!value.isNull());
         return value.value<T>();
     }
-
-    QVariantList result;
 private:
+    QVariantList result;
+    QEventLoop* loop = Q_NULLPTR;
     QString errorString;
     // set errorCode to error by default to prevent any mistaken expectations
     int errorCode = Errors::InternalError::EMPTY_ERROR_CODE;
+    Status status = Status::NotStarted;
+private Q_SLOTS:
+    void finishEventLoop();
 
 Q_SIGNALS:
     void finished();
     void emitExecuteAsync(const QVariantMap options);
 };
+class ResultBuilder {
+
+public:
+    /**
+     * @brief build provides fluent interface to build QVariantList result
+     *   which returned by command execution
+     */
+    ResultBuilder(){}
+    const QVariantList build() {
+        // return by value since QVariantMap is relatively cheap object
+        return instance;
+    }
+    template <typename T>
+    /**
+     * @brief addOption adds option to builder using fluent technique.
+     * ex: builder->addOption()->addOption()
+     * @param key  String option name. Use GDriveConstants to get list of available names
+     * @param value could be any type. Custom types must be registered with Q_DECLARE_METATYPE()
+     * @return instance of option builder to support fluency.
+     */
+    ResultBuilder& addValue(const T& value) {
+        instance.append(QVariant::fromValue(value));
+        return *this;
+    };
+private:
+    QVariantList instance;
+};
+
 }
 #endif // Command_H

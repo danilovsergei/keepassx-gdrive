@@ -61,6 +61,8 @@ SyncObject::SyncObject()
     data = QMap<SyncMapKey, int>();
 }
 
+SyncObject::~SyncObject() {}
+
 QMap<SyncMapKey, int> SyncObject::get()
 {
     return data;

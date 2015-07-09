@@ -11,8 +11,9 @@ void TestDatabaseRemoteSync::initTestCase()
   Crypto::init();
   qDebug() << "Running init testcase";
 
-  AuthCredentials *creds = new GoogleDriveCredentials(this);
-  CommandsFactory *commandsFactory = new CommandsFactoryImpl(this, creds);
+//AuthCredentials *creds = new GoogleDriveCredentials(this);
+ // creds->init();
+ // CommandsFactory *commandsFactory = new CommandsFactoryImpl(this, creds);
   // remote drive will be used to call all remote drive functions like sync , upload, download
   // remoteDrive = new RemoteDriveApi(this, commandsFactory);
   testUtils = new GDriveTestUtils();
@@ -38,6 +39,9 @@ void TestDatabaseRemoteSync::init()
   newEntryUuid = newEntry->uuid();
   newGroupUuid = newGroup->uuid();
   rootGroup = db->resolveGroup(db->rootGroup()->uuid());
+
+  // remove all remote databases if exist
+  testUtils->deleteAllDb(dbName);
 }
 
 Entry *TestDatabaseRemoteSync::createEntry(const QString &title, const QString &password)
@@ -61,6 +65,7 @@ Group *TestDatabaseRemoteSync::createGroup(const QString &groupName)
 
 void TestDatabaseRemoteSync::cleanup()
 {
+  qDebug() << "starting cleanup()";
   testUtils->deleteAllDb(dbName);
 
   // TODO add deletion of psysical db file on disk

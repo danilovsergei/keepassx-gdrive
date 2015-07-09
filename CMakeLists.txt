@@ -18,8 +18,6 @@ project(KeePassX)
 cmake_minimum_required(VERSION 2.6.4)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-
-
 include(CheckCCompilerFlag)
 include(CheckCXXCompilerFlag)
 include(CheckCXXSourceCompiles)
@@ -27,7 +25,7 @@ include(CheckCXXSourceCompiles)
 option(WITH_TESTS "Enable building of unit tests" ON)
 option(WITH_GUI_TESTS "Enable building of GUI tests" OFF)
 option(WITH_LTO "Enable Link Time Optimization (LTO)" OFF)
-option(WITH_CXX11 "Build with the C++ 11 standard" OFF)
+option(WITH_CXX11 "Build with the C++ 11 standard" ON)
 option(WITH_GOOGLE_DRIVE "Enable support for syncing with google drive" ON)
 
 set(KEEPASSX_VERSION "2.0 alpha 4")
@@ -221,6 +219,10 @@ add_subdirectory(src)
 add_subdirectory(share)
 add_subdirectory(utils)
 if(WITH_TESTS)
+  if(WITH_GOOGLE_DRIVE)
+    #use to set custom parent directory , usermail and password for tests with google drive
+    set(TEST_GOOGLE_DRIVE_DIR "0B8tltL21wts3alc0eS00UVRLNnc")
+  endif(WITH_GOOGLE_DRIVE)
   add_subdirectory(tests)
 endif(WITH_TESTS)
 

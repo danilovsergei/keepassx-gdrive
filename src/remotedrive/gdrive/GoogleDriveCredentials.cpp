@@ -5,10 +5,10 @@ GoogleDriveCredentials::GoogleDriveCredentials(QObject *parent) : AuthCredential
 
 void GoogleDriveCredentials::init()
 {
-    creds->insert(CLIENT_ID, CLIENT_ID_VALUE);
-    creds->insert(CLIENT_SECRET, CLIENT_SECRET_VALUE);
+    creds.insert(CLIENT_ID, CLIENT_ID_VALUE);
+    creds.insert(CLIENT_SECRET, CLIENT_SECRET_VALUE);
     QString refreshToken = config()->get("cloud/refresh_token").toString();
-    creds->insert(REFRESH_TOKEN, refreshToken);
+    creds.insert(REFRESH_TOKEN, refreshToken);
 }
 
 void GoogleDriveCredentials::update()
@@ -21,7 +21,7 @@ void GoogleDriveCredentials::update()
     tempSession.refreshToken().isEmpty() ? raiseError(
         Errors::AuthorizationError::GENERAL_AUTH_PROBLEM,
         QString("refresh token is empty")) : void();
-    creds->insert(REFRESH_TOKEN, tempSession.refreshToken());
+    creds.insert(REFRESH_TOKEN, tempSession.refreshToken());
     config()->set("cloud/refresh_token", tempSession.refreshToken());
 }
 

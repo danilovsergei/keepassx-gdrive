@@ -36,7 +36,6 @@ protected:
   QSharedPointer<SyncObject> syncObject;
   void syncMetadata();
 
-
   QSharedPointer<SyncObject> getSyncObject()
   {
     // TODO add proper error handling with notifying through UI

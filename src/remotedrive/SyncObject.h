@@ -6,6 +6,7 @@
 #include <QtCore/QMap>
 #include <QtCore/QSet>
 #include <QtCore/QChar>
+#include <QtCore/QDebug>
 
 namespace DatabaseSyncObject {
 enum class ObjectType : char
@@ -38,6 +39,7 @@ class SyncObject
 {
 public:
     SyncObject();
+    ~SyncObject();
     void increase(ObjectType type, ObjectName name, ObjectLocation location);
     void set(ObjectType type, ObjectName name, ObjectLocation location, int amount);
     const int get(ObjectType type, ObjectName name, ObjectLocation location) const;

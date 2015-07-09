@@ -154,6 +154,7 @@ QSharedPointer<SyncObject> DatabaseSync<SO>::syncDatabases()
   setSyncObject(QSharedPointer<SyncObject>(new SyncObject()));
   syncMetadata();
   syncEntries();
+  return syncObject;
 }
 
 /**

@@ -1,5 +1,5 @@
 #include "DatabaseOpenWidgetCloud.h"
-#include "ui_databaseopenwidgetcloud.h"
+#include "ui_DatabaseOpenWidgetCloud.h"
 
 #include <QtCore/QSettings>
 #include <iostream>

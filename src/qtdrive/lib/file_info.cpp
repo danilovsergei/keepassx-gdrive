@@ -164,6 +164,11 @@ QString str(d->data.value("description").toString());
 return str;
 }
 
+QString FileInfo::headRevisionId() const {
+QString str(d->data.value("headRevisionId").toString());
+return str;
+}
+
 QStringList FileInfo::parents() const
 {
     QStringList res;

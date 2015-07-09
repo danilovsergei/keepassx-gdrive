@@ -36,12 +36,14 @@ Q_OBJECT
 
 public:
     GDriveTestUtils();
+    GDriveTestUtils(RemoteDriveApi* remoteDrive);
     ~GDriveTestUtils();
     bool compareResult(QSharedPointer<SyncObject> actual, QMap<SyncMapKey, int> expectedMap);
     Database *readDatabase(const CompositeKey &key, const QString &dbPath);
     Database *createLocalDatabase(const QString &dbPath);
     bool uploadDb(const QString &dbPath);
-    bool deleteDb(const FileInfo &db);
+    RemoteFile uploadDbWithResult(const QString &dbPath);
+    bool deleteDb(const RemoteFile &dbInfo);
     bool deleteAllDb(const QString &dbTitle);
     const CompositeKey getTestCompositeKey();
     bool saveDatabase(Database *db, const QString &dbPath);
@@ -52,7 +54,15 @@ public:
                        const QString &password = QString("testPassword"));
     Group *createGroup(const QString &groupName = QString("testGroup"));
     bool deleteLocalDb(const QString &dbPath);
+    QString generateTempDbPath();
     QSharedPointer<SyncObject> syncDatabase(Database* db, const QString& dbPath);
+    /**
+     * @brief correctDbName appends kdbx to the db name if it's not present
+     * @param dbName name of the database
+     * returns copy of the dbName with appended kdbx if needed
+     */
+    QString correctDbName(const QString& dbName);
+
     static void waitForSignal(const QSignalSpy &spy, const int timeout);
 
 

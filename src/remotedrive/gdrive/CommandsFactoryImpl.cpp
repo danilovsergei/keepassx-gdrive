@@ -7,11 +7,12 @@ CommandsFactoryImpl::CommandsFactoryImpl(QObject *parent, AuthCredentials *creds
     connect(this, SIGNAL(updateCredentials()), creds, SLOT(update()));
 }
 
-// AuthCredentials * CommandsFactoryImpl::getCreds() {}
-
 Session *CommandsFactoryImpl::getSession()
 {
-    if (creds->getCredentials()->value(REFRESH_TOKEN).toString().isEmpty()) {
+    QVariantMap credentials  = creds->getCredentials();
+    Q_ASSERT(credentials.size() > 0);
+    Q_ASSERT(credentials.contains(REFRESH_TOKEN) > 0);
+    if (credentials.value(REFRESH_TOKEN).toString().isEmpty()) {
         Q_EMIT updateCredentials();
         waitForCredsRefresh();
     }

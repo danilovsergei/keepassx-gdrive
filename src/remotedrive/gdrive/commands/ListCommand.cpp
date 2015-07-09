@@ -31,7 +31,7 @@ void ListCommand::execute(const QVariantMap options)
         qRegisterMetaType<GoogleDrive::FileInfo>("GoogleDrive::FileInfo");
         GoogleDrive::FileInfoList dbList = cmd.files();
         RemoteFileList remoteFileList = RemoteFileImpl::fromGDriveFileInfoList(dbList);
-        result.append(QVariant::fromValue(remoteFileList));
+        setResult(KeePassxDriveSync::ResultBuilder().addValue(remoteFileList).build());
         emitSuccess();
     } else {
         emitError(Errors::FileError::LIST_FILES_PROBLEM,

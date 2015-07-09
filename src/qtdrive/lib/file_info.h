@@ -87,6 +87,7 @@ public:
     QDateTime modifiedDate() const;
     QDateTime modifiedByMeDate() const;
     QDateTime lastViewedByMeDate() const;
+    QString headRevisionId() const;
     bool isEditable() const;
     QUrl downloadUrl() const;
     QMap<QString, QUrl> exportList() const;

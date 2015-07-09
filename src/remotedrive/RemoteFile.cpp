@@ -2,7 +2,7 @@
 
 RemoteFile::RemoteFile()
 {
-    d = new RemoteFileData();
+  d = new RemoteFileData();
 }
 
 RemoteFile::RemoteFile(const RemoteFile &other) : d(other.d)
@@ -11,60 +11,69 @@ RemoteFile::RemoteFile(const RemoteFile &other) : d(other.d)
 
 const QString RemoteFile::getTitle()     const
 {
-    return d->title;
+  return d->title;
 }
 
 const QDateTime RemoteFile::getCreatedDate() const
 {
-    return d->createdDate;
+  return d->createdDate;
 }
 
 const QDateTime RemoteFile::getModifiedDate() const
 {
-    return d->modifiedDate;
+  return d->modifiedDate;
 }
 
 const qint64 RemoteFile::getFileSize()    const
 {
-    return d->fileSize;
+  return d->fileSize;
 }
 
 const QStringList RemoteFile::getParents()     const
 {
-    return d->parents;
+  return d->parents;
 }
 
 const QString RemoteFile::getId() const
 {
-    return d->id;
+  return d->id;
 }
 
 void RemoteFile::setTitle(const QString &title)
 {
-    d->title = title;
+  d->title = title;
 }
 
 void RemoteFile::setCreatedDate(const QDateTime &createdDated)
 {
-    d->createdDate = createdDated;
+  d->createdDate = createdDated;
 }
 
 void RemoteFile::setModifiedDate(const QDateTime modifiedDate)
 {
-    d->modifiedDate = modifiedDate;
+  d->modifiedDate = modifiedDate;
 }
 
 void RemoteFile::setFileSize(const quint64 fileSize)
 {
-    d->fileSize = fileSize;
+  d->fileSize = fileSize;
 }
 
 void RemoteFile::setParents(const QStringList &parents)
 {
-    d->parents = parents;
+  d->parents = parents;
 }
 
 void RemoteFile::setId(const QString &id)
 {
-    d->id = id;
+  d->id = id;
+}
+
+void RemoteFile::setHeadRevisionId(const QString &id)
+{
+  d->headRevisionId = id;
+}
+
+const QString RemoteFile::getHeadRevisionId() const {
+    return d->headRevisionId;
 }

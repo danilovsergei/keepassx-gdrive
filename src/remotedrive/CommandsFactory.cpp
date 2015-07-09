@@ -6,12 +6,12 @@ CommandsFactory::CommandsFactory(QObject *parent)
 }
 
 CommandsFactory:: ~CommandsFactory() {
-    Q_FOREACH(Command* cmd, commands) {
+    Q_FOREACH(KeePassxDriveSync::Command* cmd, commands) {
         // use deleteLater because all commands live in another thread
         cmd->deleteLater();
     }
 }
 
-void CommandsFactory::countCommand(Command* cmd) {
+void CommandsFactory::countCommand(KeePassxDriveSync::Command* cmd) {
     commands.append(cmd);
 }

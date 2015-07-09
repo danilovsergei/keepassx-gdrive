@@ -89,8 +89,7 @@ void SyncCommand::execute(const QVariantMap options)
     remoteDbLastModified = remoteDbInfo.getModifiedDate().toLocalTime();
     emitSuccess();
     delete remoteDb;
-    result.append(QVariant::fromValue(syncObject));
-    result.append(QVariant::fromValue(remoteDbLastModified));
+    setResult(KeePassxDriveSync::ResultBuilder().addValue(syncObject).addValue(remoteDbLastModified).build());
 }
 
 void SyncCommand::printSyncSymmary(QSharedPointer<SyncObject> syncObject)

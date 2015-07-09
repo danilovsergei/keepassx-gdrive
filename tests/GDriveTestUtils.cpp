@@ -1,6 +1,7 @@
 #include "GDriveTestUtils.h"
 
 Q_DECLARE_METATYPE(QList<QueryEntry>)
+Q_DECLARE_METATYPE(RemoteFile)
 Q_DECLARE_METATYPE(RemoteFileList)
 Q_DECLARE_METATYPE(QSharedPointer<DatabaseSyncObject::SyncObject>)
 Q_DECLARE_METATYPE(Database *)
@@ -8,9 +9,15 @@ Q_DECLARE_METATYPE(Database *)
 GDriveTestUtils::GDriveTestUtils()
 {
   AuthCredentials *creds = new GoogleDriveCredentials(this);
+  creds->init();
   CommandsFactory *commandsFactory = new CommandsFactoryImpl(this, creds);
   // remote drive will be used to call all remote drive functions like sync , upload, download
   remoteDrive = new RemoteDriveApi(this, commandsFactory);
+}
+
+GDriveTestUtils::GDriveTestUtils(RemoteDriveApi *remoteDrive) :
+  remoteDrive(remoteDrive)
+{
 }
 
 GDriveTestUtils::~GDriveTestUtils()
@@ -49,9 +56,6 @@ bool GDriveTestUtils::uploadDb(const QString &dbPath)
   RemoteFileList fileList = listCommand->getResult().at(0).value<RemoteFileList>();
   int expected = fileList.size() + 1;
 
-  // QVERIFY2(gdrive->getDatabasesSeq(filter).size()==0,"Test db exists in
-  // google drive before test, but it should not");
-
   // upload new database or update existing one with revision if it exists
   QFileInfo file(dbPath);
   KeePassxDriveSync::Command *uploadCommand = remoteDrive->upload();
@@ -65,8 +69,33 @@ bool GDriveTestUtils::uploadDb(const QString &dbPath)
   listCommand->execute(options);
   fileList = listCommand->getResult().at(0).value<RemoteFileList>();
   int actual = fileList.size();
+  qDebug() << QString("actual = %1 , expected = %2").arg(actual).arg(expected);
   Q_ASSERT(actual == expected);
   return actual == expected ? true : false;
+}
+
+RemoteFile GDriveTestUtils::uploadDbWithResult(const QString &dbPath)
+{
+  // get all databases with the same name and expect +1 to this number
+  qRegisterMetaType<GoogleDrive::FileInfoList>("GoogleDrive::FileInfoList");
+  QString dbName = QFileInfo(dbPath).fileName();
+  const QList<QueryEntry> filter = GoogleDriveTools::getDbNameFilter(dbName);
+  KeePassxDriveSync::Command *listCommand = remoteDrive->list();
+  QVariantMap options = OptionsBuilder().addOption(OPTION_DB_FILTER, filter).build();
+  listCommand->execute(options);
+  RemoteFileList fileList = listCommand->getResult().at(0).value<RemoteFileList>();
+  int expected = fileList.size() + 1;
+
+  // upload new database or update existing one with revision if it exists
+  QFileInfo file(dbPath);
+  KeePassxDriveSync::Command *uploadCommand = remoteDrive->upload();
+  uploadCommand->execute(OptionsBuilder().addOption(OPTION_ABSOLUTE_DB_NAME,
+                                                    dbPath).addOption(
+                           OPTION_LAST_MODIFIED_TIME,
+                           file.lastModified()).addOption(OPTION_PARENT_NAME, parentDir).build());
+  RemoteFile remoteDb = uploadCommand->getResult().at(0).value<RemoteFile>();
+  // expect remote db will have some id. Otherwise something went wrong with upload api
+  return remoteDb;
 }
 
 QSharedPointer<SyncObject> GDriveTestUtils::syncDatabase(Database *db, const QString &dbPath)
@@ -86,16 +115,26 @@ QSharedPointer<SyncObject> GDriveTestUtils::syncDatabase(Database *db, const QSt
   return syncObject;
 }
 
+QString GDriveTestUtils::correctDbName(const QString &dbName)
+{
+  QString title = dbName;
+  if (!title.endsWith(".kdbx"))
+    title.append(".kdbx");
+  return title;
+}
+
 bool GDriveTestUtils::deleteAllDb(const QString &dbTitle)
 {
   KeePassxDriveSync::Command *listCommand = remoteDrive->list();
   QVariantMap options = OptionsBuilder().addOption(OPTION_DB_FILTER, GoogleDriveTools::getDbNameFilter(
-                                                     dbTitle)).build();
+                                                     correctDbName(
+                                                       dbTitle))).build();
   listCommand->execute(options);
   const RemoteFileList dbList = listCommand->getResult().at(0).value<RemoteFileList>();
   bool result = true;
   Q_FOREACH(RemoteFile dbRec, dbList) {
-    deleteDb(RemoteFileImpl::toGDriveFileInfo(dbRec)) == false ? result = false : true;
+    deleteDb(dbRec) == false ? result = false : true;
+    qDebug() << "remove remote database";
   }
   Q_ASSERT(result);
   return result;
@@ -106,12 +145,10 @@ bool GDriveTestUtils::deleteAllDb(const QString &dbTitle)
  * database from cloud. Not needed yet by Keepassx application
  * @param db
  */
-bool GDriveTestUtils::deleteDb(const FileInfo &db)
+bool GDriveTestUtils::deleteDb(const RemoteFile &dbInfo)
 {
-  KeePassxDriveSync::Command *deleteCommand = remoteDrive->list();
-  RemoteFile dbInfo = RemoteFileImpl::fromGDriveFileInfo(db);
-  QVariantMap options = OptionsBuilder().addOption(OPTION_DB_FILTER, GoogleDriveTools::getDbNameFilter(
-                                                     dbInfo.getTitle())).build();
+  KeePassxDriveSync::Command *deleteCommand = remoteDrive->remove();
+  QVariantMap options = OptionsBuilder().addOption(OPTION_REMOTE_FILE, dbInfo).build();
   deleteCommand->execute(options);
   bool result = deleteCommand->getErrorCode() == Errors::NO_ERROR ? true : false;
   return result;
@@ -259,4 +296,10 @@ void GDriveTestUtils::waitForSignal(const QSignalSpy &spy, const int timeout)
     QTest::qWait(200);
     waitTime += 200;
   }
+}
+
+QString GDriveTestUtils::generateTempDbPath()
+{
+  return QDir::tempPath() + QDir::separator()
+         +QString::number(QDateTime::currentMSecsSinceEpoch()) +"_test.kdbx";
 }

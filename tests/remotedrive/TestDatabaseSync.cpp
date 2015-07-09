@@ -318,20 +318,22 @@ void TestDatabaseSync::testEntryGroupUpdate()
   newEntry->copyDataFrom(entry);
   newEntry->setGroup(groupRoot2);
 
-// create new group in the remote database
+  // create new group in the remote database
   Group *newGroup = new Group();
   newGroup->setName("NewGroup");
   newGroup->setUuid(Uuid::random());
   newGroup->setParent(groupRoot2);
 
-// create the same group in local database
+  // create the same group in local database
   Group *newLocalGroup = new Group();
   newLocalGroup->setName("NewGroup");
   newLocalGroup->setUuid(newGroup->uuid());
   newLocalGroup->setParent(groupRoot);
 
-// sleep to change last modification time
+  // sleep to change last modification time
   Tools::sleep(1000);
+
+  // change the parent group of the entry
   newEntry->setGroup(newGroup);
 
   entrySync->syncDatabases();

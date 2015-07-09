@@ -7,12 +7,14 @@ RemoteFileImpl::RemoteFileImpl()
 RemoteFile RemoteFileImpl::fromGDriveFileInfo(const FileInfo &fi)
 {
     RemoteFile remoteFile;
-
     remoteFile.setTitle(fi.title());
-    remoteFile.setCreatedDate(fi.createdDate());
     remoteFile.setFileSize(fi.fileSize());
+    // google drive api will return null QDateTime objects if there are not present
+    remoteFile.setCreatedDate(fi.createdDate());
     remoteFile.setModifiedDate(fi.modifiedDate());
     remoteFile.setParents(fi.parents());
+    remoteFile.setId(fi.id());
+    remoteFile.setHeadRevisionId(fi.headRevisionId());
     return remoteFile;
 }
 

@@ -25,6 +25,7 @@ public:
     qint64 fileSize;
     QStringList parents;
     QString id;
+    QString headRevisionId;
 };
 
 class RemoteFile
@@ -39,6 +40,7 @@ public:
     const qint64      getFileSize()    const;
     const QStringList getParents()     const;
     const QString getId() const;
+    const QString getHeadRevisionId() const;
 
     void           setTitle(const QString &title);
     void         setCreatedDate(const QDateTime &createdDated);
@@ -46,6 +48,7 @@ public:
     void            setFileSize(const quint64 fileSize);
     void       setParents(const QStringList &parents);
     void        setId(const QString &id);
+    void        setHeadRevisionId(const QString &id);
 
 private:
     QSharedDataPointer<RemoteFileData> d;

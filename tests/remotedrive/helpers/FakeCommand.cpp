@@ -2,14 +2,13 @@
 namespace FakeCommands {
 void FakeSyncCommand::execute(const QVariantMap options)
 {
-
-  result.append(QVariant::fromValue(QThread::currentThreadId()));
+  setResult(KeePassxDriveSync::ResultBuilder().addValue(QThread::currentThreadId()).build());
   emitSuccess();
 }
 
 void FakeAsyncCommand::execute(const QVariantMap options)
 {
-  result.append(QVariant::fromValue(QThread::currentThreadId()));
+  setResult(KeePassxDriveSync::ResultBuilder().addValue(QThread::currentThreadId()).build());
   emitSuccess();
 }
 

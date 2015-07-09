@@ -16,8 +16,10 @@ const QList<QueryEntry> GoogleDriveTools::getDbNameFilter(Database *db)
 
 const QList<QueryEntry> GoogleDriveTools::getDbNameFilter(const QString &dbName)
 {
+    // convert full path to just dbname.ext since google drive does not need any dir paths
+    QFileInfo fileName(dbName);
     QList<QueryEntry> filter;
-    QueryEntry filterEntry(QueryEntry::QueryFilter::DBNAME, QStringList(dbName));
+    QueryEntry filterEntry(QueryEntry::QueryFilter::DBNAME, QStringList(fileName.fileName()));
     filter.append(filterEntry);
     return filter;
 }

@@ -1,6 +1,7 @@
 #include "UploadCommand.h"
 
 Q_DECLARE_METATYPE(RemoteFileList)
+Q_DECLARE_METATYPE(RemoteFile)
 Q_DECLARE_METATYPE(QList<QueryEntry>)
 
 UploadCommand::UploadCommand(GoogleDrive::Session *session)
@@ -43,8 +44,15 @@ void UploadCommand::execute(const QVariantMap options)
   listCommand.execute(OptionsBuilder().addOption(OPTION_DB_FILTER,
                                                  GoogleDriveTools::getDbNameFilter(filePath)).build());
   RemoteFileList dbList = listCommand.getResult().at(0).value<RemoteFileList>();
-  Q_ASSERT(dbList.size() <= 1);
 
+  // currently we do not support multiple databases in the google drive with a same name
+  // because keepass will not know which to update
+  if (dbList.size() > 1) {
+    emitError(Errors::FileError::UPLOAD_FILES_PROBLEM,
+              QString("Found multiple cloud databases with name %1").arg(dbName));
+    return;
+  }
+  // either upload completely new file or update revision of the existing file
   if (dbList.size() == 0)
     cmd->exec(fi, &file);
   else
@@ -64,14 +72,15 @@ void UploadCommand::execute(const QVariantMap options)
 
   if (cmd->resultFileInfo().isEmpty()) {
     emitError(Errors::FileError::UPLOAD_FILES_PROBLEM,
-              QString("Failed to upload file %1").arg(dbName));
+              QString("Failed to upload file %1. No fileobject returned by remote api").arg(dbName));
     return;
   }
 
   FileInfo uploadedDb = cmd->resultFileInfo();
-
+  RemoteFile remoteDb = RemoteFileImpl::fromGDriveFileInfo(uploadedDb);
   // use extra query to update lastmodified date only for newly uploaded databases
   if (dbList.size() == 0) setLastModificationDate(uploadedDb, lastModified);
+  setResult(KeePassxDriveSync::ResultBuilder().addValue(remoteDb).build());
   emitSuccess();
 }
 

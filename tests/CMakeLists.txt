@@ -106,12 +106,12 @@ set(TEST_LIBRARIES
     test_tools
 )
 add_subdirectory(remotedrive)
-
 set(TESTTOOLS_HEADERS
     GDriveTestUtils.h
      remotedrive/helpers/FakeCommandsFactoryImpl.h
      remotedrive/helpers/FakeCommand.h
      remotedrive/helpers/FakeRemoteDriveApi.h
+     remotedrive/commands/DeleteCommandTemplate.h
 )
 
 set(TESTTOOLS_MOC
