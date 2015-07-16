@@ -3,8 +3,8 @@ Q_DECLARE_METATYPE(QList<QueryEntry>)
 Q_DECLARE_METATYPE(RemoteFile)
 Q_DECLARE_METATYPE(RemoteFileList)
 
-DeleteCommand::DeleteCommand(Session *session) :
-  session(session)
+DeleteCommand::DeleteCommand(AuthCredentials *creds) :
+  BaseCommand(creds)
 {
 }
 
@@ -14,7 +14,7 @@ void DeleteCommand::execute(const QVariantMap options)
 
   RemoteFile db = parseOption<RemoteFile>(options, OPTION_REMOTE_FILE);
 
-  CommandDelete *deleteCmd = new CommandDelete(session);
+  CommandDelete *deleteCmd = new CommandDelete(getSession());
 
   deleteCmd->exec(db.getId());
 
@@ -25,7 +25,7 @@ void DeleteCommand::execute(const QVariantMap options)
     return;
   }
 
-  ListCommand listCommand(session);
+  ListCommand listCommand(creds);
   const QList<QueryEntry> dbFilter= GoogleDriveTools::getDbNameFilter(db.getTitle());
   QVariantMap deleteOptions = OptionsBuilder().addOption(OPTION_DB_FILTER, dbFilter).build();
 

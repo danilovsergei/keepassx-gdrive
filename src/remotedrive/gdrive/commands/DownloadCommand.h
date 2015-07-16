@@ -11,21 +11,20 @@
 #include "remotedrive/RemoteFile.h"
 #include "remotedrive/gdrive/RemoteFileImpl.h"
 #include <QtCore/QUrl>
+#include <remotedrive/gdrive/BaseCommand.h>
+#include <remotedrive/AuthCredentials.h>
 
 Q_DECLARE_METATYPE(GoogleDrive::FileInfo)
 using namespace KeePassxDriveSync;
 using namespace GoogleDrive;
 
-class DownloadCommand : public KeePassxDriveSync::Command
+class DownloadCommand : public BaseCommand
 {
     Q_OBJECT
 public:
-    DownloadCommand(Session *session);
+    DownloadCommand(AuthCredentials *creds);
     ~DownloadCommand();
     void execute(const QVariantMap options);
-    static KeePassxDriveSync::Command *newInstance(Session *session);
-private:
-    Session *session;
 };
 
 #endif // DownloadCommand_H

@@ -1,67 +1,32 @@
 #include "CommandsFactoryImpl.h"
 
 CommandsFactoryImpl::CommandsFactoryImpl(QObject *parent, AuthCredentials *creds) : CommandsFactory(
-        parent), creds(creds)
+    parent),
+  creds(creds)
 {
-    // creds are living in the GUI thread while this in worker thread.
-    connect(this, SIGNAL(updateCredentials()), creds, SLOT(update()));
-}
-
-Session *CommandsFactoryImpl::getSession()
-{
-    QVariantMap credentials  = creds->getCredentials();
-    Q_ASSERT(credentials.size() > 0);
-    Q_ASSERT(credentials.contains(REFRESH_TOKEN) > 0);
-    if (credentials.value(REFRESH_TOKEN).toString().isEmpty()) {
-        Q_EMIT updateCredentials();
-        waitForCredsRefresh();
-    }
-
-    if (session == Q_NULLPTR) {
-        QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-        session = new Session(manager, this);
-        session->setClientId(CLIENT_ID_VALUE);
-        session->setClientSecret(CLIENT_SECRET_VALUE);
-        session->setRefreshToken(creds->getOption(REFRESH_TOKEN));
-    }
-
-    return session;
-}
-
-void CommandsFactoryImpl::waitForCredsRefresh()
-{
-    QEventLoop qE;
-    QTimer tT;
-
-    tT.setSingleShot(true);
-    connect(&tT, SIGNAL(timeout()), &qE, SLOT(quit()));
-    connect(creds, SIGNAL(updated()), &qE, SLOT(quit()));
-    tT.start(LOGIN_WAIT_TIMEOUT);
-    qE.exec();
 }
 
 KeePassxDriveSync::Command *CommandsFactoryImpl::download()
 {
-    return new DownloadCommand(getSession());
+  return countCommand(new DownloadCommand(creds));
 }
 
 KeePassxDriveSync::Command *CommandsFactoryImpl::sync()
 {
-    return new SyncCommand(getSession());
+  return countCommand(new SyncCommand(creds));
 }
 
 KeePassxDriveSync::Command *CommandsFactoryImpl::list()
 {
-    return new ListCommand(getSession());
+  return countCommand(new ListCommand(creds));
 }
 
 KeePassxDriveSync::Command *CommandsFactoryImpl::remove()
 {
-    return new DeleteCommand(getSession());
+  return countCommand(new DeleteCommand(creds));
 }
 
 KeePassxDriveSync::Command *CommandsFactoryImpl::upload()
 {
-    return new UploadCommand(getSession());
+  return countCommand(new UploadCommand(creds));
 }
-

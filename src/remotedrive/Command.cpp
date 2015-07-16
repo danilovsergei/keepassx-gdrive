@@ -28,8 +28,8 @@ void Command::emitSuccess()
 
 void Command::waitForFinish()
 {
-    if (status == Status::NotStarted)
-        return;
+  if (status == Status::NotStarted)
+    return;
   QEventLoop loop;
   this->loop = &loop;
   // processUserInputEvents ? QEventLoop::AllEvents : QEventLoop::ExcludeUserInputEvents
@@ -64,9 +64,19 @@ void Command::executeAsync(const QVariantMap options)
   Q_EMIT emitExecuteAsync(options);
 }
 
-void Command::setResult(QVariantList result) {
-    this->result.clear();
-    this->result = result;
+void Command::setResult(QVariantList result)
+{
+  this->result.clear();
+  this->result = result;
 }
 
+const bool Command::checkForError(Command *cmd)
+{
+  bool result = false;
+  if (cmd->getErrorCode() != Errors::NO_ERROR) {
+    emitError(cmd->getErrorCode(), cmd->getErrorString());
+    result = true;
+  }
+  return result;
+}
 }

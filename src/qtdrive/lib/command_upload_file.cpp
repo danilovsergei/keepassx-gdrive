@@ -183,8 +183,9 @@ void CommandUploadFile::multipartUpload()
         return;
     }
 
-    // put only supports updates while post only supports upload new files
-    // forcing to use something one causes google drive Not Found error
+    // put operation only supports updates
+    // while post only supports upload new files
+    // forcing to use different combination will cause google drive Not Found error
     QNetworkReply* reply;
     if (!d->fileInfo.id().isEmpty()) {
         qDebug() <<"Updating file revision";

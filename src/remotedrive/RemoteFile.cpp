@@ -74,6 +74,17 @@ void RemoteFile::setHeadRevisionId(const QString &id)
   d->headRevisionId = id;
 }
 
-const QString RemoteFile::getHeadRevisionId() const {
-    return d->headRevisionId;
+const QString RemoteFile::getHeadRevisionId() const
+{
+  return d->headRevisionId;
+}
+
+void RemoteFile::setFileUrl(const QUrl &fileUrl)
+{
+  d->fileUrl = fileUrl;
+}
+
+const QUrl RemoteFile::getFileUrl() const
+{
+  return d->fileUrl;
 }

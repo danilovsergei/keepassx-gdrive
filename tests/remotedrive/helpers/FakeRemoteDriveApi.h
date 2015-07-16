@@ -18,7 +18,6 @@ public:
 
 private:
     FakeCommandsFactoryImpl* fakeFactory = Q_NULLPTR;
-    KeePassxDriveSync::Command* getThreadedCommand(KeePassxDriveSync::Command* command);
 
 };
 

@@ -31,6 +31,7 @@ private:
 protected:
    CommandsFactory *factoryImpl = Q_NULLPTR;
    QThread driveWorkerThread;
+   KeePassxDriveSync::Command* getThreadedCommand(KeePassxDriveSync::Command *command);
 
 };
 

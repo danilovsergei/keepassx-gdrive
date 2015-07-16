@@ -6,6 +6,7 @@
 #include <QtCore/QDateTime>
 #include <QtCore/QStringList>
 #include <QtCore/QSharedData>
+#include <QtCore/QUrl>
 
 class RemoteFileData : public QSharedData
 {
@@ -26,6 +27,7 @@ public:
     QStringList parents;
     QString id;
     QString headRevisionId;
+    QUrl fileUrl;
 };
 
 class RemoteFile
@@ -41,6 +43,7 @@ public:
     const QStringList getParents()     const;
     const QString getId() const;
     const QString getHeadRevisionId() const;
+    const QUrl getFileUrl() const;
 
     void           setTitle(const QString &title);
     void         setCreatedDate(const QDateTime &createdDated);
@@ -49,6 +52,7 @@ public:
     void       setParents(const QStringList &parents);
     void        setId(const QString &id);
     void        setHeadRevisionId(const QString &id);
+    void        setFileUrl(const QUrl &fileUrl);
 
 private:
     QSharedDataPointer<RemoteFileData> d;

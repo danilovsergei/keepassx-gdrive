@@ -6,13 +6,15 @@ void TestCommand::initTestCase()
   remoteDriveApi = new FakeRemoteDriveApi(this, commandsFactory);
 }
 
+void TestCommand::cleanupTestCase()
+{}
+
 void TestCommand::init()
 {
 }
 
 void TestCommand::testSyncCommandExecution()
 {
-  commandsFactory = new FakeCommandsFactoryImpl(this);
   // remote drive will be used to call all remote drive functions like sync , upload, download
   unsigned long mainThread = QThread::currentThreadId();
   KeePassxDriveSync::Command *fakeCommand = remoteDriveApi->fakeSyncCommand();

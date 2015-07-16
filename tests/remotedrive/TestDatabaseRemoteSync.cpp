@@ -11,13 +11,16 @@ void TestDatabaseRemoteSync::initTestCase()
   Crypto::init();
   qDebug() << "Running init testcase";
 
-//AuthCredentials *creds = new GoogleDriveCredentials(this);
- // creds->init();
- // CommandsFactory *commandsFactory = new CommandsFactoryImpl(this, creds);
-  // remote drive will be used to call all remote drive functions like sync , upload, download
-  // remoteDrive = new RemoteDriveApi(this, commandsFactory);
-  testUtils = new GDriveTestUtils();
-  qDebug() << "finished";
+  creds = new GoogleDriveCredentials(this);
+  creds->init();
+  commandsFactory = new CommandsFactoryImpl(this, creds);
+  remoteDrive = new RemoteDriveApi(this, commandsFactory);
+  testUtils = new GDriveTestUtils(remoteDrive);
+}
+
+void TestDatabaseRemoteSync::cleanupTestCase()
+{
+  delete testUtils;
 }
 
 void TestDatabaseRemoteSync::testSingleRun()
@@ -683,27 +686,20 @@ void TestDatabaseRemoteSync::testRemoveRemoteEntrySlots()
   Q_ASSERT(testUtils->saveDatabase(db, dbPath));
 
   KeePassxDriveSync::Command *syncCommand = remoteDrive->sync();
-  QSignalSpy spy(syncCommand, SIGNAL(finished()));
   syncCommand->executeAsync(OptionsBuilder().addOption(OPTION_DB_POINTER,
-                                                                    db).addOption(
+                                                       db).addOption(
                               OPTION_ABSOLUTE_DB_NAME, dbPath).build());
-
-  int waitTime = 0;
-
-  while (spy.count() == 0 && waitTime < 10000) {
-    QTest::qWait(200);
-    waitTime += 200;
-  }
-
-  // make sure syncDone was emitted
-  QCOMPARE(spy.count(), 1);
+  syncCommand->waitForFinish();
   // make sure no errors happen
   QCOMPARE(syncCommand->getErrorCode(), static_cast<int>(Errors::NO_ERROR));
 
   // make sure Entry still removed after sync
   QCOMPARE(entry->group()->uuid(), db->metadata()->recycleBin()->uuid());
   QList<QVariant> args = syncCommand->getResult();
-  QCOMPARE(args.count(), 1);
+  // expect:
+  // 0: QSharedPointer<SyncObject> syncObject
+  // 1: QDateTime with lastModifiedDate
+  QCOMPARE(args.count(), 2);
   QSharedPointer<SyncObject> actual = args.at(0).value < QSharedPointer <
                                                            SyncObject > >();
   QMap<SyncMapKey, int> expectedMap;
@@ -743,7 +739,7 @@ void TestDatabaseRemoteSync::testRemoteDatabaseSyncDoNothing()
   KeePassxDriveSync::Command *syncCommand = remoteDrive->sync();
   QSignalSpy spy(syncCommand, SIGNAL(finished()));
   syncCommand->executeAsync(OptionsBuilder().addOption(OPTION_DB_POINTER,
-                                                                    db).addOption(
+                                                       db).addOption(
                               OPTION_ABSOLUTE_DB_NAME, dbPath).build());
   int waitTime = 0;
 
@@ -820,7 +816,7 @@ void TestDatabaseRemoteSync::testRemoteDatabaseSyncNoCloudDb()
   KeePassxDriveSync::Command *syncCommand = remoteDrive->sync();
   QSignalSpy spy(syncCommand, SIGNAL(finished()));
   syncCommand->executeAsync(OptionsBuilder().addOption(OPTION_DB_POINTER,
-                                                                    db).addOption(
+                                                       db).addOption(
                               OPTION_ABSOLUTE_DB_NAME, dbPath).build());
 
   int waitTime = 0;
@@ -855,7 +851,7 @@ void TestDatabaseRemoteSync::testRemoteDatabaseSyncLoginError()
   KeePassxDriveSync::Command *syncCommand = remoteDrive->sync();
   QSignalSpy spy(syncCommand, SIGNAL(finished()));
   syncCommand->executeAsync(OptionsBuilder().addOption(OPTION_DB_POINTER,
-                                                                    db).addOption(
+                                                       db).addOption(
                               OPTION_ABSOLUTE_DB_NAME, dbPath).build());
 
   int waitTime = 0;

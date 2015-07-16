@@ -20,7 +20,7 @@ private:
     // all commands live in another thread and do not support Qt memory management
     QList<KeePassxDriveSync::Command*> commands;
 protected:
-    void countCommand(KeePassxDriveSync::Command* cmd);
+    KeePassxDriveSync::Command *countCommand(KeePassxDriveSync::Command* cmd);
 };
 
 #endif // COMMANDSFACTORY_H

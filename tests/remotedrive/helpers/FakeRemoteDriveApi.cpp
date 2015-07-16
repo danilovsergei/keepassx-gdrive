@@ -25,9 +25,4 @@ KeePassxDriveSync::Command *FakeRemoteDriveApi::fakeArgumentsCommand()
   return getThreadedCommand(fakeFactory->fakeArgumentsCommand());
 }
 
-KeePassxDriveSync::Command *FakeRemoteDriveApi::getThreadedCommand(
-  KeePassxDriveSync::Command *command)
-{
-  command->moveToThread(&driveWorkerThread);
-  return command;
-}
+

@@ -35,7 +35,6 @@ class GDriveTestUtils : public QObject
 Q_OBJECT
 
 public:
-    GDriveTestUtils();
     GDriveTestUtils(RemoteDriveApi* remoteDrive);
     ~GDriveTestUtils();
     bool compareResult(QSharedPointer<SyncObject> actual, QMap<SyncMapKey, int> expectedMap);

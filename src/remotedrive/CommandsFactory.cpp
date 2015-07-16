@@ -12,6 +12,7 @@ CommandsFactory:: ~CommandsFactory() {
     }
 }
 
-void CommandsFactory::countCommand(KeePassxDriveSync::Command* cmd) {
+KeePassxDriveSync::Command* CommandsFactory::countCommand(KeePassxDriveSync::Command* cmd) {
     commands.append(cmd);
+    return cmd;
 }

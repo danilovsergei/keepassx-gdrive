@@ -123,17 +123,6 @@ set(keepassx_SOURCES
     gui/DatabaseOpenWidgetCloud.cpp
     gui/SettingsWidgetCloud.cpp
 
-    #gdrive/GoogleDriveApi.cpp
-    #gdrive/GDriveEntriesSync.cpp
-    #gdrive/GDriveGroupsSync.cpp
-    #gdrive/GDriveDatabaseSync.cpp
-    #gdrive/GDriveDatabaseSyncFactory.cpp
-    #gdrive/QueryEntry.cpp
-    #gdrive/helpers/GDriveDbDownloadHelper.cpp
-    #gdrive/helpers/GDriveGetDbHelper.cpp
-    #gdrive/helpers/SyncRecentDbHelper.cpp
-    #gdrive/GDriveDatabaseSyncBase.cpp
-
     remotedrive/CommandsFactory.cpp
     remotedrive/Command.cpp
     remotedrive/AuthCredentials.cpp
@@ -155,6 +144,7 @@ set(keepassx_SOURCES
     remotedrive/gdrive/GoogleDriveTools.cpp
     remotedrive/gdrive/RemoteFileImpl.cpp
     remotedrive/gdrive/QueryEntry.cpp
+    remotedrive/gdrive/BaseCommand.cpp
 
 
     remotedrive/gdrive/commands/DownloadCommand.cpp
@@ -224,20 +214,6 @@ set(keepassx_MOC
     gui/DatabaseOpenWidgetCloud.h
     gui/SettingsWidgetCloud.h
 
-
-    #gdrive/GoogleDriveApi.h
-    #gdrive/GDriveEntriesSync.h
-    #gdrive/GDriveGroupsSync.h
-    #gdrive/GDriveDatabaseSync.h
-    #gdrive/GDriveDatabaseSyncFactory.h
-    #gdrive/QueryEntry.h
-    #gdrive/helpers/GDriveDbDownloadHelper.h
-    #gdrive/helpers/GDriveGetDbHelper.h
-    #gdrive/helpers/SyncRecentDbHelper.h
-    #gdrive/GDriveDatabaseSyncBase.h
-
-
-
     remotedrive/Command.h
     remotedrive/RemoteDriveApi.h
     remotedrive/CommandsFactory.h
@@ -260,6 +236,7 @@ set(keepassx_MOC
     remotedrive/gdrive/GoogleDriveTools.h
     remotedrive/gdrive/RemoteFileImpl.h
     remotedrive/gdrive/QueryEntry.h
+    remotedrive/gdrive/BaseCommand.h
 
     remotedrive/gdrive/commands/DownloadCommand.h
     remotedrive/gdrive/commands/SyncCommand.h

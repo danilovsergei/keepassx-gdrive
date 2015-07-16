@@ -6,18 +6,17 @@
 #include "remotedrive/gdrive/QueryEntry.h"
 #include "core/Config.h"
 #include "remotedrive/RemoteFile.h"
-
+#include <remotedrive/AuthCredentials.h>
+#include <remotedrive/gdrive/BaseCommand.h>
 
 using namespace GoogleDrive;
-class ListCommand : public KeePassxDriveSync::Command
+class ListCommand : public BaseCommand
 {
     Q_OBJECT
 public:
-    ListCommand(Session *session);
+    ListCommand(AuthCredentials *creds);
     void execute(const QVariantMap options);
     ~ListCommand();
-private:
-    Session *session;
 };
 typedef QList<QueryEntry> DbFilter;
 #endif // LISTCOMMAND_H

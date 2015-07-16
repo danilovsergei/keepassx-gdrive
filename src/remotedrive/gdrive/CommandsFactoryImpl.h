@@ -14,6 +14,7 @@
 #include "remotedrive/gdrive/commands/UploadCommand.h"
 #include "remotedrive/gdrive/commands/DeleteCommand.h"
 #include "remotedrive/Command.h"
+#include <QtCore/QThreadStorage>
 
 using namespace GoogleDrive;
 class CommandsFactoryImpl : public CommandsFactory
@@ -27,13 +28,7 @@ public:
     KeePassxDriveSync::Command *upload();
     KeePassxDriveSync::Command *remove();
 private:
-    Session *session = Q_NULLPTR;
     AuthCredentials *creds;
-    Session *getSession();
-    void waitForCredsRefresh();
-
-Q_SIGNALS:
-    void updateCredentials();
 };
 
 #endif // COMMANDSFACTORYIMPL_H

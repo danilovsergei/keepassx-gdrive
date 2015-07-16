@@ -17,14 +17,16 @@
 #include "remotedrive/gdrive/commands/ListCommand.h"
 #include  <remotedrive/RemoteFile.h>
 #include "remotedrive/OptionsBuilder.h"
+#include <remotedrive/gdrive/CommandsFactoryImpl.h>
+#include <remotedrive/gdrive/BaseCommand.h>
 
 using namespace GoogleDrive;
-class UploadCommand : public KeePassxDriveSync::Command
+class UploadCommand : public BaseCommand
 {
   Q_OBJECT
 
 public:
-  UploadCommand(Session *session);
+  UploadCommand(AuthCredentials *creds);
   /**
    * @brief uploads local database to the google  drive.
    *  This method will always create new remote file. Even if file with such name already exists
@@ -36,7 +38,6 @@ public:
   void execute(const QVariantMap options);
   ~UploadCommand();
 private:
-  Session *session;
   void setLastModificationDate(const FileInfo & fi, const QDateTime& lastModified);
 };
 

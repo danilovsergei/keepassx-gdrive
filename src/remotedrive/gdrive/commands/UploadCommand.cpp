@@ -4,8 +4,8 @@ Q_DECLARE_METATYPE(RemoteFileList)
 Q_DECLARE_METATYPE(RemoteFile)
 Q_DECLARE_METATYPE(QList<QueryEntry>)
 
-UploadCommand::UploadCommand(GoogleDrive::Session *session)
-    :session(session)
+UploadCommand::UploadCommand(AuthCredentials* creds)
+    :BaseCommand(creds)
 {}
 
 void UploadCommand::execute(const QVariantMap options)
@@ -13,7 +13,6 @@ void UploadCommand::execute(const QVariantMap options)
   const QString filePath = parseOption<QString>(options, OPTION_ABSOLUTE_DB_NAME);
   const QDateTime lastModified = parseOption<QDateTime>(options, OPTION_LAST_MODIFIED_TIME);
   const QString parent = parseOption<QString>(options, OPTION_PARENT_NAME);
-
   // urlfields are custom keepassx fields which will be added to the file. Not visible through GoogleDrive UI
   QMap<QString, QString> urlFields;
   // bodyfields are standard GoogleDrive properties and visible by user through UI
@@ -31,7 +30,7 @@ void UploadCommand::execute(const QVariantMap options)
     fi.setParents(QStringList(config()->get("cloud/GdriveKeepassFolder").toString()));
 
   qDebug() << "Start uploading the database " + filePath;
-  CommandUploadFile *cmd = new CommandUploadFile(session);
+  CommandUploadFile *cmd = new CommandUploadFile(getSession());
   cmd->setAutoDelete(true);
 
   qRegisterMetaType<GoogleDrive::FileInfoList>("GoogleDrive::FileInfoList");
@@ -40,7 +39,7 @@ void UploadCommand::execute(const QVariantMap options)
   QFile file(filePath);
 
   // Always check if cloud db exists to prevent uploading second db with a same name
-  ListCommand listCommand(session);
+  ListCommand listCommand(creds);
   listCommand.execute(OptionsBuilder().addOption(OPTION_DB_FILTER,
                                                  GoogleDriveTools::getDbNameFilter(filePath)).build());
   RemoteFileList dbList = listCommand.getResult().at(0).value<RemoteFileList>();
@@ -86,7 +85,7 @@ void UploadCommand::execute(const QVariantMap options)
 
 void UploadCommand::setLastModificationDate(const FileInfo &fi, const QDateTime &lastModified)
 {
-  CommandUpdate *cmd = new CommandUpdate(session);
+  CommandUpdate *cmd = new CommandUpdate(getSession());
 
   QMap<QString, QString> urlProperties;
   QMap<QString, QString> bodyProperties;

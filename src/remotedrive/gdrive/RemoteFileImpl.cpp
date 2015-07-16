@@ -15,6 +15,7 @@ RemoteFile RemoteFileImpl::fromGDriveFileInfo(const FileInfo &fi)
     remoteFile.setParents(fi.parents());
     remoteFile.setId(fi.id());
     remoteFile.setHeadRevisionId(fi.headRevisionId());
+    remoteFile.setFileUrl(fi.downloadUrl());
     return remoteFile;
 }
 
@@ -36,10 +37,12 @@ FileInfo RemoteFileImpl::toGDriveFileInfo(const RemoteFile &remoteFile)
     const char *cId = "id";
     const char *cTitle = "title";
     const char *cParents = "parents";
+    const char *cFileUrl = "downloadUrl";
 
     data.insert(cTitle, remoteFile.getTitle());
     data.insert(cParents, remoteFile.getParents());
     data.insert(cId, remoteFile.getId());
+    data.insert(cFileUrl, remoteFile.getFileUrl());
     FileInfo fi(data);
     return fi;
 }

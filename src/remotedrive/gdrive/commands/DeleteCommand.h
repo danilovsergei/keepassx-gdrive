@@ -8,19 +8,19 @@
 #include <remotedrive/gdrive/commands/ListCommand.h>
 #include <remotedrive/gdrive/GoogleDriveTools.h>
 #include <remotedrive/OptionsBuilder.h>
+#include <remotedrive/AuthCredentials.h>
+#include <remotedrive/gdrive/BaseCommand.h>
 
 using namespace KeePassxDriveSync;
 using namespace GoogleDrive;
 
-class DeleteCommand : public KeePassxDriveSync::Command
+class DeleteCommand : public BaseCommand
 {
 Q_OBJECT
 public:
-    DeleteCommand(Session *session);
+    DeleteCommand(AuthCredentials* creds);
     void execute(const QVariantMap options);
     ~DeleteCommand();
-private:
-    Session *session;
 };
 
 #endif // DELETECOMMAND_H

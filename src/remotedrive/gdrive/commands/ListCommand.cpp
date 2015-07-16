@@ -3,7 +3,8 @@
 Q_DECLARE_METATYPE(DbFilter)
 Q_DECLARE_METATYPE(RemoteFileList)
 
-ListCommand::ListCommand(Session *session) : session(session)
+ListCommand::ListCommand(AuthCredentials *creds)
+    : BaseCommand(creds)
 {
 }
 
@@ -15,7 +16,7 @@ void ListCommand::execute(const QVariantMap options)
 {
     DbFilter queryFilter = options.value(OPTION_DB_FILTER).value<DbFilter>();
 
-    CommandFileList cmd(session);
+    CommandFileList cmd(getSession());
     cmd.setAutoDelete(true);
     cmd.setFields("items(fileSize,id,title,modifiedDate,description,downloadUrl)");
     QString query = QueryEntry::getEntries(queryFilter);

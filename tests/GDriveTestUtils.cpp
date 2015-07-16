@@ -6,24 +6,13 @@ Q_DECLARE_METATYPE(RemoteFileList)
 Q_DECLARE_METATYPE(QSharedPointer<DatabaseSyncObject::SyncObject>)
 Q_DECLARE_METATYPE(Database *)
 
-GDriveTestUtils::GDriveTestUtils()
-{
-  AuthCredentials *creds = new GoogleDriveCredentials(this);
-  creds->init();
-  CommandsFactory *commandsFactory = new CommandsFactoryImpl(this, creds);
-  // remote drive will be used to call all remote drive functions like sync , upload, download
-  remoteDrive = new RemoteDriveApi(this, commandsFactory);
-}
-
 GDriveTestUtils::GDriveTestUtils(RemoteDriveApi *remoteDrive) :
   remoteDrive(remoteDrive)
 {
 }
 
 GDriveTestUtils::~GDriveTestUtils()
-{
-  delete remoteDrive;
-}
+{}
 
 Entry *GDriveTestUtils::createEntry(const QString &title, const QString &password)
 {
@@ -52,21 +41,24 @@ bool GDriveTestUtils::uploadDb(const QString &dbPath)
   const QList<QueryEntry> filter = GoogleDriveTools::getDbNameFilter(dbName);
   KeePassxDriveSync::Command *listCommand = remoteDrive->list();
   QVariantMap options = OptionsBuilder().addOption(OPTION_DB_FILTER, filter).build();
-  listCommand->execute(options);
+  listCommand->executeAsync(options);
+  listCommand->waitForFinish();
   RemoteFileList fileList = listCommand->getResult().at(0).value<RemoteFileList>();
   int expected = fileList.size() + 1;
 
   // upload new database or update existing one with revision if it exists
   QFileInfo file(dbPath);
   KeePassxDriveSync::Command *uploadCommand = remoteDrive->upload();
-  uploadCommand->execute(OptionsBuilder().addOption(OPTION_ABSOLUTE_DB_NAME,
+  uploadCommand->executeAsync(OptionsBuilder().addOption(OPTION_ABSOLUTE_DB_NAME,
                                                     dbPath).addOption(
                            OPTION_LAST_MODIFIED_TIME,
                            file.lastModified()).addOption(OPTION_PARENT_NAME, parentDir).build());
+  uploadCommand->waitForFinish();
 
   // verify db was loaded successfully. Using >0 because in some cases i will
   // expect 2 databases
-  listCommand->execute(options);
+  listCommand->executeAsync(options);
+  listCommand->waitForFinish();
   fileList = listCommand->getResult().at(0).value<RemoteFileList>();
   int actual = fileList.size();
   qDebug() << QString("actual = %1 , expected = %2").arg(actual).arg(expected);
@@ -82,17 +74,19 @@ RemoteFile GDriveTestUtils::uploadDbWithResult(const QString &dbPath)
   const QList<QueryEntry> filter = GoogleDriveTools::getDbNameFilter(dbName);
   KeePassxDriveSync::Command *listCommand = remoteDrive->list();
   QVariantMap options = OptionsBuilder().addOption(OPTION_DB_FILTER, filter).build();
-  listCommand->execute(options);
+  listCommand->executeAsync(options);
+  listCommand->waitForFinish();
   RemoteFileList fileList = listCommand->getResult().at(0).value<RemoteFileList>();
   int expected = fileList.size() + 1;
 
   // upload new database or update existing one with revision if it exists
   QFileInfo file(dbPath);
   KeePassxDriveSync::Command *uploadCommand = remoteDrive->upload();
-  uploadCommand->execute(OptionsBuilder().addOption(OPTION_ABSOLUTE_DB_NAME,
+  uploadCommand->executeAsync(OptionsBuilder().addOption(OPTION_ABSOLUTE_DB_NAME,
                                                     dbPath).addOption(
                            OPTION_LAST_MODIFIED_TIME,
                            file.lastModified()).addOption(OPTION_PARENT_NAME, parentDir).build());
+  uploadCommand->waitForFinish();
   RemoteFile remoteDb = uploadCommand->getResult().at(0).value<RemoteFile>();
   // expect remote db will have some id. Otherwise something went wrong with upload api
   return remoteDb;
@@ -101,9 +95,11 @@ RemoteFile GDriveTestUtils::uploadDbWithResult(const QString &dbPath)
 QSharedPointer<SyncObject> GDriveTestUtils::syncDatabase(Database *db, const QString &dbPath)
 {
   KeePassxDriveSync::Command *syncCommand = remoteDrive->sync();
-  syncCommand->execute(OptionsBuilder().addOption(OPTION_DB_POINTER,
+  syncCommand->executeAsync(OptionsBuilder().addOption(OPTION_DB_POINTER,
                                                   db).addOption(OPTION_ABSOLUTE_DB_NAME,
                                                                 dbPath).build());
+  syncCommand->waitForFinish();
+  Q_ASSERT(syncCommand->getErrorCode() == Errors::NO_ERROR);
 
   typedef QSharedPointer < DatabaseSyncObject::SyncObject > SyncType;
   qRegisterMetaType < QSharedPointer < DatabaseSyncObject::SyncObject > >(
@@ -129,7 +125,8 @@ bool GDriveTestUtils::deleteAllDb(const QString &dbTitle)
   QVariantMap options = OptionsBuilder().addOption(OPTION_DB_FILTER, GoogleDriveTools::getDbNameFilter(
                                                      correctDbName(
                                                        dbTitle))).build();
-  listCommand->execute(options);
+  listCommand->executeAsync(options);
+  listCommand->waitForFinish();
   const RemoteFileList dbList = listCommand->getResult().at(0).value<RemoteFileList>();
   bool result = true;
   Q_FOREACH(RemoteFile dbRec, dbList) {
@@ -149,7 +146,8 @@ bool GDriveTestUtils::deleteDb(const RemoteFile &dbInfo)
 {
   KeePassxDriveSync::Command *deleteCommand = remoteDrive->remove();
   QVariantMap options = OptionsBuilder().addOption(OPTION_REMOTE_FILE, dbInfo).build();
-  deleteCommand->execute(options);
+  deleteCommand->executeAsync(options);
+  deleteCommand->waitForFinish();
   bool result = deleteCommand->getErrorCode() == Errors::NO_ERROR ? true : false;
   return result;
 }

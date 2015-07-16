@@ -29,14 +29,14 @@ private Q_SLOTS:
     void uploadOneDb();
     void uploadTwoDb();
     void updateDbRevision();
+    void testDownloadOneFile();
     void initTestCase();
-protected:
-    RemoteDriveApi* getRemoteDriveApi();
 private:
     RemoteDriveApi* remoteDriveApi = Q_NULLPTR;
     QScopedPointer<GDriveTestUtils> testUtils;
     QString parentDir = QString(GDRIVE_DIR);
-
+    AuthCredentials *creds = Q_NULLPTR;
+    CommandsFactory *commandsFactory = Q_NULLPTR;
 };
 
 #endif // TESTUPLOADDELETECOMMAND_H

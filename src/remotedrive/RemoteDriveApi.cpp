@@ -29,33 +29,40 @@ CommandsFactory *RemoteDriveApi::getFactory()
 
 Command *RemoteDriveApi::download()
 {
-    return factoryImpl->download();
+    return getThreadedCommand(factoryImpl->download());
 }
 
 Command *RemoteDriveApi::list()
 {
-    return factoryImpl->list();
+    return getThreadedCommand(factoryImpl->list());
 }
 
 Command *RemoteDriveApi::upload()
 {
-    return factoryImpl->upload();
+    return getThreadedCommand(factoryImpl->upload());
 }
 
 Command *RemoteDriveApi::remove()
 {
-    return factoryImpl->remove();
+    return getThreadedCommand(factoryImpl->remove());
 }
 
 
 Command *RemoteDriveApi::sync()
 {
-    return factoryImpl->sync();
+    return getThreadedCommand(factoryImpl->sync());
 }
 
 void RemoteDriveApi::raiseError(int errorType, const QString &description)
 {
     qDebug() << errorType << description;
     Q_ASSERT(false);
+}
+
+KeePassxDriveSync::Command *RemoteDriveApi::getThreadedCommand(
+  KeePassxDriveSync::Command *command)
+{
+  command->moveToThread(&driveWorkerThread);
+  return command;
 }
 

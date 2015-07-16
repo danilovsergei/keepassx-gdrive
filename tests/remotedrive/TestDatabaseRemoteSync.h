@@ -39,6 +39,7 @@ class TestDatabaseRemoteSync: public QObject
     Q_OBJECT
 private Q_SLOTS:
     void initTestCase();
+    void cleanupTestCase();
     void init();
     void cleanup();
     void testSingleRun();
@@ -85,7 +86,9 @@ private:
     Group* createGroup(const QString& groupName=QString("testGroup"));
 
     RemoteDriveApi *remoteDrive = Q_NULLPTR;
-    GDriveTestUtils* testUtils;
+    GDriveTestUtils* testUtils = Q_NULLPTR;
+    AuthCredentials *creds = Q_NULLPTR;
+    CommandsFactory *commandsFactory = Q_NULLPTR;
 
     template <typename T> void templateUpdateLocal();
     template <typename T> void templateRemoveLocal();
