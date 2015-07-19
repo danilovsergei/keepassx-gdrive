@@ -5,34 +5,36 @@
 #include <QtCore/QVariantMap>
 #include <QtCore/QThread>
 #include "Errors.h"
-#include "remotedrive/Command.h"
+#include "remotedrive/RemoteCommand.h"
 #include "core/Global.h"
 using namespace KeePassxDriveSync;
 
 class RemoteDriveApi : public QObject
 {
-    Q_OBJECT
+  Q_OBJECT
 
 public:
 
-    RemoteDriveApi(QObject *parent, CommandsFactory *factoryImpl);
-    ~RemoteDriveApi();
+  RemoteDriveApi(QObject *parent, CommandsFactory *factoryImpl);
+  ~RemoteDriveApi();
 
-    KeePassxDriveSync::Command *download();
-    KeePassxDriveSync::Command *upload();
-    KeePassxDriveSync::Command *list();
-    KeePassxDriveSync::Command *sync();
-    KeePassxDriveSync::Command *remove();
+  KeePassxDriveSync::Command download();
+  KeePassxDriveSync::Command upload();
+  KeePassxDriveSync::Command list();
+  KeePassxDriveSync::Command sync();
+  KeePassxDriveSync::Command remove();
 
 private:
-    CommandsFactory *getFactory();
-    void raiseError(int errorType, const QString &description);
+  CommandsFactory *getFactory();
+  void raiseError(int errorType, const QString &description);
 
 protected:
-   CommandsFactory *factoryImpl = Q_NULLPTR;
-   QThread driveWorkerThread;
-   KeePassxDriveSync::Command* getThreadedCommand(KeePassxDriveSync::Command *command);
-
+  CommandsFactory *factoryImpl = Q_NULLPTR;
+private:
+  QThread driveWorkerThread;
+protected:
+    // make protected level to be available for fakes
+    KeePassxDriveSync::Command getThreadedCommand(KeePassxDriveSync::Command  command);
 };
 
 #endif // REMOTEDRIVEAPI_H

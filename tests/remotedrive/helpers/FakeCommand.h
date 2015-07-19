@@ -2,11 +2,11 @@
 #define FAKECOMMAND_H
 
 
-#include <remotedrive/Command.h>
+#include <remotedrive/RemoteCommand.h>
 #include <QtCore/QDebug>
 #include <QtCore/QThread>
 namespace FakeCommands {
-class FakeSyncCommand : public KeePassxDriveSync::Command
+class FakeSyncCommand : public KeePassxDriveSync::RemoteCommand
 {
     Q_OBJECT
 public:
@@ -18,7 +18,7 @@ public:
     void execute(const QVariantMap options);
 };
 
-class FakeAsyncCommand : public KeePassxDriveSync::Command
+class FakeAsyncCommand : public KeePassxDriveSync::RemoteCommand
 {
     Q_OBJECT
 public:
@@ -29,7 +29,7 @@ public:
     //TODO add Q_DECL_OVERRIDE when migrate to QT5
     void execute(const QVariantMap options);
 };
-class FakeFailCommand : public KeePassxDriveSync::Command
+class FakeFailCommand : public KeePassxDriveSync::RemoteCommand
 {
     Q_OBJECT
 public:
@@ -39,7 +39,7 @@ public:
     //TODO add Q_DECL_OVERRIDE when migrate to QT5
     void execute(const QVariantMap options);
 };
-class FakeArgumentsCommand : public KeePassxDriveSync::Command
+class FakeArgumentsCommand : public KeePassxDriveSync::RemoteCommand
 {
     Q_OBJECT
 public:

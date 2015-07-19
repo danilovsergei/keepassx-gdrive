@@ -1,28 +1,29 @@
 #include "SyncCommand.h"
+#include <core/Tools.h>
 
 Q_DECLARE_METATYPE(RemoteFileList)
 Q_DECLARE_METATYPE(QSharedPointer<SyncObject>)
 Q_DECLARE_METATYPE(Database *)
 Q_DECLARE_METATYPE(QList<QueryEntry>)
 Q_DECLARE_METATYPE(RemoteFile)
-SyncCommand::SyncCommand(AuthCredentials *creds)
-    : BaseCommand(creds)
+SyncCommand::SyncCommand(AuthCredentials *creds) :
+  BaseCommand(creds)
 {
 }
 
 void SyncCommand::execute(const QVariantMap options)
 {
   Q_ASSERT(options.size() >= 1);
-
   Database *localDb = parseOption<Database *>(options, OPTION_DB_POINTER);
   const QString localDbPath = parseOption<QString>(options, OPTION_ABSOLUTE_DB_NAME);
   const QString dbName = QFileInfo(localDbPath).fileName();
 
-  QScopedPointer<Command> listCommand(new ListCommand(creds));
-  listCommand->execute(OptionsBuilder().addOption(OPTION_DB_FILTER,
-                                                  GoogleDriveTools::getDbNameFilter(
-                                                    dbName)).build());
-  if (checkForError(listCommand.data())) return;
+  KeePassxDriveSync::Command listCommand = KeePassxDriveSync::Command(new ListCommand(creds));
+  listCommand->executeAsync(OptionsBuilder().addOption(OPTION_DB_FILTER,
+                                                       GoogleDriveTools::getDbNameFilter(
+                                                         dbName)).build());
+  listCommand->waitForFinish();
+  if (checkForError(listCommand)) return;
   RemoteFileList dbList = listCommand->getResult().at(0).value<RemoteFileList>();
 
   // no need to sync database because given copy exists only locally.
@@ -31,6 +32,7 @@ void SyncCommand::execute(const QVariantMap options)
     qDebug() << QString("Nothing to sync. There is no remote database with name: %1").arg(QFileInfo(
                                                                                             localDbPath).fileName());
     emitSuccess();
+    return;
   }
 
   if (dbList.size() > 1) {
@@ -52,16 +54,21 @@ void SyncCommand::execute(const QVariantMap options)
     qDebug() << QString("Databases have the same modification time %1. Will skip sync").arg(
       localDb->metadata()->lastModifiedDate().toLocalTime().toString());
     emitSuccess();
+    return;
   }
-  QScopedPointer<Command> downloadCommand(new DownloadCommand(creds));
-  downloadCommand->execute(OptionsBuilder().addOption(OPTION_FI,
-                                                      dbList.first()).addOption(OPTION_DB_DIR,
-                                                                                QDir::
-                                                                                tempPath()).
-                           addOption(OPTION_DB_NAME,
-                                     QString::number(
-                                       QDateTime::currentMSecsSinceEpoch())+"-"+dbName).build());
-  if (checkForError(downloadCommand.data())) return;
+  KeePassxDriveSync::Command downloadCommand
+    = KeePassxDriveSync::Command(new DownloadCommand(creds));
+  // download remote database locally for further sync
+  downloadCommand->executeAsync(OptionsBuilder().addOption(OPTION_FI,
+                                                           dbList.first()).addOption(OPTION_DB_DIR,
+                                                                                     QDir::
+                                                                                     tempPath()).
+                                addOption(OPTION_DB_NAME,
+                                          QString::number(
+                                            QDateTime::currentMSecsSinceEpoch())+"-"
+                                          +dbName).build());
+  downloadCommand->waitForFinish();
+  if (checkForError(downloadCommand)) return;
 
   const QString remoteDbPath = downloadCommand->getResult().at(0).toString();
 
@@ -94,10 +101,10 @@ void SyncCommand::execute(const QVariantMap options)
   // it will help to run sync when both local and remote database were modified simultaneously
   // and remote database has older timestamp
   remoteDbLastModified = remoteDbInfo.getModifiedDate().toLocalTime();
-  emitSuccess();
-  delete remoteDb;
   setResult(KeePassxDriveSync::ResultBuilder().addValue(syncObject).addValue(
               remoteDbLastModified).build());
+  delete remoteDb;
+  emitSuccess();
 }
 
 void SyncCommand::printSyncSymmary(QSharedPointer<SyncObject> syncObject)
@@ -155,7 +162,6 @@ Database *SyncCommand::readDatabase(Database *localDb, const QString &remoteDbPa
                 remoteDbPath));
     return Q_NULLPTR;
   }
-  emitSuccess();
   return remoteDb;
 }
 

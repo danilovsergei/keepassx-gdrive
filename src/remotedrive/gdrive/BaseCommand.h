@@ -1,7 +1,7 @@
 #ifndef BASECOMMAND_H
 #define BASECOMMAND_H
 
-#include <remotedrive/Command.h>
+#include <remotedrive/RemoteCommand.h>
 #include <qtdrive/lib/session.h>
 #include <QtCore/QThreadStorage>
 #include <QtNetwork/QNetworkAccessManager>
@@ -10,7 +10,7 @@
 #include <remotedrive/AuthCredentials.h>
 
 using namespace GoogleDrive;
-class BaseCommand : public KeePassxDriveSync::Command
+class BaseCommand : public KeePassxDriveSync::RemoteCommand
 {
   Q_OBJECT
 public:

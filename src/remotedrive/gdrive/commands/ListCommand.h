@@ -1,6 +1,6 @@
 #ifndef LISTCOMMAND_H
 #define LISTCOMMAND_H
-#include "remotedrive/Command.h"
+#include "remotedrive/RemoteCommand.h"
 #include "qtdrive/lib/command_file_list.h"
 #include "remotedrive/gdrive/RemoteFileImpl.h"
 #include "remotedrive/gdrive/QueryEntry.h"

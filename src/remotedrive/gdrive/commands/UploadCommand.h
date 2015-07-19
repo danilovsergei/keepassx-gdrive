@@ -1,7 +1,7 @@
 #ifndef UPLOADCOMMAND_H
 #define UPLOADCOMMAND_H
 
-#include <remotedrive/Command.h>
+#include <remotedrive/RemoteCommand.h>
 #include "qtdrive/lib/session.h"
 #include <remotedrive/gdrive/GDriveConstants.h>
 #include <QtCore/QDateTime>

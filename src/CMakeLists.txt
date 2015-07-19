@@ -124,7 +124,7 @@ set(keepassx_SOURCES
     gui/SettingsWidgetCloud.cpp
 
     remotedrive/CommandsFactory.cpp
-    remotedrive/Command.cpp
+    remotedrive/RemoteCommand.cpp
     remotedrive/AuthCredentials.cpp
     remotedrive/RemoteDriveApi.cpp
     remotedrive/Errors.cpp
@@ -214,7 +214,7 @@ set(keepassx_MOC
     gui/DatabaseOpenWidgetCloud.h
     gui/SettingsWidgetCloud.h
 
-    remotedrive/Command.h
+    remotedrive/RemoteCommand.h
     remotedrive/RemoteDriveApi.h
     remotedrive/CommandsFactory.h
     remotedrive/AuthCredentials.h

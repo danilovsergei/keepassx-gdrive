@@ -78,7 +78,7 @@ void DatabaseOpenWidgetCloud::loadSupportedCloudEngines() {
   // TODO load list of supported engines from config file
   ui->comboCloudEngine->addItem("Google Drive");
   ui->comboCloudEngine->setCurrentIndex(0);
-  connect(listCommand, SIGNAL(finished()),this, SLOT(cloudDbLoad()));
+  connect(listCommand.data(), SIGNAL(finished()),this, SLOT(cloudDbLoad()));
   listCommand = remoteDrive->list();
   listCommand->executeAsync(OptionsBuilder().build());
 }
@@ -106,7 +106,7 @@ void DatabaseOpenWidgetCloud::downloadDb() {
     // download cloud db to the database folder
     qDebug() << QString("Database %1 downloaded locally first time.").arg(
       fi.getTitle());
-    connect(downloadCommand, SIGNAL(finished()),         this,
+    connect(downloadCommand.data(), SIGNAL(finished()),         this,
           SLOT(downloadDbFinished()) );
     downloadCommand->executeAsync(OptionsBuilder().addOption(OPTION_FI, fi).build());
   }

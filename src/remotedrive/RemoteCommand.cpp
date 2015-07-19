@@ -1,16 +1,23 @@
-#include "Command.h"
+#include "RemoteCommand.h"
 #include <QtCore/QObject>
 
 namespace KeePassxDriveSync {
-Command::Command()
+RemoteCommand::RemoteCommand()
 {
+  qDebug() << "Create command with ID = " + ID.toString();
   connect(this, SIGNAL(emitExecuteAsync(const QVariantMap)), this,
           SLOT(execute(const QVariantMap)), Qt::UniqueConnection);
   connect(this, SIGNAL(finished()), this, SLOT(finishEventLoop()), Qt::UniqueConnection);
 }
 
-void Command::emitError(const int errorCode, const QString &errorString)
+RemoteCommand::~RemoteCommand()
 {
+  qDebug() << "Destroy command with ID = " + ID.toString();
+}
+
+void RemoteCommand::emitError(const int errorCode, const QString &errorString)
+{
+  qDebug() << "Emit finished: fail";
   status = Status::NotStarted;
   qDebug() << QString("%1 : %2").arg(QString::number(errorCode), errorString);
   this->errorCode = errorCode;
@@ -18,15 +25,16 @@ void Command::emitError(const int errorCode, const QString &errorString)
   Q_EMIT finished();
 }
 
-void Command::emitSuccess()
+void RemoteCommand::emitSuccess()
 {
+  qDebug() << "Emit finished: success";
   status = Status::NotStarted;
   this->errorCode = Errors::NO_ERROR;
   this->errorString = "";
   Q_EMIT finished();
 }
 
-void Command::waitForFinish()
+void RemoteCommand::waitForFinish()
 {
   if (status == Status::NotStarted)
     return;
@@ -37,40 +45,40 @@ void Command::waitForFinish()
   this->loop = Q_NULLPTR;
 }
 
-void Command::finishEventLoop()
+void RemoteCommand::finishEventLoop()
 {
   if (loop)
     loop->quit();
 }
 
-const QVariantList Command::getResult()
+const QVariantList RemoteCommand::getResult()
 {
   return result;
 }
 
-const QString Command::getErrorString()
+const QString RemoteCommand::getErrorString()
 {
   return errorString;
 }
 
-const int Command::getErrorCode()
+const int RemoteCommand::getErrorCode()
 {
   return errorCode;
 }
 
-void Command::executeAsync(const QVariantMap options)
+void RemoteCommand::executeAsync(const QVariantMap options)
 {
   status = Status::InProgress;
   Q_EMIT emitExecuteAsync(options);
 }
 
-void Command::setResult(QVariantList result)
+void RemoteCommand::setResult(QVariantList result)
 {
   this->result.clear();
   this->result = result;
 }
 
-const bool Command::checkForError(Command *cmd)
+const bool RemoteCommand::checkForError(Command cmd)
 {
   bool result = false;
   if (cmd->getErrorCode() != Errors::NO_ERROR) {

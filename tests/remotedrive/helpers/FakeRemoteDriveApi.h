@@ -11,10 +11,10 @@ class FakeRemoteDriveApi : public RemoteDriveApi
 Q_OBJECT
 public:
     FakeRemoteDriveApi(QObject *parent, CommandsFactory *factoryImpl);
-    KeePassxDriveSync::Command* fakeSyncCommand();
-    KeePassxDriveSync::Command* fakeAsyncCommand();
-    KeePassxDriveSync::Command* fakeFailCommand();
-    KeePassxDriveSync::Command* fakeArgumentsCommand();
+    KeePassxDriveSync::Command fakeSyncCommand();
+    KeePassxDriveSync::Command fakeAsyncCommand();
+    KeePassxDriveSync::Command fakeFailCommand();
+    KeePassxDriveSync::Command fakeArgumentsCommand();
 
 private:
     FakeCommandsFactoryImpl* fakeFactory = Q_NULLPTR;

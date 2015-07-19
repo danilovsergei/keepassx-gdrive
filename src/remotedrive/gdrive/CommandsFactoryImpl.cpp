@@ -6,27 +6,27 @@ CommandsFactoryImpl::CommandsFactoryImpl(QObject *parent, AuthCredentials *creds
 {
 }
 
-KeePassxDriveSync::Command *CommandsFactoryImpl::download()
+KeePassxDriveSync::Command CommandsFactoryImpl::download()
 {
-  return countCommand(new DownloadCommand(creds));
+  return KeePassxDriveSync::Command(new DownloadCommand(creds));
 }
 
-KeePassxDriveSync::Command *CommandsFactoryImpl::sync()
+KeePassxDriveSync::Command CommandsFactoryImpl::sync()
 {
-  return countCommand(new SyncCommand(creds));
+   return KeePassxDriveSync::Command(new SyncCommand(creds));
 }
 
-KeePassxDriveSync::Command *CommandsFactoryImpl::list()
+KeePassxDriveSync::Command CommandsFactoryImpl::list()
 {
-  return countCommand(new ListCommand(creds));
+  return KeePassxDriveSync::Command(new ListCommand(creds));
 }
 
-KeePassxDriveSync::Command *CommandsFactoryImpl::remove()
+KeePassxDriveSync::Command CommandsFactoryImpl::remove()
 {
-  return countCommand(new DeleteCommand(creds));
+   return KeePassxDriveSync::Command(new DeleteCommand(creds));
 }
 
-KeePassxDriveSync::Command *CommandsFactoryImpl::upload()
+KeePassxDriveSync::Command CommandsFactoryImpl::upload()
 {
-  return countCommand(new UploadCommand(creds));
+   return KeePassxDriveSync::Command(new UploadCommand(creds));
 }

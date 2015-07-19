@@ -1,4 +1,5 @@
 #include "BaseCommand.h"
+QThreadStorage<Session *> BaseCommand::session;
 
 BaseCommand::BaseCommand(AuthCredentials* creds)
     : creds(creds)
@@ -6,7 +7,6 @@ BaseCommand::BaseCommand(AuthCredentials* creds)
     // creds are living in the GUI thread while this in worker thread.
     connect(this, SIGNAL(updateCredentials()), creds, SLOT(update()));
 }
-QThreadStorage<Session *> BaseCommand::session;
 
 Session *BaseCommand::getSession()
 {

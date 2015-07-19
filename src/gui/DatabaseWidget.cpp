@@ -178,7 +178,7 @@ DatabaseWidget::DatabaseWidget(Database* db, QWidget* parent)
         // update last db last modification time to use it for sync with remote database
         connect(m_editEntryWidget, SIGNAL(editFinished(bool)), SLOT(setLastModified(bool)));
         connect(m_editGroupWidget, SIGNAL(editFinished(bool)), SLOT(setLastModified(bool)));
-        connect(syncCommand, SIGNAL(finished()),      this, SLOT(syncDone()));
+        connect(syncCommand.data(), SIGNAL(finished()),      this, SLOT(syncDone()));
     }
     setCurrentWidget(m_mainWidget);
 }

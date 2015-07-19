@@ -164,7 +164,7 @@ private:
     QWidget* widgetBeforeLock;
     QString m_filename;
     RemoteDriveApi* remoteDrive;
-    KeePassxDriveSync::Command* syncCommand;
+    KeePassxDriveSync::Command  syncCommand;
 };
 
 #endif // KEEPASSX_DATABASEWIDGET_H

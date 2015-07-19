@@ -5,22 +5,22 @@ FakeRemoteDriveApi::FakeRemoteDriveApi(QObject *parent, CommandsFactory *factory
   fakeFactory = static_cast<FakeCommandsFactoryImpl *>(factoryImpl);
 }
 
-KeePassxDriveSync::Command *FakeRemoteDriveApi::fakeSyncCommand()
+KeePassxDriveSync::Command FakeRemoteDriveApi::fakeSyncCommand()
 {
   return getThreadedCommand(fakeFactory->fakeSyncCommand());
 }
 
-KeePassxDriveSync::Command *FakeRemoteDriveApi::fakeAsyncCommand()
+KeePassxDriveSync::Command FakeRemoteDriveApi::fakeAsyncCommand()
 {
   return getThreadedCommand(fakeFactory->fakeAsyncCommand());
 }
 
-KeePassxDriveSync::Command *FakeRemoteDriveApi::fakeFailCommand()
+KeePassxDriveSync::Command FakeRemoteDriveApi::fakeFailCommand()
 {
   return getThreadedCommand(fakeFactory->fakeFailCommand());
 }
 
-KeePassxDriveSync::Command *FakeRemoteDriveApi::fakeArgumentsCommand()
+KeePassxDriveSync::Command FakeRemoteDriveApi::fakeArgumentsCommand()
 {
   return getThreadedCommand(fakeFactory->fakeArgumentsCommand());
 }

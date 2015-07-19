@@ -442,8 +442,8 @@ void Metadata::removeCustomField(const QString& key)
 }
 
 /**
- * @brief Metadata::setLastModifiedDate sets database last modification date.Runtime variable only
- * Will not be saved with a database saving
+ * @brief Metadata::setLastModifiedDate sets database last modification date.
+ * Runtime variable only. Will not be saved with a database saving
  */
 void Metadata::setLastModifiedDate(const QDateTime& date) {
 m_lastModified=date;

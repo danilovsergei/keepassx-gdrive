@@ -2,7 +2,7 @@
 #define GOOGLEDRIVETOOLS_H
 #include <QtCore/QString>
 #include <QtCore/QDateTime>
-#include <gdrive/QueryEntry.h>
+#include <remotedrive/gdrive/QueryEntry.h>
 #include <core/Database.h>
 #include <core/Metadata.h>
 #include "core/Config.h"

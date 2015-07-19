@@ -17,7 +17,7 @@ void TestCommand::testSyncCommandExecution()
 {
   // remote drive will be used to call all remote drive functions like sync , upload, download
   unsigned long mainThread = QThread::currentThreadId();
-  KeePassxDriveSync::Command *fakeCommand = remoteDriveApi->fakeSyncCommand();
+  KeePassxDriveSync::Command fakeCommand = remoteDriveApi->fakeSyncCommand();
   fakeCommand->execute(QVariantMap());
   QVariantList result = fakeCommand->getResult();
   unsigned long commandThreadId = result.at(0).value<unsigned long>();
@@ -29,8 +29,8 @@ void TestCommand::testSyncCommandExecution()
 void TestCommand::testAsyncCommandExecution()
 {
   unsigned long mainThread = QThread::currentThreadId();
-  KeePassxDriveSync::Command *fakeCommand = remoteDriveApi->fakeAsyncCommand();
-  QSignalSpy spy(fakeCommand, SIGNAL(finished()));
+  KeePassxDriveSync::Command fakeCommand = remoteDriveApi->fakeAsyncCommand();
+  QSignalSpy spy(fakeCommand.data(), SIGNAL(finished()));
   fakeCommand->executeAsync(QVariantMap());
   int waitTime = 0;
 
@@ -51,19 +51,9 @@ void TestCommand::testAsyncCommandExecution()
 
 void TestCommand::testFailCommandExecution()
 {
-  KeePassxDriveSync::Command *fakeCommand = remoteDriveApi->fakeFailCommand();
-  QSignalSpy spy(fakeCommand, SIGNAL(finished()));
+  KeePassxDriveSync::Command fakeCommand = remoteDriveApi->fakeFailCommand();
    fakeCommand->executeAsync(QVariantMap());
-
-  int waitTime = 0;
-
-  while (spy.count() == 0 && waitTime < 10000) {
-    QTest::qWait(200);
-    waitTime += 200;
-  }
-
-  // make sure finished was emitted
-  QCOMPARE(spy.count(), 1);
+   fakeCommand->waitForFinish();
   // make we get predefined error message
   QVERIFY(fakeCommand->getErrorCode() == Errors::AuthorizationError::GENERAL_AUTH_PROBLEM);
   QVERIFY(fakeCommand->getErrorString() == "Authorization failed for test user");
@@ -71,20 +61,10 @@ void TestCommand::testFailCommandExecution()
 
 void TestCommand::testArgumentsCommandExecution()
 {
-  KeePassxDriveSync::Command *fakeCommand = remoteDriveApi->fakeArgumentsCommand();
-  QSignalSpy spy(fakeCommand, SIGNAL(finished()));
+  KeePassxDriveSync::Command fakeCommand = remoteDriveApi->fakeArgumentsCommand();
   fakeCommand->executeAsync(OptionsBuilder().addOption(QString("Test"), QString(
                                                             "StringKey")).build());
-
-  int waitTime = 0;
-
-  while (spy.count() == 0 && waitTime < 10000) {
-    QTest::qWait(200);
-    waitTime += 200;
-  }
-
-  // make sure finished was emitted
-  QCOMPARE(spy.count(), 1);
+   fakeCommand->waitForFinish();
   // make we get predefined error message
   QVERIFY(fakeCommand->getErrorCode() == Errors::NO_ERROR);
 }

@@ -20,7 +20,7 @@ void TestDatabaseRemoteSync::initTestCase()
 
 void TestDatabaseRemoteSync::cleanupTestCase()
 {
-  delete testUtils;
+  // delete testUtils;
 }
 
 void TestDatabaseRemoteSync::testSingleRun()
@@ -68,17 +68,20 @@ Group *TestDatabaseRemoteSync::createGroup(const QString &groupName)
 
 void TestDatabaseRemoteSync::cleanup()
 {
-  qDebug() << "starting cleanup()";
+  qDebug() << "starting cleanup";
   testUtils->deleteAllDb(dbName);
+  qDebug() << "deleted all db";
 
   // TODO add deletion of psysical db file on disk
   delete group;
   delete newGroup;
-
+  qDebug() << "deleted groups";
   delete entry;
   delete newEntry;
   delete rootGroup;
+  qDebug() << "deleted entries";
   delete db;
+  qDebug() << "deleted db";
 }
 
 const CompositeKey TestDatabaseRemoteSync::getTestCompositeKey()
@@ -679,16 +682,18 @@ void TestDatabaseRemoteSync::testRemoveRemoteEntrySlots()
   // save database to file since upload db takes local file
   Q_ASSERT(testUtils->saveDatabase(db, dbPath));
   Q_ASSERT(testUtils->uploadDb(dbPath));
-
+  QDateTime beforeRemoval = db->metadata()->lastModifiedDate();
   Tools::sleep(1000);
 
   db->recycleEntry(entry);
+  QDateTime afterRemoval = db->metadata()->lastModifiedDate();
   Q_ASSERT(testUtils->saveDatabase(db, dbPath));
 
-  KeePassxDriveSync::Command *syncCommand = remoteDrive->sync();
+  KeePassxDriveSync::Command syncCommand = remoteDrive->sync();
   syncCommand->executeAsync(OptionsBuilder().addOption(OPTION_DB_POINTER,
                                                        db).addOption(
                               OPTION_ABSOLUTE_DB_NAME, dbPath).build());
+  qDebug() << "wait until upload command will be finished";
   syncCommand->waitForFinish();
   // make sure no errors happen
   QCOMPARE(syncCommand->getErrorCode(), static_cast<int>(Errors::NO_ERROR));
@@ -712,7 +717,6 @@ void TestDatabaseRemoteSync::testRemoveRemoteEntrySlots()
 
   Q_ASSERT(testUtils->deleteAllDb(dbName));
   delete db;
-  delete syncCommand;
 }
 
 /**
@@ -736,27 +740,18 @@ void TestDatabaseRemoteSync::testRemoteDatabaseSyncDoNothing()
 
   Tools::sleep(1000);
 
-  KeePassxDriveSync::Command *syncCommand = remoteDrive->sync();
-  QSignalSpy spy(syncCommand, SIGNAL(finished()));
+  KeePassxDriveSync::Command syncCommand = remoteDrive->sync();
   syncCommand->executeAsync(OptionsBuilder().addOption(OPTION_DB_POINTER,
                                                        db).addOption(
                               OPTION_ABSOLUTE_DB_NAME, dbPath).build());
-  int waitTime = 0;
-
-  while (spy.count() == 0 && waitTime < 10000) {
-    QTest::qWait(200);
-    waitTime += 200;
-  }
-
-  // make sure syncDone was emitted
-  QCOMPARE(spy.count(), 1);
+  syncCommand->waitForFinish();
   // make sure no errors happen
   QCOMPARE(syncCommand->getErrorCode(), static_cast<int>(Errors::NO_ERROR));
-
-  Q_ASSERT(testUtils->deleteAllDb(dbName));
-  delete entry;
-  delete db;
-  delete syncCommand;
+  qDebug() << "testcase finished";
+  // Q_ASSERT(testUtils->deleteAllDb(dbName));
+  // delete entry;
+  // delete db;
+  // delete syncCommand;
 }
 
 /**
@@ -813,25 +808,14 @@ void TestDatabaseRemoteSync::testRemoteDatabaseSyncNoCloudDb()
   Database *db = createLocalDatabase();
   QString dbPath(QDir::tempPath() + QDir::separator() + dbName + ".kdbx");
 
-  KeePassxDriveSync::Command *syncCommand = remoteDrive->sync();
-  QSignalSpy spy(syncCommand, SIGNAL(finished()));
+  KeePassxDriveSync::Command syncCommand = remoteDrive->sync();
   syncCommand->executeAsync(OptionsBuilder().addOption(OPTION_DB_POINTER,
                                                        db).addOption(
                               OPTION_ABSOLUTE_DB_NAME, dbPath).build());
-
-  int waitTime = 0;
-
-  while (spy.count() == 0 && waitTime < 10000) {
-    QTest::qWait(200);
-    waitTime += 200;
-  }
-
-  // make sure syncDone was emitted
-  QCOMPARE(spy.count(), 1);
+  syncCommand->waitForFinish();
   // make sure no errors happen
   QCOMPARE(syncCommand->getErrorCode(), static_cast<int>(Errors::NO_ERROR));
 
-  delete syncCommand;
   delete db;
 }
 
@@ -848,37 +832,16 @@ void TestDatabaseRemoteSync::testRemoteDatabaseSyncLoginError()
   key.addKey(PasswordKey("NewPassword"));
   db->setKey(key);
 
-  KeePassxDriveSync::Command *syncCommand = remoteDrive->sync();
-  QSignalSpy spy(syncCommand, SIGNAL(finished()));
+  KeePassxDriveSync::Command syncCommand = remoteDrive->sync();
   syncCommand->executeAsync(OptionsBuilder().addOption(OPTION_DB_POINTER,
                                                        db).addOption(
                               OPTION_ABSOLUTE_DB_NAME, dbPath).build());
-
-  int waitTime = 0;
-
-  while (spy.count() == 0 && waitTime < 10000) {
-    QTest::qWait(200);
-    waitTime += 200;
-  }
-
-  QCOMPARE(spy.count(), 1);
+   syncCommand->waitForFinish();
   // make sure syncError was emitted with non zero error code
   QCOMPARE(syncCommand->getErrorCode(), static_cast<int>(Errors::SyncError::KEY_PROBLEM));
-
-  delete syncCommand;
   delete db;
 }
 
 // TODO Do some mocking to test download and sync errors
 
 QTEST_GUILESS_MAIN(TestDatabaseRemoteSync)
-
-// int main(int argc, char* argv[])
-// {
-// QCoreApplication app(argc, argv);
-// TestDatabaseRemoteSync tc;
-// QStringList args;
-// args.append("./testremotedatabasesync");
-// args.append("testUpdateLocalGroup");
-// return QTest::qExec(&tc,args);
-// }

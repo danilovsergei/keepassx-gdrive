@@ -1,7 +1,7 @@
 #ifndef DownloadCommand_H
 #define DownloadCommand_H
 
-#include "remotedrive/Command.h"
+#include "remotedrive/RemoteCommand.h"
 #include "qtdrive/lib/file_info.h"
 #include "qtdrive/lib/command_download_file.h"
 #include <QtCore/QDir>
@@ -20,11 +20,11 @@ using namespace GoogleDrive;
 
 class DownloadCommand : public BaseCommand
 {
-    Q_OBJECT
+  Q_OBJECT
 public:
-    DownloadCommand(AuthCredentials *creds);
-    ~DownloadCommand();
-    void execute(const QVariantMap options);
+  DownloadCommand(AuthCredentials *creds);
+  ~DownloadCommand();
+  void execute(const QVariantMap options);
 };
 
 #endif // DownloadCommand_H

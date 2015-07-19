@@ -43,8 +43,8 @@ public:
 private:
     Ui::DatabaseOpenWidgetCloud *ui;
     RemoteDriveApi* remoteDrive = Q_NULLPTR;
-    KeePassxDriveSync::Command* downloadCommand = Q_NULLPTR;
-    KeePassxDriveSync::Command* listCommand = Q_NULLPTR;
+    KeePassxDriveSync::Command downloadCommand;
+    KeePassxDriveSync::Command listCommand;
 private Q_SLOTS:
     void downloadDbFinished();
 };

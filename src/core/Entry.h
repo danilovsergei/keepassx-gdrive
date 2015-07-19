@@ -140,6 +140,11 @@ private Q_SLOTS:
     void emitDataChanged();
     void updateTimeinfo();
     void updateModifiedSinceBegin();
+    /**
+     * @brief updateLastModified writes last modification time to the database
+     * @param time QDateTime of the last modification
+     */
+    void updateLastModified(QDateTime time);
 
 private:
     bool wordMatch(const QString& word, Qt::CaseSensitivity caseSensitivity);

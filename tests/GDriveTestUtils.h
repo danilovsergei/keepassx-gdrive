@@ -22,7 +22,7 @@
 #include "remotedrive/AuthCredentials.h"
 #include "remotedrive/gdrive/CommandsFactoryImpl.h"
 #include "remotedrive/RemoteDriveApi.h"
-#include "remotedrive/Command.h"
+#include "remotedrive/RemoteCommand.h"
 #include "remotedrive/gdrive/GoogleDriveCredentials.h"
 
 

@@ -39,7 +39,7 @@ bool GDriveTestUtils::uploadDb(const QString &dbPath)
   qRegisterMetaType<GoogleDrive::FileInfoList>("GoogleDrive::FileInfoList");
   QString dbName = QFileInfo(dbPath).fileName();
   const QList<QueryEntry> filter = GoogleDriveTools::getDbNameFilter(dbName);
-  KeePassxDriveSync::Command *listCommand = remoteDrive->list();
+  KeePassxDriveSync::Command listCommand = remoteDrive->list();
   QVariantMap options = OptionsBuilder().addOption(OPTION_DB_FILTER, filter).build();
   listCommand->executeAsync(options);
   listCommand->waitForFinish();
@@ -48,7 +48,7 @@ bool GDriveTestUtils::uploadDb(const QString &dbPath)
 
   // upload new database or update existing one with revision if it exists
   QFileInfo file(dbPath);
-  KeePassxDriveSync::Command *uploadCommand = remoteDrive->upload();
+  KeePassxDriveSync::Command uploadCommand = remoteDrive->upload();
   uploadCommand->executeAsync(OptionsBuilder().addOption(OPTION_ABSOLUTE_DB_NAME,
                                                     dbPath).addOption(
                            OPTION_LAST_MODIFIED_TIME,
@@ -72,7 +72,7 @@ RemoteFile GDriveTestUtils::uploadDbWithResult(const QString &dbPath)
   qRegisterMetaType<GoogleDrive::FileInfoList>("GoogleDrive::FileInfoList");
   QString dbName = QFileInfo(dbPath).fileName();
   const QList<QueryEntry> filter = GoogleDriveTools::getDbNameFilter(dbName);
-  KeePassxDriveSync::Command *listCommand = remoteDrive->list();
+  KeePassxDriveSync::Command listCommand = remoteDrive->list();
   QVariantMap options = OptionsBuilder().addOption(OPTION_DB_FILTER, filter).build();
   listCommand->executeAsync(options);
   listCommand->waitForFinish();
@@ -81,7 +81,7 @@ RemoteFile GDriveTestUtils::uploadDbWithResult(const QString &dbPath)
 
   // upload new database or update existing one with revision if it exists
   QFileInfo file(dbPath);
-  KeePassxDriveSync::Command *uploadCommand = remoteDrive->upload();
+  KeePassxDriveSync::Command uploadCommand = remoteDrive->upload();
   uploadCommand->executeAsync(OptionsBuilder().addOption(OPTION_ABSOLUTE_DB_NAME,
                                                     dbPath).addOption(
                            OPTION_LAST_MODIFIED_TIME,
@@ -94,7 +94,7 @@ RemoteFile GDriveTestUtils::uploadDbWithResult(const QString &dbPath)
 
 QSharedPointer<SyncObject> GDriveTestUtils::syncDatabase(Database *db, const QString &dbPath)
 {
-  KeePassxDriveSync::Command *syncCommand = remoteDrive->sync();
+  KeePassxDriveSync::Command syncCommand = remoteDrive->sync();
   syncCommand->executeAsync(OptionsBuilder().addOption(OPTION_DB_POINTER,
                                                   db).addOption(OPTION_ABSOLUTE_DB_NAME,
                                                                 dbPath).build());
@@ -121,7 +121,7 @@ QString GDriveTestUtils::correctDbName(const QString &dbName)
 
 bool GDriveTestUtils::deleteAllDb(const QString &dbTitle)
 {
-  KeePassxDriveSync::Command *listCommand = remoteDrive->list();
+  KeePassxDriveSync::Command listCommand = remoteDrive->list();
   QVariantMap options = OptionsBuilder().addOption(OPTION_DB_FILTER, GoogleDriveTools::getDbNameFilter(
                                                      correctDbName(
                                                        dbTitle))).build();
@@ -144,7 +144,7 @@ bool GDriveTestUtils::deleteAllDb(const QString &dbTitle)
  */
 bool GDriveTestUtils::deleteDb(const RemoteFile &dbInfo)
 {
-  KeePassxDriveSync::Command *deleteCommand = remoteDrive->remove();
+  KeePassxDriveSync::Command deleteCommand = remoteDrive->remove();
   QVariantMap options = OptionsBuilder().addOption(OPTION_REMOTE_FILE, dbInfo).build();
   deleteCommand->executeAsync(options);
   deleteCommand->waitForFinish();

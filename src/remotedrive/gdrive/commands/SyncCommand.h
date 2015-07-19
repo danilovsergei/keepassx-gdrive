@@ -11,10 +11,9 @@
 #include "keys/CompositeKey.h"
 #include "QtCore/QtConcurrentRun"
 #include <QtCore/QSharedPointer>
-#include "remotedrive/Command.h"
+#include "remotedrive/RemoteCommand.h"
 #include "qtdrive/lib/session.h"
 #include "remotedrive/SyncObject.h"
-#include "remotedrive/Command.h"
 #include "remotedrive/gdrive/commands/ListCommand.h"
 #include "remotedrive/OptionsBuilder.h"
 #include "remotedrive/gdrive/commands/DownloadCommand.h"

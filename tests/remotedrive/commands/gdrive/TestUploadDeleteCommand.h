@@ -10,7 +10,7 @@
 #include <QtCore/QTemporaryFile>
 #include "crypto/Crypto.h"
 #include <QtCore/QDebug>
-#include <remotedrive/Command.h>
+#include <remotedrive/RemoteCommand.h>
 #include <QtTest/QSignalSpy>
 #include "config-keepassx-tests.h"
 #include <core/Tools.h>

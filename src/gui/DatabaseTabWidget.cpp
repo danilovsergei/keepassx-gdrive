@@ -339,17 +339,12 @@ void DatabaseTabWidget::saveDatabaseToCloud(Database *db)
   AuthCredentials *creds = new GoogleDriveCredentials(this);
   CommandsFactory *commandsFactory = new CommandsFactoryImpl(this, creds);
   RemoteDriveApi *remoteDrive = new RemoteDriveApi(this, commandsFactory);
-  KeePassxDriveSync::Command* uploadCommand = remoteDrive->upload();
+  KeePassxDriveSync::Command uploadCommand = remoteDrive->upload();
   uploadCommand->executeAsync(OptionsBuilder().addOption(OPTION_ABSOLUTE_DB_NAME,
                                                        dbStruct.filePath).addOption(
                               OPTION_LAST_MODIFIED_TIME,
                               db->metadata()->
                               lastModifiedDate()).build());
-
-  delete uploadCommand;
-  delete remoteDrive;
-  delete commandsFactory;
-  delete creds;
 }
 
 void DatabaseTabWidget::saveDatabase(Database *db)

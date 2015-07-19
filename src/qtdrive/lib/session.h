@@ -32,6 +32,7 @@
 #define GOOGLE_DRIVE_SESSION_H
 
 #include <QtCore/QObject>
+#include <QtCore/QDebug>
 
 class QNetworkAccessManager;
 

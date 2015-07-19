@@ -5,22 +5,22 @@ FakeCommandsFactoryImpl::FakeCommandsFactoryImpl(QObject *parent) : CommandsFact
 {
 }
 
-KeePassxDriveSync::Command *FakeCommandsFactoryImpl::fakeSyncCommand()
+KeePassxDriveSync::Command FakeCommandsFactoryImpl::fakeSyncCommand()
 {
-  return new FakeSyncCommand();
+  return KeePassxDriveSync::Command(new FakeSyncCommand());
 }
 
-KeePassxDriveSync::Command *FakeCommandsFactoryImpl::fakeAsyncCommand()
+KeePassxDriveSync::Command FakeCommandsFactoryImpl::fakeAsyncCommand()
 {
-  return new FakeAsyncCommand();
+  return KeePassxDriveSync::Command(new FakeAsyncCommand());
 }
 
-KeePassxDriveSync::Command *FakeCommandsFactoryImpl::fakeFailCommand()
+KeePassxDriveSync::Command FakeCommandsFactoryImpl::fakeFailCommand()
 {
-  return new FakeFailCommand();
+  return KeePassxDriveSync::Command(new FakeFailCommand());
 }
 
-KeePassxDriveSync::Command *FakeCommandsFactoryImpl::fakeArgumentsCommand()
+KeePassxDriveSync::Command FakeCommandsFactoryImpl::fakeArgumentsCommand()
 {
-  return new FakeArgumentsCommand();
+  return KeePassxDriveSync::Command(new FakeArgumentsCommand());
 }

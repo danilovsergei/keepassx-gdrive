@@ -1,5 +1,5 @@
-#ifndef Command_H
-#define Command_H
+#ifndef RemoteCommand_H
+#define RemoteCommand_H
 #include <QtCore/QObject>
 #include <QtCore/QDebug>
 #include <QtCore/QString>
@@ -7,9 +7,13 @@
 #include <remotedrive/Errors.h>
 #include <QtCore/QEventLoop>
 #include <core/Global.h>
+#include <QtCore/QUuid>
+#include <QtCore/QSharedPointer>
 
 namespace KeePassxDriveSync {
-class Command : public QObject
+class RemoteCommand;
+typedef QSharedPointer<RemoteCommand> Command;
+class RemoteCommand : public QObject
 {
   Q_OBJECT
 public:
@@ -17,7 +21,8 @@ public:
     NotStarted = 0,
     InProgress = 1,
   };
-  Command();
+  RemoteCommand();
+  ~RemoteCommand();
   // returns error description if error happen. empty otherwise
   const QString getErrorString();
   // returns error code from Errors.h , or Errors:NoError if command was successfull
@@ -30,7 +35,7 @@ public:
    * @param cmd command to check for error
    * @return True if command emits error and false othewise
    */
-  const bool checkForError(Command *cmd);
+  const bool checkForError(Command cmd);
 
   /**
    * @brief getResult result of command execution if it exists
@@ -96,6 +101,7 @@ protected:
 
 private:
   QVariantList result;
+  QUuid ID = QUuid::createUuid();
   QEventLoop *loop = Q_NULLPTR;
   QString errorString;
   // set errorCode to error by default to prevent any mistaken expectations
@@ -144,4 +150,4 @@ private:
   QVariantList instance;
 };
 }
-#endif // Command_H
+#endif // RemoteCommand_H

@@ -29,7 +29,9 @@ Session::Session(QNetworkAccessManager* manager, QObject* parent)
 
 Session::~Session()
 {
+    qDebug() << " delete session object";
     delete d_ptr;
+    qDebug() << "session object was deleted";
 }
 
 QNetworkAccessManager *Session::networkManager() const

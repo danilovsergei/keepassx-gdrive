@@ -13,7 +13,7 @@
 #include "remotedrive/gdrive/commands/ListCommand.h"
 #include "remotedrive/gdrive/commands/UploadCommand.h"
 #include "remotedrive/gdrive/commands/DeleteCommand.h"
-#include "remotedrive/Command.h"
+#include "remotedrive/RemoteCommand.h"
 #include <QtCore/QThreadStorage>
 
 using namespace GoogleDrive;
@@ -22,11 +22,11 @@ class CommandsFactoryImpl : public CommandsFactory
     Q_OBJECT
 public:
     CommandsFactoryImpl(QObject *parent, AuthCredentials *creds);
-    KeePassxDriveSync::Command *download();
-    KeePassxDriveSync::Command *sync();
-    KeePassxDriveSync::Command *list();
-    KeePassxDriveSync::Command *upload();
-    KeePassxDriveSync::Command *remove();
+    KeePassxDriveSync::Command download();
+    KeePassxDriveSync::Command sync();
+    KeePassxDriveSync::Command list();
+    KeePassxDriveSync::Command upload();
+    KeePassxDriveSync::Command remove();
 private:
     AuthCredentials *creds;
 };
