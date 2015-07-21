@@ -46,14 +46,15 @@ public:
     bool deleteAllDb(const QString &dbTitle);
     const CompositeKey getTestCompositeKey();
     bool saveDatabase(Database *db, const QString &dbPath);
-    Entry *createEntry(Database *db, const QString &title = QString("testTitle"),
-                       const QString &password = QString("testPassword"));
-    Group *createGroup(Database *db, const QString &groupName = QString("testGroup"));
     Entry *createEntry(const QString &title = QString("testTitle"),
                        const QString &password = QString("testPassword"));
+    Entry *createEntry(Database *db, const QString &title = QString("testTitle"),
+                       const QString &password = QString("testPassword"));
     Group *createGroup(const QString &groupName = QString("testGroup"));
+    Group *createGroup(Database *db, const QString &groupName = QString("testGroup"));
+
     bool deleteLocalDb(const QString &dbPath);
-    QString generateTempDbPath();
+    QString generateTempDbPath(const QString& pattern = QString("test"));
     QSharedPointer<SyncObject> syncDatabase(Database* db, const QString& dbPath);
     /**
      * @brief correctDbName appends kdbx to the db name if it's not present

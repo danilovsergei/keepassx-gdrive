@@ -12,7 +12,9 @@ GDriveTestUtils::GDriveTestUtils(RemoteDriveApi *remoteDrive) :
 }
 
 GDriveTestUtils::~GDriveTestUtils()
-{}
+{
+  qDebug() << "delete testUtils";
+}
 
 Entry *GDriveTestUtils::createEntry(const QString &title, const QString &password)
 {
@@ -24,12 +26,26 @@ Entry *GDriveTestUtils::createEntry(const QString &title, const QString &passwor
   return entry;
 }
 
+Entry *GDriveTestUtils::createEntry(Database *db, const QString &title, const QString &password)
+{
+  Entry *entry = createEntry(title, password);
+  entry->setGroup(db->resolveGroup(db->rootGroup()->uuid()));
+  return entry;
+}
+
 Group *GDriveTestUtils::createGroup(const QString &groupName)
 {
   Group *newGroup = new Group;
 
   newGroup->setName(groupName);
   newGroup->setUuid(Uuid::random());
+  return newGroup;
+}
+
+Group *GDriveTestUtils::createGroup(Database *db, const QString &groupName)
+{
+  Group *newGroup = createGroup(groupName);
+  newGroup->setParent(db->resolveGroup(db->rootGroup()->uuid()));
   return newGroup;
 }
 
@@ -50,9 +66,10 @@ bool GDriveTestUtils::uploadDb(const QString &dbPath)
   QFileInfo file(dbPath);
   KeePassxDriveSync::Command uploadCommand = remoteDrive->upload();
   uploadCommand->executeAsync(OptionsBuilder().addOption(OPTION_ABSOLUTE_DB_NAME,
-                                                    dbPath).addOption(
-                           OPTION_LAST_MODIFIED_TIME,
-                           file.lastModified()).addOption(OPTION_PARENT_NAME, parentDir).build());
+                                                         dbPath).addOption(
+                                OPTION_LAST_MODIFIED_TIME,
+                                file.lastModified()).addOption(OPTION_PARENT_NAME,
+                                                               parentDir).build());
   uploadCommand->waitForFinish();
 
   // verify db was loaded successfully. Using >0 because in some cases i will
@@ -83,9 +100,10 @@ RemoteFile GDriveTestUtils::uploadDbWithResult(const QString &dbPath)
   QFileInfo file(dbPath);
   KeePassxDriveSync::Command uploadCommand = remoteDrive->upload();
   uploadCommand->executeAsync(OptionsBuilder().addOption(OPTION_ABSOLUTE_DB_NAME,
-                                                    dbPath).addOption(
-                           OPTION_LAST_MODIFIED_TIME,
-                           file.lastModified()).addOption(OPTION_PARENT_NAME, parentDir).build());
+                                                         dbPath).addOption(
+                                OPTION_LAST_MODIFIED_TIME,
+                                file.lastModified()).addOption(OPTION_PARENT_NAME,
+                                                               parentDir).build());
   uploadCommand->waitForFinish();
   RemoteFile remoteDb = uploadCommand->getResult().at(0).value<RemoteFile>();
   // expect remote db will have some id. Otherwise something went wrong with upload api
@@ -96,8 +114,8 @@ QSharedPointer<SyncObject> GDriveTestUtils::syncDatabase(Database *db, const QSt
 {
   KeePassxDriveSync::Command syncCommand = remoteDrive->sync();
   syncCommand->executeAsync(OptionsBuilder().addOption(OPTION_DB_POINTER,
-                                                  db).addOption(OPTION_ABSOLUTE_DB_NAME,
-                                                                dbPath).build());
+                                                       db).addOption(OPTION_ABSOLUTE_DB_NAME,
+                                                                     dbPath).build());
   syncCommand->waitForFinish();
   Q_ASSERT(syncCommand->getErrorCode() == Errors::NO_ERROR);
 
@@ -220,27 +238,6 @@ Database *GDriveTestUtils::createLocalDatabase(const QString &dbPath)
   return db1;
 }
 
-Entry *GDriveTestUtils::createEntry(Database *db, const QString &title, const QString &password)
-{
-  Entry *entry = new Entry();
-
-  entry->setGroup(db->resolveGroup(db->rootGroup()->uuid()));
-  entry->setTitle(title);
-  entry->setPassword(password);
-  entry->setUuid(Uuid::random());
-  return entry;
-}
-
-Group *GDriveTestUtils::createGroup(Database *db, const QString &groupName)
-{
-  Group *newGroup = new Group;
-
-  newGroup->setName(groupName);
-  newGroup->setUuid(Uuid::random());
-  newGroup->setParent(db->resolveGroup(db->rootGroup()->uuid()));
-  return newGroup;
-}
-
 /**
  * @brief GDriveTestUtils::compareResult compares actual and expected
  * results for  database sync
@@ -296,8 +293,8 @@ void GDriveTestUtils::waitForSignal(const QSignalSpy &spy, const int timeout)
   }
 }
 
-QString GDriveTestUtils::generateTempDbPath()
+QString GDriveTestUtils::generateTempDbPath(const QString &pattern)
 {
   return QDir::tempPath() + QDir::separator()
-         +QString::number(QDateTime::currentMSecsSinceEpoch()) +"_test.kdbx";
+         +QString::number(QDateTime::currentMSecsSinceEpoch()) +"_"+pattern+ ".kdbx";
 }

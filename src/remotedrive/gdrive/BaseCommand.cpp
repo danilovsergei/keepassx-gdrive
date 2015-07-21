@@ -1,11 +1,11 @@
 #include "BaseCommand.h"
 QThreadStorage<Session *> BaseCommand::session;
 
-BaseCommand::BaseCommand(AuthCredentials* creds)
-    : creds(creds)
+BaseCommand::BaseCommand(AuthCredentials *creds) :
+  creds(creds)
 {
-    // creds are living in the GUI thread while this in worker thread.
-    connect(this, SIGNAL(updateCredentials()), creds, SLOT(update()));
+  // creds are living in the GUI thread while this in worker thread.
+  connect(this, SIGNAL(updateCredentials()), creds, SLOT(update()));
 }
 
 Session *BaseCommand::getSession()
@@ -18,14 +18,15 @@ Session *BaseCommand::getSession()
     waitForCredsRefresh();
   }
   if (!session.hasLocalData()) {
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-    Session *sessionObj = new Session(manager, this);
+    // session ptr will be managed by QThreadStorage session instance
+    Session *sessionObj = new Session();
     sessionObj->setClientId(CLIENT_ID_VALUE);
     sessionObj->setClientSecret(CLIENT_SECRET_VALUE);
     sessionObj->setRefreshToken(creds->getOption(REFRESH_TOKEN));
+    // move ownership of sessionObj ptr to static QThreadStorage session object
     session.setLocalData(sessionObj);
   }
-return session.localData();
+  return session.localData();
 }
 
 void BaseCommand::waitForCredsRefresh()

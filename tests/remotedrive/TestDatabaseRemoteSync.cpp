@@ -33,37 +33,21 @@ void TestDatabaseRemoteSync::testSingleRun()
  */
 void TestDatabaseRemoteSync::init()
 {
-  db = createLocalDatabase();
-  group = createGroup("Group");
-  newGroup = createGroup("NewGroup");
+  dbPath = testUtils->generateTempDbPath();
+  oldDbPath = testUtils->generateTempDbPath("old_test");
+  dbName = QFileInfo(dbPath).fileName();
+  db = testUtils->createLocalDatabase(dbPath);
+  group = testUtils->createGroup("Group");
+  newGroup = testUtils->createGroup("NewGroup");
 
-  entry = createEntry("Entry", password);
-  newEntry = createEntry("NewEntry", password);
+  entry = testUtils->createEntry("Entry", password);
+  newEntry = testUtils->createEntry("NewEntry", password);
   newEntryUuid = newEntry->uuid();
   newGroupUuid = newGroup->uuid();
   rootGroup = db->resolveGroup(db->rootGroup()->uuid());
 
   // remove all remote databases if exist
   testUtils->deleteAllDb(dbName);
-}
-
-Entry *TestDatabaseRemoteSync::createEntry(const QString &title, const QString &password)
-{
-  Entry *entry = new Entry();
-
-  entry->setTitle(title);
-  entry->setPassword(password);
-  entry->setUuid(Uuid::random());
-  return entry;
-}
-
-Group *TestDatabaseRemoteSync::createGroup(const QString &groupName)
-{
-  Group *newGroup = new Group;
-
-  newGroup->setName(groupName);
-  newGroup->setUuid(Uuid::random());
-  return newGroup;
 }
 
 void TestDatabaseRemoteSync::cleanup()
@@ -75,13 +59,13 @@ void TestDatabaseRemoteSync::cleanup()
   // TODO add deletion of psysical db file on disk
   delete group;
   delete newGroup;
-  qDebug() << "deleted groups";
   delete entry;
-  delete newEntry;
-  delete rootGroup;
-  qDebug() << "deleted entries";
-  delete db;
-  qDebug() << "deleted db";
+  if (newEntry)
+    delete newEntry;
+  if (rootGroup)
+    delete rootGroup;
+  if (db)
+    delete db;
 }
 
 const CompositeKey TestDatabaseRemoteSync::getTestCompositeKey()
@@ -90,58 +74,6 @@ const CompositeKey TestDatabaseRemoteSync::getTestCompositeKey()
 
   key.addKey(PasswordKey("test"));
   return key;
-}
-
-Database *TestDatabaseRemoteSync::createLocalDatabase()
-{
-  Database *db1 = new Database();
-
-  db1->setKey(getTestCompositeKey());
-  db1->metadata()->setName(dbName);
-
-  // save fake database locally
-  KeePass2Writer m_writer;
-  QString fileName(dbPath);
-  qDebug() << "saving to " + fileName;
-  QFile qFile(fileName);
-
-  if (qFile.exists())
-    qFile.remove();
-  Q_ASSERT(qFile.exists() == false);
-  QSaveFile saveFile(fileName);
-  bool result = false;
-
-  if (saveFile.open(QIODevice::WriteOnly)) {
-    m_writer.writeDatabase(&saveFile, db1);
-    result = saveFile.commit();
-  }
-
-  // check database saved successfully
-  Q_ASSERT(result == true);
-  Q_ASSERT(qFile.exists() == true);
-  return db1;
-}
-
-Entry *TestDatabaseRemoteSync::createEntry(Database *db, const QString &title,
-                                           const QString &password)
-{
-  Entry *entry = new Entry();
-
-  entry->setGroup(db->resolveGroup(db->rootGroup()->uuid()));
-  entry->setTitle(title);
-  entry->setPassword(password);
-  entry->setUuid(Uuid::random());
-  return entry;
-}
-
-Group *TestDatabaseRemoteSync::createGroup(Database *db, const QString &groupName)
-{
-  Group *newGroup = new Group;
-
-  newGroup->setName(groupName);
-  newGroup->setUuid(Uuid::random());
-  newGroup->setParent(db->resolveGroup(db->rootGroup()->uuid()));
-  return newGroup;
 }
 
 /**
@@ -281,12 +213,12 @@ void TestDatabaseRemoteSync::templateMissingRemote()
 
 template<> void TestDatabaseRemoteSync::setMissingRemote<Entry *>()
 {
-  createEntry(db);
+  testUtils->createEntry(db);
 }
 
 template<> void TestDatabaseRemoteSync::setMissingRemote<Group *>()
 {
-  createGroup(db);
+  testUtils->createGroup(db);
 }
 
 template<> void TestDatabaseRemoteSync::validateMissingRemote<Group *>(
@@ -618,17 +550,11 @@ void TestDatabaseRemoteSync::testRemoveLocalEntryToRecycleBin()
 {
   qDebug() << "testRemoveLocalEntryToRecycleBin started";
 
-  Database *db = createLocalDatabase();
-  QString oldDbPath(QDir::tempPath() + QDir::separator() + "oldDb.kdbx");
-  QString dbPath(QDir::tempPath() + QDir::separator() + dbName + ".kdbx");
-
-  // create new entry
-  Entry *entry = createEntry(db);
-
   Q_ASSERT(testUtils->saveDatabase(db, oldDbPath));
 
   // create new entry which will present only in remote db
-  Entry *newEntry = createEntry(db);
+  delete newEntry;
+  newEntry = testUtils->createEntry(db, "NewEntry", "New Password");
 
   db->recycleEntry(newEntry);
   Uuid uuid = newEntry->uuid();
@@ -636,7 +562,12 @@ void TestDatabaseRemoteSync::testRemoveLocalEntryToRecycleBin()
   Q_ASSERT(testUtils->uploadDb(dbPath));
 
   // completely delete latest local db version
+  delete newEntry;
+  delete rootGroup;
+  rootGroup = Q_NULLPTR;
+  newEntry = Q_NULLPTR;
   delete db;
+  db = Q_NULLPTR;
   QFile::remove(dbPath);
 
   // rename old version to have the same name as remote db to let sync work
@@ -658,8 +589,6 @@ void TestDatabaseRemoteSync::testRemoveLocalEntryToRecycleBin()
   // since entry was removed new recycle bin group should be created for it
   expectedMap.insert(SyncMapKey(SGroup(), SMissing(), SLocal()), 1);
   compareResult(actual, expectedMap);
-  Q_ASSERT(testUtils->deleteAllDb(dbName));
-  delete db;
 }
 
 /**
@@ -670,14 +599,6 @@ void TestDatabaseRemoteSync::testRemoveRemoteEntrySlots()
 {
   qRegisterMetaType < QSharedPointer < SyncObject > >
     ("QSharedPointer<SyncObject>");
-  Database *db = createLocalDatabase();
-  QString dbPath(QDir::tempPath() + QDir::separator() + dbName + ".kdbx");
-
-  // create new entry
-  Entry *entry = createEntry(db);
-
-  // create new group
-  Group *group = createGroup(db);
 
   // save database to file since upload db takes local file
   Q_ASSERT(testUtils->saveDatabase(db, dbPath));
@@ -716,7 +637,6 @@ void TestDatabaseRemoteSync::testRemoveRemoteEntrySlots()
   compareResult(actual, expectedMap);
 
   Q_ASSERT(testUtils->deleteAllDb(dbName));
-  delete db;
 }
 
 /**
@@ -727,17 +647,9 @@ void TestDatabaseRemoteSync::testRemoteDatabaseSyncDoNothing()
 {
   qRegisterMetaType < QSharedPointer < SyncObject > >
     ("QSharedPointer<SyncObject>");
-  Database *db = createLocalDatabase();
-  QString dbPath(QDir::tempPath() + QDir::separator() + dbName + ".kdbx");
-
-  Entry *entry = new Entry();
-
-  entry->setGroup(db->resolveGroup(db->rootGroup()->uuid()));
-  entry->setTitle("NewEntry1");
-  entry->setPassword("TestPassword");
-  entry->setUuid(Uuid::random());
+  Entry *entry = testUtils->createEntry(db);
   Q_ASSERT(testUtils->uploadDb(dbPath));
-
+  qDebug() << "passed this step";
   Tools::sleep(1000);
 
   KeePassxDriveSync::Command syncCommand = remoteDrive->sync();
@@ -747,11 +659,6 @@ void TestDatabaseRemoteSync::testRemoteDatabaseSyncDoNothing()
   syncCommand->waitForFinish();
   // make sure no errors happen
   QCOMPARE(syncCommand->getErrorCode(), static_cast<int>(Errors::NO_ERROR));
-  qDebug() << "testcase finished";
-  // Q_ASSERT(testUtils->deleteAllDb(dbName));
-  // delete entry;
-  // delete db;
-  // delete syncCommand;
 }
 
 /**
@@ -805,9 +712,6 @@ void TestDatabaseRemoteSync::testRemoteDatabaseSyncNoCloudDb()
 {
   qRegisterMetaType < QSharedPointer < SyncObject > >
     ("QSharedPointer<SyncObject>");
-  Database *db = createLocalDatabase();
-  QString dbPath(QDir::tempPath() + QDir::separator() + dbName + ".kdbx");
-
   KeePassxDriveSync::Command syncCommand = remoteDrive->sync();
   syncCommand->executeAsync(OptionsBuilder().addOption(OPTION_DB_POINTER,
                                                        db).addOption(
@@ -815,15 +719,10 @@ void TestDatabaseRemoteSync::testRemoteDatabaseSyncNoCloudDb()
   syncCommand->waitForFinish();
   // make sure no errors happen
   QCOMPARE(syncCommand->getErrorCode(), static_cast<int>(Errors::NO_ERROR));
-
-  delete db;
 }
 
 void TestDatabaseRemoteSync::testRemoteDatabaseSyncLoginError()
 {
-  Database *db = createLocalDatabase();
-  QString dbPath(QDir::tempPath() + QDir::separator() + dbName + ".kdbx");
-
   Q_ASSERT(testUtils->uploadDb(dbPath));
 
   // changing database password to make sync fail. Since sync is using local db
@@ -836,10 +735,9 @@ void TestDatabaseRemoteSync::testRemoteDatabaseSyncLoginError()
   syncCommand->executeAsync(OptionsBuilder().addOption(OPTION_DB_POINTER,
                                                        db).addOption(
                               OPTION_ABSOLUTE_DB_NAME, dbPath).build());
-   syncCommand->waitForFinish();
+  syncCommand->waitForFinish();
   // make sure syncError was emitted with non zero error code
   QCOMPARE(syncCommand->getErrorCode(), static_cast<int>(Errors::SyncError::KEY_PROBLEM));
-  delete db;
 }
 
 // TODO Do some mocking to test download and sync errors

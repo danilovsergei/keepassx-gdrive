@@ -15,7 +15,6 @@ ListCommand::~ListCommand() {
 void ListCommand::execute(const QVariantMap options)
 {
     DbFilter queryFilter = options.value(OPTION_DB_FILTER).value<DbFilter>();
-
     CommandFileList cmd(getSession());
     cmd.setAutoDelete(true);
     cmd.setFields("items(fileSize,id,title,modifiedDate,description,downloadUrl)");

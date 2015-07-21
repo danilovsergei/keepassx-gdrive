@@ -30,7 +30,7 @@
 
 #ifndef GOOGLE_DRIVE_COMMAND_PRIVATE_H
 #define GOOGLE_DRIVE_COMMAND_PRIVATE_H
-#include "QtCore/QDebug";
+#include "QtCore/QDebug"
 #include "command.h"
 
 class QEventLoop;
@@ -51,7 +51,9 @@ public:
         , autoDelete(false)
         , error(Command::NoError)
         , loop(0)
-    {}
+    {
+        qDebug() << "Created new command private";
+    }
 
     virtual ~CommandPrivate() {}
 

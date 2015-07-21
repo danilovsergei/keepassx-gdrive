@@ -19,12 +19,12 @@ public:
     QTime accessTokenExpiresTime;
 };
 
-Session::Session(QNetworkAccessManager* manager, QObject* parent)
+Session::Session(QObject* parent)
     : QObject(parent)
     , d_ptr(new SessionPrivate)
 {
     Q_D(Session);
-    d->manager = manager;
+    d->manager = new QNetworkAccessManager(this);
 }
 
 Session::~Session()

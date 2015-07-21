@@ -41,7 +41,7 @@ void RemoteCommand::waitForFinish()
   QEventLoop loop;
   this->loop = &loop;
   // processUserInputEvents ? QEventLoop::AllEvents : QEventLoop::ExcludeUserInputEvents
-  loop.exec(QEventLoop::ExcludeUserInputEvents);
+  loop.exec(QEventLoop::AllEvents);
   this->loop = Q_NULLPTR;
 }
 

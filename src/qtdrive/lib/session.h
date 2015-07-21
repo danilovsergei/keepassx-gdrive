@@ -60,7 +60,7 @@ public:
      *        Session don't own provided manager.
      * @param parent
      */
-    Session(QNetworkAccessManager* manager, QObject* parent = 0);
+    Session(QObject* parent = 0);
     ~Session();
 
     /**

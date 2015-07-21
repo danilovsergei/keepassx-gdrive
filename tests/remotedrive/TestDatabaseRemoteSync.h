@@ -59,31 +59,32 @@ private Q_SLOTS:
     // void testRemoteDatabaseSyncAmbigiousDb();
 
 private:
-    const QString dbName = "test";
+    QString dbName;
     const QString parentDir = "0B8tltL21wts3alc0eS00UVRLNnc";
     const QString newNotes = "New Notes";
-    const QString   oldDbPath = QDir::tempPath() + QDir::separator() + "oldDb.kdbx";
-    const QString   dbPath = QDir::tempPath() + QDir::separator() + dbName + ".kdbx";
+    //const QString   oldDbPath = QDir::tempPath() + QDir::separator() + "oldDb.kdbx";
+    QString   dbPath;
+    QString oldDbPath;
     const QString newPassword = "NewPassword";
     const QString password = "Password";
-    Database *db;
-    Group *group;
-    Group *newGroup;
-    Entry *entry;
-    Entry *newEntry;
+    Database *db = Q_NULLPTR;
+    Group *group = Q_NULLPTR;
+    Group *newGroup = Q_NULLPTR;
+    Entry *entry = Q_NULLPTR;
+    Entry *newEntry = Q_NULLPTR;
 
-    Uuid   newEntryUuid;
+    Uuid   newEntryUuid ;
     Uuid   newGroupUuid;
-    Group *rootGroup;
+    Group *rootGroup = Q_NULLPTR;
 
     void compareResult(QSharedPointer<SyncObject> actual, QMap<SyncMapKey, int> expectedMap);
     Database* readDatabase(const CompositeKey& key,const QString& dbPath);
     Database* createLocalDatabase();
     const CompositeKey getTestCompositeKey();
-    Entry* createEntry(Database* db,const QString& title=QString("testTitle"),const QString& password=QString("testPassword"));
-    Group* createGroup(Database* db,const QString& groupName=QString("testGroup"));
-    Entry* createEntry(const QString& title=QString("testTitle"),const QString& password=QString("testPassword"));
-    Group* createGroup(const QString& groupName=QString("testGroup"));
+    //Entry* createEntry(Database* db,const QString& title=QString("testTitle"),const QString& password=QString("testPassword"));
+    //Group* createGroup(Database* db,const QString& groupName=QString("testGroup"));
+    //Entry* createEntry(const QString& title=QString("testTitle"),const QString& password=QString("testPassword"));
+    //Group* createGroup(const QString& groupName=QString("testGroup"));
 
     RemoteDriveApi *remoteDrive = Q_NULLPTR;
     GDriveTestUtils* testUtils = Q_NULLPTR;

@@ -15,7 +15,7 @@ void GoogleDriveCredentials::update()
 {
     LoginPage loginPage;
     QScopedPointer<QNetworkAccessManager> manager(new QNetworkAccessManager(this));
-    Session tempSession(manager.data(), this);
+    Session tempSession(this);
     loginPage.updateCredentials(tempSession);
     qDebug() << "refresh = " + tempSession.refreshToken();
     tempSession.refreshToken().isEmpty() ? raiseError(

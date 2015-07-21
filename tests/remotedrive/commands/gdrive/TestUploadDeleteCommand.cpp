@@ -23,17 +23,21 @@ void TestUploadDeleteCommand::testDeleteOneFile()
   QString dbPath = testUtils->generateTempDbPath();
   testUtils->createLocalDatabase(dbPath);
   RemoteFile remoteDb = testUtils->uploadDbWithResult(dbPath);
+  qDebug() << "Upload command finished";
   // verify db was uploaded just fine
   QVERIFY(remoteDb.getId().size() > 0);
   QVERIFY(!remoteDb.getCreatedDate().isNull() && remoteDb.getCreatedDate().isValid());
 
   KeePassxDriveSync::Command deleteCommand = remoteDriveApi->remove();
+  qDebug() << "delete command started";
   deleteCommand->executeAsync(OptionsBuilder().addOption(OPTION_REMOTE_FILE, remoteDb).build());
   deleteCommand->waitForFinish();
+  qDebug() << "delete command finished";
   QVERIFY(deleteCommand->getErrorCode() == Errors::NO_ERROR);
 
   // clean up
   testUtils->deleteLocalDb(dbPath);
+  qDebug() << "test finished";
 }
 
 void TestUploadDeleteCommand::deleteTwoFiles()
