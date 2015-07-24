@@ -195,9 +195,17 @@ QSharedPointer<SyncObject> DatabaseSync<SO>::syncEntries()
   // to further decide whether we need to update remote db
   Q_FOREACH(SO * localEntry, entries1) {
     if (!processEntry(db1, localEntry)) continue;
+    if (!entries2.contains(localEntry->uuid())) {
+        bool isRemoved = Tools::hasChild(db1->metadata()->recycleBin(), localEntry);
+        if (isRemoved) {
+             // entry should be created and removed to recycle bin in remote database
+             getSyncObject()->increase(getObjectType(), SRemoved(), SRemote());
+        } else {
+            // entry is missing in remote database
+             getSyncObject()->increase(getObjectType(), SMissing(), SRemote());
+        }
+    }
 
-    if (!entries2.contains(localEntry->uuid()))
-      getSyncObject()->increase(getObjectType(), SMissing(), SRemote());
   }
   return DatabaseSync::syncObject;
 }

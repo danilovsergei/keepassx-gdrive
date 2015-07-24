@@ -143,6 +143,7 @@ private:
     void recCreateDelObjects();
     void updateTimeinfo();
     bool includeInSearch(bool resolveInherit);
+    void  updateLastModified(QDateTime time);
 
     QPointer<Database> m_db;
     Uuid m_uuid;

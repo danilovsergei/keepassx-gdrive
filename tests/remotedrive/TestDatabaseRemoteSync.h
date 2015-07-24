@@ -34,82 +34,85 @@ using namespace DatabaseSyncObject;
 /**
  * @brief The TestDatabaseRemoteSync class
  */
-class TestDatabaseRemoteSync: public QObject
+class TestDatabaseRemoteSync : public QObject
 {
-    Q_OBJECT
+  Q_OBJECT
 private Q_SLOTS:
-    void initTestCase();
-    void cleanupTestCase();
-    void init();
-    void cleanup();
-    void testSingleRun();
-    void testRemoveLocalEntryToRecycleBin();
-    void testRemoveRemoteEntrySlots();
-    void testRemoteDatabaseSyncDoNothing();    
-    void testRemoteDatabaseSyncNoCloudDb();
-    void testRemoteDatabaseSyncLoginError();
-    void testUpdateLocal();
-    void testRemoveLocal();
-    void testMissingLocal();
-    void testRemoveRemote();
-    void testMissingRemote();
-    void testUpdateRemote();
+  void initTestCase();
+  void cleanupTestCase();
+  void init();
+  void cleanup();
+  void testSingleRun();
+  void testRemoveLocalEntryToRecycleBin();
+  void testRemoveRemoteEntrySlots();
+  void testRemoteDatabaseSyncDoNothing();
+  void testRemoteDatabaseSyncNoCloudDb();
+  void testRemoteDatabaseSyncLoginError();
+  void testUpdateLocal();
+  void testRemoveLocal();
+  void testMissingLocal();
+  void testRemoveRemote();
+  void testMissingRemote();
+  void testUpdateRemote();
 
-    // Commented because debug code was removed from production code. Need to find better way for it
-    // void testRemoteDatabaseSyncAmbigiousDb();
+  // Commented because debug code was removed from production code. Need to find better way for it
+  // void testRemoteDatabaseSyncAmbigiousDb();
 
 private:
-    QString dbName;
-    const QString parentDir = "0B8tltL21wts3alc0eS00UVRLNnc";
-    const QString newNotes = "New Notes";
-    //const QString   oldDbPath = QDir::tempPath() + QDir::separator() + "oldDb.kdbx";
-    QString   dbPath;
-    QString oldDbPath;
-    const QString newPassword = "NewPassword";
-    const QString password = "Password";
-    Database *db = Q_NULLPTR;
-    Group *group = Q_NULLPTR;
-    Group *newGroup = Q_NULLPTR;
-    Entry *entry = Q_NULLPTR;
-    Entry *newEntry = Q_NULLPTR;
+  void cleanupLocalDb();
+  void cleanupFiles(bool includeOldDbPath = false);
+  QString dbName;
+  const QString parentDir = "0B8tltL21wts3alc0eS00UVRLNnc";
+  const QString newNotes = "New Notes";
+  // const QString   oldDbPath = QDir::tempPath() + QDir::separator() + "oldDb.kdbx";
+  QString dbPath;
+  QString oldDbPath;
+  const QString newPassword = "NewPassword";
+  const QString password = "Password";
 
-    Uuid   newEntryUuid ;
-    Uuid   newGroupUuid;
-    Group *rootGroup = Q_NULLPTR;
+  QScopedPointer<Database> db;
+  QScopedPointer<Group> group;
+  QScopedPointer<Group> newGroup;
+  QScopedPointer<Entry> entry;
+  QScopedPointer<Entry> newEntry;
+  QScopedPointer<Group> rootGroup;
 
-    void compareResult(QSharedPointer<SyncObject> actual, QMap<SyncMapKey, int> expectedMap);
-    Database* readDatabase(const CompositeKey& key,const QString& dbPath);
-    Database* createLocalDatabase();
-    const CompositeKey getTestCompositeKey();
-    //Entry* createEntry(Database* db,const QString& title=QString("testTitle"),const QString& password=QString("testPassword"));
-    //Group* createGroup(Database* db,const QString& groupName=QString("testGroup"));
-    //Entry* createEntry(const QString& title=QString("testTitle"),const QString& password=QString("testPassword"));
-    //Group* createGroup(const QString& groupName=QString("testGroup"));
+  Uuid newEntryUuid;
+  Uuid newGroupUuid;
 
-    RemoteDriveApi *remoteDrive = Q_NULLPTR;
-    GDriveTestUtils* testUtils = Q_NULLPTR;
-    AuthCredentials *creds = Q_NULLPTR;
-    CommandsFactory *commandsFactory = Q_NULLPTR;
+  void compareResult(QSharedPointer<SyncObject> actual, QMap<SyncMapKey, int> expectedMap);
+  Database *readDatabase(const CompositeKey &key, const QString &dbPath);
+  Database *createLocalDatabase();
+  const CompositeKey getTestCompositeKey();
+  // Entry* createEntry(Database* db,const QString& title=QString("testTitle"),const QString& password=QString("testPassword"));
+  // Group* createGroup(Database* db,const QString& groupName=QString("testGroup"));
+  // Entry* createEntry(const QString& title=QString("testTitle"),const QString& password=QString("testPassword"));
+  // Group* createGroup(const QString& groupName=QString("testGroup"));
 
-    template <typename T> void templateUpdateLocal();
-    template <typename T> void templateRemoveLocal();
-    template <typename T> void templateMissingLocal();
-    template <typename T> void templateRemoveRemote();
-    template <typename T> void templateMissingRemote();
-    template <typename T> void templateUpdateRemote();
-    template <typename T> void prepare();
-    template <typename T> void setUpdateLocal();
-    template<typename T>  void setRemoveLocal();
-    template<typename T>  void setMissingLocal();
-    template<typename T>  void setRemoveRemote();
-    template<typename T>  void setMissingRemote();
-    template<typename T>  void setUpdateRemote();
-    template<typename T> void validateUpdateLocal(const QSharedPointer<SyncObject>& actual);
-    template<typename T> void validateRemoveLocal(const QSharedPointer<SyncObject>& actual);
-    template<typename T> void validateMissingLocal(const QSharedPointer<SyncObject>& actual);
-    template<typename T> void validateRemoveRemote(const QSharedPointer<SyncObject>& actual);
-    template<typename T> void validateMissingRemote(const QSharedPointer<SyncObject>& actual);
-    template<typename T> void validateUpdateRemote(const QSharedPointer<SyncObject>& actual);
+  RemoteDriveApi *remoteDrive = Q_NULLPTR;
+  GDriveTestUtils *testUtils = Q_NULLPTR;
+  AuthCredentials *creds = Q_NULLPTR;
+  CommandsFactory *commandsFactory = Q_NULLPTR;
+
+  template<typename T> void templateUpdateLocal();
+  template<typename T> void templateRemoveLocal();
+  template<typename T> void templateMissingLocal();
+  template<typename T> void templateRemoveRemote();
+  template<typename T> void templateMissingRemote();
+  template<typename T> void templateUpdateRemote();
+  template<typename T> void prepare();
+  template<typename T> void setUpdateLocal();
+  template<typename T> void setRemoveLocal();
+  template<typename T> void setMissingLocal();
+  template<typename T> void setRemoveRemote();
+  template<typename T> void setMissingRemote();
+  template<typename T> void setUpdateRemote();
+  template<typename T> void validateUpdateLocal(const QSharedPointer<SyncObject> &actual);
+  template<typename T> void validateRemoveLocal(const QSharedPointer<SyncObject> &actual);
+  template<typename T> void validateMissingLocal(const QSharedPointer<SyncObject> &actual);
+  template<typename T> void validateRemoveRemote(const QSharedPointer<SyncObject> &actual);
+  template<typename T> void validateMissingRemote(const QSharedPointer<SyncObject> &actual);
+  template<typename T> void validateUpdateRemote(const QSharedPointer<SyncObject> &actual);
 };
 
 #endif // TESTDATABASEREMOTESYNC_H

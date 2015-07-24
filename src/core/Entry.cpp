@@ -71,8 +71,10 @@ template<class T> inline bool Entry::set(T &property, const T &value)
 void Entry::updateTimeinfo()
 {
   if (m_updateTimeinfo) {
-    m_data.timeInfo.setLastModificationTime(Tools::currentDateTimeUtc());
-    m_data.timeInfo.setLastAccessTime(Tools::currentDateTimeUtc());
+    QDateTime current = Tools::currentDateTimeUtc();
+    m_data.timeInfo.setLastModificationTime(current);
+    m_data.timeInfo.setLastAccessTime(current);
+    updateLastModified(current);
   }
 }
 
@@ -534,11 +536,9 @@ void Entry::setGroup(Group *group)
 
   QObject::setParent(group);
 
-  if (m_updateTimeinfo) {
-    QDateTime current = Tools::currentDateTimeUtc();
-    m_data.timeInfo.setLocationChanged(current);
-    updateLastModified(current);
-  }
+  QDateTime current = Tools::currentDateTimeUtc();
+  m_data.timeInfo.setLocationChanged(current);
+  updateLastModified(current);
 }
 
 void Entry::emitDataChanged()
@@ -589,5 +589,8 @@ QString Entry::resolvePlaceholders(const QString &str) const
 
 void Entry::updateLastModified(QDateTime time)
 {
-     m_group->database()->metadata()->setLastModifiedDate(time);
+  // update db last modification time only if entry attached to some group and group to db
+  // otherwise it does not make a sense to update it
+  if (m_group && m_group->database())
+    m_group->database()->metadata()->setLastModifiedDate(time);
 }

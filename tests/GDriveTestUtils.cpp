@@ -118,7 +118,7 @@ QSharedPointer<SyncObject> GDriveTestUtils::syncDatabase(Database *db, const QSt
                                                                      dbPath).build());
   syncCommand->waitForFinish();
   Q_ASSERT(syncCommand->getErrorCode() == Errors::NO_ERROR);
-
+  Q_ASSERT(syncCommand->getResult().length() > 0);
   typedef QSharedPointer < DatabaseSyncObject::SyncObject > SyncType;
   qRegisterMetaType < QSharedPointer < DatabaseSyncObject::SyncObject > >(
     "QSharedPointer<SyncObject>");

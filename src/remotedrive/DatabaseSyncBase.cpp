@@ -8,13 +8,10 @@ DatabaseSyncBase::DatabaseSyncBase(Database* db1, Database* db2)
  * @brief DatabaseSync::syncMetadata Check if db metadata was changed and sync it
  * Do it while syncing groups because they always synced before entries
  */
-
-// TODO move metadata sync prior entries and groups and do it once
-
 void DatabaseSyncBase::syncMetadata() {
-    // sync recycle bin
-    // recycle bin absent in local database and exists in remote database
-    // recycle bin changes in remote database are newer that local database changes
+    // sync recycle bin. There are some cases when it's needed:
+    //   recycle bin absent in local database and exists in remote database and
+    //   recycle bin changes in remote database are newer that local database changes
     // Note recycleBin() means emty recycle, while recycleBinEnabled means disabled recycle bin
 
     if (!db1->metadata()->recycleBin() && db2->metadata()->recycleBin() &&
@@ -27,6 +24,10 @@ void DatabaseSyncBase::syncMetadata() {
         recycleBin->copyDataFrom(remoteRecycleBin);
         db1->metadata()->setRecycleBin(recycleBin);
         db1->metadata()->setRecycleBinChanged(db2->metadata()->recycleBinChanged());
+        // treat recycle bin as regular group from the point of sync
+        syncObject->increase(SGroup(), SMissing(), SLocal());
+        // do nothing for SRemoteType because it will be counted during groups sync as missing group
+
         // Note that recycle bin entries will be synced separately
         // as a part of normal sync process
     }

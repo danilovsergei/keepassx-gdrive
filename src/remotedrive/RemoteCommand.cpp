@@ -19,9 +19,11 @@ void RemoteCommand::emitError(const int errorCode, const QString &errorString)
 {
   qDebug() << "Emit finished: fail";
   status = Status::NotStarted;
-  qDebug() << QString("%1 : %2").arg(QString::number(errorCode), errorString);
-  this->errorCode = errorCode;
-  this->errorString = errorString;
+  if (this->errorCode == Errors::InternalError::EMPTY_ERROR_CODE) {
+      qDebug() << QString("%1 : %2").arg(QString::number(errorCode), errorString);
+      this->errorCode = errorCode;
+      this->errorString = errorString;
+  }
   Q_EMIT finished();
 }
 
