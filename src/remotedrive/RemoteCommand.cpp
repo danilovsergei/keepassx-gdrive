@@ -4,7 +4,6 @@
 namespace KeePassxDriveSync {
 RemoteCommand::RemoteCommand()
 {
-  qDebug() << "Create command with ID = " + ID.toString();
   connect(this, SIGNAL(emitExecuteAsync(const QVariantMap)), this,
           SLOT(execute(const QVariantMap)), Qt::UniqueConnection);
   connect(this, SIGNAL(finished()), this, SLOT(finishEventLoop()), Qt::UniqueConnection);
@@ -12,24 +11,21 @@ RemoteCommand::RemoteCommand()
 
 RemoteCommand::~RemoteCommand()
 {
-  qDebug() << "Destroy command with ID = " + ID.toString();
 }
 
 void RemoteCommand::emitError(const int errorCode, const QString &errorString)
 {
-  qDebug() << "Emit finished: fail";
   status = Status::NotStarted;
   if (this->errorCode == Errors::InternalError::EMPTY_ERROR_CODE) {
-      qDebug() << QString("%1 : %2").arg(QString::number(errorCode), errorString);
-      this->errorCode = errorCode;
-      this->errorString = errorString;
+    qDebug() << QString("%1 : %2").arg(QString::number(errorCode), errorString);
+    this->errorCode = errorCode;
+    this->errorString = errorString;
   }
   Q_EMIT finished();
 }
 
 void RemoteCommand::emitSuccess()
 {
-  qDebug() << "Emit finished: success";
   status = Status::NotStarted;
   this->errorCode = Errors::NO_ERROR;
   this->errorString = "";

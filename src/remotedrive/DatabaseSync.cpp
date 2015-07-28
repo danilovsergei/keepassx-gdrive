@@ -33,6 +33,8 @@ void DatabaseSync<SO>::syncEntry(SO *localEntry, SO *cloudEntry)
   else if (localEntry->timeInfo().lastModificationTime().toTime_t()
            > cloudEntry->timeInfo().lastModificationTime().toTime_t()) {
     getSyncObject()->increase(getObjectType(), SOlder(), SRemote());
+    qDebug() << QString(
+      "Remote DB has older " + getType() + "data.UUID=" + cloudEntry->uuid().toHex());
   }
 }
 
@@ -178,7 +180,6 @@ QSharedPointer<SyncObject> DatabaseSync<SO>::syncEntries()
     // remote entry also exists in local database
     if (entries1.contains(cloudEntry->uuid())) {
       SO *localEntry = entries1[cloudEntry->uuid()];
-
       syncEntry(localEntry, cloudEntry);
       syncLocation(localEntry, cloudEntry);
     }
@@ -196,16 +197,15 @@ QSharedPointer<SyncObject> DatabaseSync<SO>::syncEntries()
   Q_FOREACH(SO * localEntry, entries1) {
     if (!processEntry(db1, localEntry)) continue;
     if (!entries2.contains(localEntry->uuid())) {
-        bool isRemoved = Tools::hasChild(db1->metadata()->recycleBin(), localEntry);
-        if (isRemoved) {
-             // entry should be created and removed to recycle bin in remote database
-             getSyncObject()->increase(getObjectType(), SRemoved(), SRemote());
-        } else {
-            // entry is missing in remote database
-             getSyncObject()->increase(getObjectType(), SMissing(), SRemote());
-        }
+      bool isRemoved = Tools::hasChild(db1->metadata()->recycleBin(), localEntry);
+      if (isRemoved) {
+        // entry should be created and removed to recycle bin in remote database
+        getSyncObject()->increase(getObjectType(), SRemoved(), SRemote());
+      } else {
+        // entry is missing in remote database
+        getSyncObject()->increase(getObjectType(), SMissing(), SRemote());
+      }
     }
-
   }
   return DatabaseSync::syncObject;
 }

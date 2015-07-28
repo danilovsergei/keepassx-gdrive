@@ -22,6 +22,7 @@
 #include "core/Group.h"
 #include "core/Metadata.h"
 #include "core/Tools.h"
+#include <QtCore/QDebug>
 
 const int Entry::DefaultIconNumber = 0;
 
@@ -535,10 +536,11 @@ void Entry::setGroup(Group *group)
   group->addEntry(this);
 
   QObject::setParent(group);
-
-  QDateTime current = Tools::currentDateTimeUtc();
-  m_data.timeInfo.setLocationChanged(current);
-  updateLastModified(current);
+  if (m_updateTimeinfo) {
+    QDateTime current = Tools::currentDateTimeUtc();
+    m_data.timeInfo.setLocationChanged(current);
+    updateLastModified(current);
+  }
 }
 
 void Entry::emitDataChanged()

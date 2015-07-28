@@ -90,7 +90,6 @@ void SyncCommand::execute(const QVariantMap options)
                 "Unable to read database %1").arg(remoteDbPath));
     return;
   }
-
   QSharedPointer<DatabaseSyncBase> sync = DatabaseSyncFactory::createDatabaseSync(
     DatabaseSyncFactory::SyncId::ALL, localDb, remoteDb);
   QSharedPointer<SyncObject> syncObject = sync->syncDatabases();

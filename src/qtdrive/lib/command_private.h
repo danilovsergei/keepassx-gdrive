@@ -51,9 +51,7 @@ public:
         , autoDelete(false)
         , error(Command::NoError)
         , loop(0)
-    {
-        qDebug() << "Created new command private";
-    }
+    {}
 
     virtual ~CommandPrivate() {}
 

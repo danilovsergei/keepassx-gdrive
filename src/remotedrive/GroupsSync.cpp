@@ -54,6 +54,7 @@ QMap<Uuid, Group *> GroupsSync::getEntriesMap(Database *db)
 
   // add recycle bin group since it's also has to be synced if was created at
   // one of the sources and currently absent in another source
+  // TODO find out if still need it after adding separate metadata sync
   if (db->metadata()->recycleBin())
     entries.insert(db->metadata()->recycleBin()->uuid(), db->metadata()->recycleBin());
   return entries;

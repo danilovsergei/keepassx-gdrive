@@ -4,9 +4,10 @@ Q_DECLARE_METATYPE(RemoteFileList)
 Q_DECLARE_METATYPE(RemoteFile)
 Q_DECLARE_METATYPE(QList<QueryEntry>)
 
-UploadCommand::UploadCommand(AuthCredentials* creds)
-    :BaseCommand(creds)
-{}
+UploadCommand::UploadCommand(AuthCredentials *creds) :
+  BaseCommand(creds)
+{
+}
 
 void UploadCommand::execute(const QVariantMap options)
 {
@@ -30,8 +31,7 @@ void UploadCommand::execute(const QVariantMap options)
     fi.setParents(QStringList(config()->get("cloud/GdriveKeepassFolder").toString()));
 
   qDebug() << "Start uploading the database " + filePath;
-  CommandUploadFile *cmd = new CommandUploadFile(getSession());
-  cmd->setAutoDelete(true);
+  QScopedPointer<CommandUploadFile> cmd(new CommandUploadFile(getSession()));
 
   qRegisterMetaType<GoogleDrive::FileInfoList>("GoogleDrive::FileInfoList");
   QList<QueryEntry> filter;
@@ -41,7 +41,8 @@ void UploadCommand::execute(const QVariantMap options)
   // Always check if cloud db exists to prevent uploading second db with a same name
   ListCommand listCommand(creds);
   listCommand.execute(OptionsBuilder().addOption(OPTION_DB_FILTER,
-                                                 GoogleDriveTools::getDbNameFilter(filePath)).build());
+                                                 GoogleDriveTools::getDbNameFilter(
+                                                   filePath)).build());
   RemoteFileList dbList = listCommand.getResult().at(0).value<RemoteFileList>();
 
   // currently we do not support multiple databases in the google drive with a same name
@@ -74,7 +75,6 @@ void UploadCommand::execute(const QVariantMap options)
               QString("Failed to upload file %1. No fileobject returned by remote api").arg(dbName));
     return;
   }
-
   FileInfo uploadedDb = cmd->resultFileInfo();
   RemoteFile remoteDb = RemoteFileImpl::fromGDriveFileInfo(uploadedDb);
   // use extra query to update lastmodified date only for newly uploaded databases

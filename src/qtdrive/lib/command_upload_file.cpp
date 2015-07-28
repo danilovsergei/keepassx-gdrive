@@ -107,8 +107,7 @@ void CommandUploadFile::requestFinished()
     //close the file opened during multipartUpload
     if (d->fileData->isOpen())
       d->fileData->close();
-
-
+    qDebug() << "close db file";
 
     //tryAutoDelete();
     QNetworkReply *reply = qobject_cast<QNetworkReply*>(sender());
@@ -175,7 +174,7 @@ void CommandUploadFile::multipartUpload()
     QNetworkRequest request( url );
     setRequestAccessToken(request, session()->accessToken());
 
-
+    qDebug() << "open db for reading";
     bool b = d->fileData->open(QIODevice::ReadOnly);
 
     if (!b) {

@@ -267,10 +267,8 @@ void TestDatabaseRemoteSync::templateUpdateRemote()
   prepare<T>();
   Q_ASSERT(testUtils->saveDatabase(db.data(), dbPath));
   Q_ASSERT(testUtils->uploadDb(dbPath));
-
   Tools::sleep(1000);
   setUpdateRemote<T>();
-
   // run sync database syncronously
   QSharedPointer<SyncObject> actual = testUtils->syncDatabase(db.data(), dbPath);
 
@@ -368,8 +366,10 @@ template<> void TestDatabaseRemoteSync::prepare<Group *>()
 
 template<> void TestDatabaseRemoteSync::prepare<Entry *>()
 {
+  qDebug() << "Doing prepare stage";
   entry->setGroup(rootGroup.data());
   newEntry->setGroup(rootGroup.data());
+  qDebug() << "Finish prepare stage";
 }
 
 template<> void TestDatabaseRemoteSync::validateUpdateLocal<Group *>(

@@ -28,9 +28,7 @@ Command::Command(Session *session) :
 
 Command::~Command()
 {
-  qDebug() << "Start to destory GDrive command";
   delete d_ptr;
-  qDebug() << "destroyed GDrive command";
 }
 
 bool Command::autoDelete() const
