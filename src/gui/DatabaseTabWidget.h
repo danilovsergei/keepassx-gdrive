@@ -72,6 +72,8 @@ public Q_SLOTS:
     void importKeePass1Database();
     void saveDatabase(int index = -1);
     void saveDatabaseAs(int index = -1);
+    void saveDatabase(Database* db, bool syncToCloud = false);
+    void saveDatabaseWithSync(Database *db);
     bool closeDatabase(int index = -1);
     void closeDatabaseFromSender();
     bool closeAllDatabases();
@@ -98,11 +100,9 @@ private Q_SLOTS:
     void toggleTabbar();
     void changeDatabase(Database* newDb);
     void destroyCloudDatabaseStub(Database* db);
-    void saveDatabaseToCloud(Database* db);
 
 
 private:
-    void saveDatabase(Database* db);
     void saveDatabaseAs(Database* db);
     bool closeDatabase(Database* db);
     void deleteDatabase(Database* db);

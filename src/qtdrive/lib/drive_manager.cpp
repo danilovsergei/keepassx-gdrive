@@ -19,6 +19,7 @@
 #include "drive_manager.h"
 
 #include <boost/bind.hpp>
+#include <boost/filesystem.hpp>
 
 #include <QNetworkRequest>
 #include <QNetworkAccessManager>

@@ -23,11 +23,6 @@ void TestDatabaseRemoteSync::cleanupTestCase()
   // delete testUtils;
 }
 
-void TestDatabaseRemoteSync::testSingleRun()
-{
-  qDebug() << "Start singleRun";
-}
-
 /**
  * @brief TestDatabaseRemoteSync::init executed before each testmethod
  */

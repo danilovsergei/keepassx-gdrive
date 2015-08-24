@@ -19,6 +19,9 @@
 #include "remotedrive/gdrive/commands/DownloadCommand.h"
 #include <remotedrive/AuthCredentials.h>
 #include <remotedrive/gdrive/BaseCommand.h>
+#include <remotedrive/gdrive/commands/UploadCommand.h>
+#include <core/Config.h>
+#include <remotedrive/Constants.h>
 
 using namespace KeePassxDriveSync;
 using namespace GoogleDrive;
@@ -33,6 +36,9 @@ private:
     CompositeKey localDbKey;
     Database *readDatabase(Database *localDb, const QString &remoteDbPath);
     QDateTime remoteDbLastModified;
+    void updateRemoteDatabase(QSharedPointer<SyncObject> syncObject, Database &localDb,
+                              Database &remoteDb, const QString &localDbPath, RemoteFile remoteFileInfo);
+
 
 public:
     SyncCommand(AuthCredentials *creds);
@@ -47,5 +53,7 @@ public:
     // returns last modification time of remote db
     // it's a remote db version which is currently synced with local version
     QDateTime getRemoteDbLastModified();
+private:
+    void emitCustomSuccess(Database* remoteDb,  QSharedPointer<SyncObject> syncObject, QDateTime remoteDbLastModified);
 };
 #endif // SyncCommand_H

@@ -44,6 +44,11 @@
 
 #include <QtCore/QFile>
 #include <QtCore/QString>
+#include <QtCore/QDateTime>
+#include <QtCore/QScopedPointer>
+#include <QtCore/QTemporaryFile>
+#include <QtCore/QDebug>
+#include <remotedrive/RemoteTools.h>
 
 #ifdef open
 #error qsavefile.h must be included before any header file that defines open
@@ -63,6 +68,8 @@ public:
     explicit QSaveFile(const QString &name);
     explicit QSaveFile(QObject *parent);
     QSaveFile(const QString &name, QObject *parent);
+    QSaveFile(const QString &name, const QDateTime& newTime, QObject *parent);
+    QSaveFile(const QString &name, const QDateTime& newTime);
     ~QSaveFile();
 
     QFile::FileError error() const;
@@ -87,7 +94,7 @@ public:
     bool resize(qint64 sz);
 
     int handle() const;
-
+    bool setLastModificationDate(QTemporaryFile* tempFile, const QDateTime& newTime);
 protected:
     qint64 readData(char *data, qint64 maxlen);
     qint64 writeData(const char *data, qint64 len);

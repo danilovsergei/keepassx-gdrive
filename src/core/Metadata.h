@@ -83,6 +83,7 @@ public:
     void setDefaultUserName(const QString& value);
     void setDefaultUserNameChanged(const QDateTime& value);
     void setLastModifiedDate(const QDateTime& value);
+    void setUpdateLastModifiedDate(bool value);
     void setMaintenanceHistoryDays(int value);
     void setColor(const QColor& value);
     void setProtectTitle(bool value);
@@ -129,6 +130,7 @@ private:
     QColor m_color;
     //last modification time of the database
     QDateTime m_lastModified;
+    bool m_update_lastModified = true;
 
     bool m_protectTitle;
     bool m_protectUsername;

@@ -28,6 +28,8 @@
 #include "keys/CompositeKey.h"
 #include "keys/FileKey.h"
 #include "keys/PasswordKey.h"
+#include <QtCore/QtGlobal>
+#include <QtCore/QDebug>
 
 int main(int argc, char **argv)
 {
@@ -52,19 +54,10 @@ int main(int argc, char **argv)
         key.addKey(password);
     }
 
-    QFile dbFile(app.arguments().at(2));
-    if (!dbFile.exists()) {
-        qCritical("File does not exist.");
-        return 1;
-    }
-    if (!dbFile.open(QIODevice::ReadOnly)) {
-        qCritical("Unable to open file.");
-        return 1;
-    }
-
+    QString dbFile(app.arguments().at(2));
     KeePass2Reader reader;
     reader.setSaveXml(true);
-    Database* db = reader.readDatabase(&dbFile, key);
+    Database* db = reader.readDatabase(dbFile, key);
     delete db;
 
     QByteArray xmlData = reader.xmlData();

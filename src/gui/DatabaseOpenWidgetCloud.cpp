@@ -23,9 +23,9 @@ DatabaseOpenWidgetCloud::DatabaseOpenWidgetCloud(QWidget *parent) :
   connect(ui->buttonBox, SIGNAL(rejected()), SIGNAL(dbRejected()));
   connect(ui->buttonBox, SIGNAL(accepted()), SLOT(downloadDb()));
   AuthCredentials* creds = new GoogleDriveCredentials(this);
-  CommandsFactory* commandsFactory = new CommandsFactoryImpl(this,creds);
+  CommandsFactory* commandsFactory = new CommandsFactoryImpl(this, creds);
   // remote drive will be used to call all remote drive functions like sync , upload, download
-  remoteDrive = new RemoteDriveApi(this,commandsFactory);
+  remoteDrive = new RemoteDriveApi(this, commandsFactory);
 }
 
 /**
@@ -35,7 +35,7 @@ DatabaseOpenWidgetCloud::DatabaseOpenWidgetCloud(QWidget *parent) :
  */
 void DatabaseOpenWidgetCloud::cloudDbLoad()
 {
-  Q_ASSERT(listCommand->getErrorCode()!=static_cast<int>(Errors::NO_ERROR));
+  Q_ASSERT(listCommand->getErrorCode()==static_cast<int>(Errors::NO_ERROR));
   qRegisterMetaType<RemoteFileList>("RemoteFileList");
   const RemoteFileList db_files = listCommand->getResult().at(0).value<RemoteFileList>();
   QMap<QString, RemoteFile> files;
@@ -78,8 +78,8 @@ void DatabaseOpenWidgetCloud::loadSupportedCloudEngines() {
   // TODO load list of supported engines from config file
   ui->comboCloudEngine->addItem("Google Drive");
   ui->comboCloudEngine->setCurrentIndex(0);
-  connect(listCommand.data(), SIGNAL(finished()),this, SLOT(cloudDbLoad()));
   listCommand = remoteDrive->list();
+  connect(listCommand.data(), SIGNAL(finished()),this, SLOT(cloudDbLoad()));
   listCommand->executeAsync(OptionsBuilder().build());
 }
 
@@ -106,6 +106,7 @@ void DatabaseOpenWidgetCloud::downloadDb() {
     // download cloud db to the database folder
     qDebug() << QString("Database %1 downloaded locally first time.").arg(
       fi.getTitle());
+    downloadCommand = remoteDrive->download();
     connect(downloadCommand.data(), SIGNAL(finished()),         this,
           SLOT(downloadDbFinished()) );
     downloadCommand->executeAsync(OptionsBuilder().addOption(OPTION_FI, fi).build());
@@ -114,7 +115,8 @@ void DatabaseOpenWidgetCloud::downloadDb() {
 }
 
 void DatabaseOpenWidgetCloud::downloadDbFinished() {
-    Q_ASSERT(downloadCommand->getErrorCode()!=static_cast<int>(Errors::NO_ERROR));
+    Q_ASSERT(downloadCommand->getErrorCode()==static_cast<int>(Errors::NO_ERROR));
     QString dbPath = downloadCommand->getResult().at(0).toString();
+    Q_ASSERT (!dbPath.isNull() && !dbPath.isEmpty());
     Q_EMIT dbSelected(dbPath);
 }

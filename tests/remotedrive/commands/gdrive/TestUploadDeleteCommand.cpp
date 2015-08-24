@@ -3,12 +3,11 @@ Q_DECLARE_METATYPE(RemoteFile)
 
 void TestUploadDeleteCommand::initTestCase()
 {
-    AuthCredentials *creds = new GoogleDriveCredentials(this);
-    creds->init();
-    CommandsFactory *commandsFactory = new CommandsFactoryImpl(this, creds);
-    // remote drive will be used to call all remote drive functions like sync , upload, download
-    remoteDriveApi = new RemoteDriveApi(this, commandsFactory);
-
+  AuthCredentials *creds = new GoogleDriveCredentials(this);
+  creds->init();
+  CommandsFactory *commandsFactory = new CommandsFactoryImpl(this, creds);
+  // remote drive will be used to call all remote drive functions like sync , upload, download
+  remoteDriveApi = new RemoteDriveApi(this, commandsFactory);
 
   testUtils.reset(new GDriveTestUtils(remoteDriveApi));
   Crypto::init();
@@ -16,12 +15,13 @@ void TestUploadDeleteCommand::initTestCase()
 }
 
 TestUploadDeleteCommand::TestUploadDeleteCommand()
-{}
+{
+}
 
 void TestUploadDeleteCommand::testDeleteOneFile()
 {
   QString dbPath = testUtils->generateTempDbPath();
-  testUtils->createLocalDatabase(dbPath);
+  Database* db = testUtils->createLocalDatabase(dbPath);
   RemoteFile remoteDb = testUtils->uploadDbWithResult(dbPath);
   qDebug() << "Upload command finished";
   // verify db was uploaded just fine
@@ -37,7 +37,7 @@ void TestUploadDeleteCommand::testDeleteOneFile()
 
   // clean up
   testUtils->deleteLocalDb(dbPath);
-  qDebug() << "test finished";
+  delete db;
 }
 
 void TestUploadDeleteCommand::deleteTwoFiles()
@@ -62,7 +62,7 @@ void TestUploadDeleteCommand::deleleNonExistingFile()
 void TestUploadDeleteCommand::uploadOneDb()
 {
   QString dbPath = testUtils->generateTempDbPath();
-  testUtils->createLocalDatabase(dbPath);
+  Database* db = testUtils->createLocalDatabase(dbPath);
   KeePassxDriveSync::Command uploadCommand = remoteDriveApi->upload();
   QFileInfo file(dbPath);
   uploadCommand->executeAsync(OptionsBuilder().addOption(OPTION_ABSOLUTE_DB_NAME,
@@ -72,6 +72,10 @@ void TestUploadDeleteCommand::uploadOneDb()
                                                                parentDir).build());
   uploadCommand->waitForFinish();
   QVERIFY(uploadCommand->getErrorCode() == Errors::NO_ERROR);
+
+  // clean up
+  testUtils->deleteLocalDb(dbPath);
+  delete db;
 }
 
 void TestUploadDeleteCommand::uploadTwoDb()
@@ -83,7 +87,7 @@ void TestUploadDeleteCommand::uploadTwoDb()
 void TestUploadDeleteCommand::updateDbRevision()
 {
   QString dbPath = testUtils->generateTempDbPath();
-  testUtils->createLocalDatabase(dbPath);
+  Database* db = testUtils->createLocalDatabase(dbPath);
 
   KeePassxDriveSync::Command uploadCommand = remoteDriveApi->upload();
   QFileInfo file(dbPath);
@@ -97,6 +101,9 @@ void TestUploadDeleteCommand::updateDbRevision()
   QVERIFY(uploadCommand->getErrorCode() == Errors::NO_ERROR);
   RemoteFile firstRemoteDb = uploadCommand->getResult().at(0).value<RemoteFile>();
   Tools::sleep(1000);
+  Entry* entry = new Entry();
+  entry->setParent(db->rootGroup());
+  testUtils->saveDatabase(db, dbPath);
   uploadCommand->executeAsync(options);
   uploadCommand->waitForFinish();
   RemoteFile secondRemoteDb = uploadCommand->getResult().at(0).value<RemoteFile>();
@@ -107,47 +114,91 @@ void TestUploadDeleteCommand::updateDbRevision()
            "Expect second database will have latest modifiedDate");
   QVERIFY2(firstRemoteDb.getHeadRevisionId() != secondRemoteDb.getHeadRevisionId(),
            "Expect second database has different head revision");
+
+  // clean up
+  testUtils->deleteLocalDb(dbPath);
+  delete db;
 }
 
+void TestUploadDeleteCommand::testDownloadOneFile()
+{
+  // first upload file to the cloud
+  QString dbPath = testUtils->generateTempDbPath();
+  Database* db = testUtils->createLocalDatabase(dbPath);
 
-void TestUploadDeleteCommand::testDownloadOneFile() {
-    // first upload file to the cloud
-    QString dbPath = testUtils->generateTempDbPath();
-    testUtils->createLocalDatabase(dbPath);
+  KeePassxDriveSync::Command uploadCommand = remoteDriveApi->upload();
+  QFileInfo file(dbPath);
+  QVariantMap options(OptionsBuilder().addOption(OPTION_ABSOLUTE_DB_NAME,
+                                                 dbPath).addOption(
+                        OPTION_LAST_MODIFIED_TIME,
+                        file.lastModified()).addOption(OPTION_PARENT_NAME,
+                                                       parentDir).build());
+  uploadCommand->executeAsync(options);
+  uploadCommand->waitForFinish();
+  QVERIFY(uploadCommand->getErrorCode() == Errors::NO_ERROR);
+  RemoteFile remoteDb = uploadCommand->getResult().at(0).value<RemoteFile>();
+  // clean up local database
+  testUtils->deleteLocalDb(dbPath);
 
-    KeePassxDriveSync::Command uploadCommand = remoteDriveApi->upload();
-    QFileInfo file(dbPath);
-    QVariantMap options(OptionsBuilder().addOption(OPTION_ABSOLUTE_DB_NAME,
-                                                   dbPath).addOption(
-                          OPTION_LAST_MODIFIED_TIME,
-                          file.lastModified()).addOption(OPTION_PARENT_NAME,
-                                                         parentDir).build());
-    uploadCommand->executeAsync(options);
-    uploadCommand->waitForFinish();
-    QVERIFY(uploadCommand->getErrorCode() == Errors::NO_ERROR);
-    RemoteFile remoteDb = uploadCommand->getResult().at(0).value<RemoteFile>();
-    // clean up local database
-    testUtils->deleteLocalDb(dbPath);
+  // try to download file back
+  KeePassxDriveSync::Command downloadCommand = remoteDriveApi->download();
+  downloadCommand->executeAsync(OptionsBuilder().addOption(OPTION_FI,
+                                                           remoteDb).addOption(OPTION_DB_DIR,
+                                                                               QDir::tempPath()).build());
+  downloadCommand->waitForFinish();
+  QVERIFY(downloadCommand->getErrorCode() == Errors::NO_ERROR);
 
-    // try to download file back
-    KeePassxDriveSync::Command downloadCommand = remoteDriveApi->download();
-//    const RemoteFile rFi = parseOption<RemoteFile>(options, OPTION_FI);
-//    const QString dbDir
-//      = parseOption(options, OPTION_DB_DIR, config()->get("cloud/dbdir").toString());
-//    const QString dbName = parseOption(options, OPTION_DB_NAME, QString(""));
+  // expect database saved locally
+  QString expectedPath = QDir::tempPath() + QDir::separator() + remoteDb.getTitle();
+  QVERIFY(QFile(expectedPath).exists());
 
-    downloadCommand->executeAsync(OptionsBuilder().addOption(OPTION_FI,remoteDb).addOption(OPTION_DB_DIR, QDir::tempPath()).build());
-    downloadCommand->waitForFinish();
-    QVERIFY(downloadCommand->getErrorCode() == Errors::NO_ERROR);
-
-    // expect database saved locally
-    QString expectedPath = QDir::tempPath() + QDir::separator() + remoteDb.getTitle();
-    QVERIFY(QFile(expectedPath).exists());
+  // clean up
+  testUtils->deleteLocalDb(dbPath);
+  delete db;
 }
 
+void TestUploadDeleteCommand::testDownloadTimeStamp()
+{
+  // first upload file to the cloud
+  QString dbPath = testUtils->generateTempDbPath();
+  Database* db = testUtils->createLocalDatabase(dbPath);
+  KeePassxDriveSync::Command uploadCommand = remoteDriveApi->upload();
+  QFileInfo file(dbPath);
+  QDateTime localTimeStamp = file.lastModified();
+  QVariantMap options(OptionsBuilder().addOption(OPTION_ABSOLUTE_DB_NAME,
+                                                 dbPath).addOption(
+                        OPTION_LAST_MODIFIED_TIME,
+                        file.lastModified()).addOption(OPTION_PARENT_NAME,
+                                                       parentDir).build());
+  Tools::sleep(1000);
+  uploadCommand->executeAsync(options);
+  uploadCommand->waitForFinish();
+  QVERIFY(uploadCommand->getErrorCode() == Errors::NO_ERROR);
+  RemoteFile remoteDb = uploadCommand->getResult().at(0).value<RemoteFile>();
+  // clean up local database
+  testUtils->deleteLocalDb(dbPath);
+  QDateTime remoteTimeStamp = remoteDb.getModifiedDate();
+  qDebug() << QString("localTime = %1").arg(localTimeStamp.toLocalTime().toString());
+  qDebug() << QString("remoteTime = %1").arg(remoteTimeStamp.toLocalTime().toString());
+  QCOMPARE(localTimeStamp.toLocalTime().toTime_t(), remoteTimeStamp.toLocalTime().toTime_t());
 
+  // try to download file back
+  KeePassxDriveSync::Command downloadCommand = remoteDriveApi->download();
+  downloadCommand->executeAsync(OptionsBuilder().addOption(OPTION_FI,
+                                                           remoteDb).addOption(OPTION_DB_DIR,
+                                                                               QDir::tempPath()).build());
+  downloadCommand->waitForFinish();
+  QVERIFY(downloadCommand->getErrorCode() == Errors::NO_ERROR);
+  QString expectedPath = QDir::tempPath() + QDir::separator() + remoteDb.getTitle();
+  QVERIFY(QFile(expectedPath).exists());
+  QFileInfo downloadedFile(expectedPath);
+  QCOMPARE(downloadedFile.lastModified().toLocalTime().toTime_t(),
+           remoteTimeStamp.toLocalTime().toTime_t());
 
-
+  // clean up
+  testUtils->deleteLocalDb(dbPath);
+  delete db;
+}
 
 int main(int argc, char *argv[])
 {

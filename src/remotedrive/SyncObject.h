@@ -7,6 +7,7 @@
 #include <QtCore/QSet>
 #include <QtCore/QChar>
 #include <QtCore/QDebug>
+#include <QtCore/QDateTime>
 
 namespace DatabaseSyncObject {
 enum class ObjectType : char
@@ -45,8 +46,15 @@ public:
     const int get(ObjectType type, ObjectName name, ObjectLocation location) const;
     QMap<SyncMapKey, int> get();
     QMap<SyncMapKey, QPair<int, int> > compare(QSharedPointer<SyncObject> other);
+    void setLocalModificationDate(const QDateTime& dateTime);
+    void setRemoteModificationDate(const QDateTime& dateTime);
+    const QDateTime getLocalModificationDate();
+    const QDateTime getRemoteModificationDate();
+
 private:
     QMap<SyncMapKey, int> data;
+    QDateTime localModificationDate;
+    QDateTime remoteModificationDate;
 };
 inline uint qHash(const SyncMapKey &var)
 {

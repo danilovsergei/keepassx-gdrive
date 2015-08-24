@@ -42,7 +42,6 @@ private Q_SLOTS:
   void cleanupTestCase();
   void init();
   void cleanup();
-  void testSingleRun();
   void testRemoveLocalEntryToRecycleBin();
   void testRemoveRemoteEntrySlots();
   void testRemoteDatabaseSyncDoNothing();

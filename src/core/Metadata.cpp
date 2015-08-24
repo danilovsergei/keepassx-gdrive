@@ -446,7 +446,10 @@ void Metadata::removeCustomField(const QString& key)
  * Runtime variable only. Will not be saved with a database saving
  */
 void Metadata::setLastModifiedDate(const QDateTime& date) {
-m_lastModified=date;
+    if  (m_update_lastModified) {
+        m_lastModified=date;
+    }
+
 }
 
 //Returns database last modification date
@@ -454,7 +457,14 @@ QDateTime Metadata::lastModifiedDate() const
 {
  return m_lastModified;
 }
-
+/**
+ * @brief Metadata::setUpdateLastModifiedDate  triggers whether m_lastModified will be updated
+ * upon each setLastModifiedDate call.
+ * For now set to false only for db sync to prevent m_lastModified set to now instead real remote db time
+ */
+void Metadata::setUpdateLastModifiedDate(bool value) {
+    m_update_lastModified = value;
+}
 
 
 

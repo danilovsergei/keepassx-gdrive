@@ -20,6 +20,7 @@
 #define KEEPASSX_TESTQSAVEFILE_H
 
 #include <QtCore/QObject>
+#include <QtCore/QDebug>
 
 class TestQSaveFile : public QObject
 {
@@ -31,6 +32,7 @@ private Q_SLOTS:
     void transactionalWriteNoPermissions();
     void transactionalWriteCanceled();
     void transactionalWriteErrorRenaming();
+    void testModificationTimeUpdate();
 
 private:
     QString tmpDir();

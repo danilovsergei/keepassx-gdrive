@@ -93,6 +93,14 @@ protected:
   T parseOption(const QVariantMap &options, const QString &optionName)
   {
     // fail since option is required
+    if (!options.contains(optionName)) {
+        QString options_str;
+        Q_FOREACH(const QString& option, options.keys()) {
+            options_str.append(option);
+            options_str.append("; ");
+        }
+        qDebug() << QString("Options: %1 miss required option: %2").arg(options_str).arg(optionName);
+    }
     Q_ASSERT(options.contains(optionName));
     QVariant value(options.value(optionName));
     Q_ASSERT(!value.isNull());

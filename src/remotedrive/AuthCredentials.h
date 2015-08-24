@@ -16,7 +16,7 @@ public Q_SLOTS:
 
 protected:
     QVariantMap creds ;
-
+    bool initialized = false;
 public Q_SLOTS:
     void credentialsUpdated();
 

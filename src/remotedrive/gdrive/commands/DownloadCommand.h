@@ -13,6 +13,7 @@
 #include <QtCore/QUrl>
 #include <remotedrive/gdrive/BaseCommand.h>
 #include <remotedrive/AuthCredentials.h>
+#include <remotedrive/RemoteTools.h>
 
 Q_DECLARE_METATYPE(GoogleDrive::FileInfo)
 using namespace KeePassxDriveSync;

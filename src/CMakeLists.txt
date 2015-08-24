@@ -137,6 +137,7 @@ set(keepassx_SOURCES
     remotedrive/EntriesSync.cpp
     remotedrive/AllSync.cpp
     remotedrive/DatabaseSync.cpp
+    remotedrive/RemoteTools.cpp
 
     remotedrive/gdrive/LoginPage.cpp
     remotedrive/gdrive/GoogleDriveCredentials.cpp
@@ -228,6 +229,8 @@ set(keepassx_MOC
     remotedrive/EntriesSync.h
     remotedrive/AllSync.h
     remotedrive/DatabaseSync.h
+    remotedrive/Constants.h
+    remotedrive/RemoteTools.h
 
     remotedrive/gdrive/LoginPage.h
     remotedrive/gdrive/GDriveConstants.h

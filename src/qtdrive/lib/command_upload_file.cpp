@@ -107,7 +107,7 @@ void CommandUploadFile::requestFinished()
     //close the file opened during multipartUpload
     if (d->fileData->isOpen())
       d->fileData->close();
-    qDebug() << "close db file";
+    //qDebug() << "close db file";
 
     //tryAutoDelete();
     QNetworkReply *reply = qobject_cast<QNetworkReply*>(sender());
@@ -118,7 +118,7 @@ void CommandUploadFile::requestFinished()
         return;
 
     bool ok;
-    qDebug()<< reply->request().url();
+    //qDebug()<< reply->request().url();
     QVariant res = QJson::Parser().parse(reply, &ok);
     if (!ok)
     {
@@ -134,7 +134,6 @@ void CommandUploadFile::requestFinished()
 void CommandUploadFile::multipartUpload()
 {
     Q_D(CommandUploadFile);
-     qDebug()<< "Start new upload";
     // prepare url
     QString urlStr("https://www.googleapis.com/upload/drive/v2/files");
     if (!d->fileInfo.id().isEmpty())
@@ -145,19 +144,19 @@ void CommandUploadFile::multipartUpload()
 
     //fill the additional url keys
     Q_FOREACH(QString key,d->urlFields.keys()){
-         qDebug()<< QString("Add to key:%1=%2").arg(key,d->urlFields[key]);
+        // qDebug()<< QString("Add to key:%1=%2").arg(key,d->urlFields[key]);
         url.addQueryItem(key,d->urlFields[key]);
     }
     //fill the additional body keys
     Q_FOREACH(QString key,d->bodyFields.keys()) {
     d->fileInfo.rawData()[key]=d->bodyFields[key];
-    qDebug()<< QString("Add to body:%1=%2").arg(key,d->bodyFields[key]);
+    //qDebug()<< QString("Add to body:%1=%2").arg(key,d->bodyFields[key]);
     }
 
 
     // prepare multipart body
     QHttpMultiPart* multiPart = new QHttpMultiPart(QHttpMultiPart::RelatedType);
-    qDebug()<< "pass url:"+url.toString();
+    //qDebug()<< "pass url:"+url.toString();
 
     QHttpPart metaPart;
     metaPart.setHeader(QNetworkRequest::ContentTypeHeader, "application/json; charset=UTF-8");
@@ -174,7 +173,7 @@ void CommandUploadFile::multipartUpload()
     QNetworkRequest request( url );
     setRequestAccessToken(request, session()->accessToken());
 
-    qDebug() << "open db for reading";
+    //qDebug() << "open db for reading";
     bool b = d->fileData->open(QIODevice::ReadOnly);
 
     if (!b) {
@@ -187,7 +186,7 @@ void CommandUploadFile::multipartUpload()
     // forcing to use different combination will cause google drive Not Found error
     QNetworkReply* reply;
     if (!d->fileInfo.id().isEmpty()) {
-        qDebug() <<"Updating file revision";
+        //qDebug() <<"Updating file revision";
         reply = session()->networkManager()->put(request, multiPart);
     }
     else {

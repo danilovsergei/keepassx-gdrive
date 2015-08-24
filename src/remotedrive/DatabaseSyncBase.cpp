@@ -9,11 +9,17 @@ DatabaseSyncBase::DatabaseSyncBase(Database* db1, Database* db2)
  * Do it while syncing groups because they always synced before entries
  */
 void DatabaseSyncBase::syncMetadata() {
+    // sync last modification date
+    if (db1->metadata()->lastModifiedDate() < db2->metadata()->lastModifiedDate()) {
+        db1->metadata()->setLastModifiedDate(db2->metadata()->lastModifiedDate());
+    } else {
+        // remote database sync will be performed in the DatabaseWidget in sync callback
+    }
+
     // sync recycle bin. There are some cases when it's needed:
     //   recycle bin absent in local database and exists in remote database and
     //   recycle bin changes in remote database are newer that local database changes
     // Note recycleBin() means emty recycle, while recycleBinEnabled means disabled recycle bin
-
     if (!db1->metadata()->recycleBin() && db2->metadata()->recycleBin() &&
             db1->metadata()->recycleBinChanged() <  db2->metadata()->recycleBinChanged()) {
         // perform full copy of the recycle bin metadata including uuid and other data

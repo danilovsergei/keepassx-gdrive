@@ -44,16 +44,16 @@ void SyncCommand::execute(const QVariantMap options)
     return;
   }
   RemoteFile remoteDbInfo = dbList.value(0);
-  qDebug() << "remote db date = "+QString::number(
-    remoteDbInfo.getModifiedDate().toLocalTime().toTime_t());
-  qDebug() << "local db date  = "+QString::number(
-    localDb->metadata()->lastModifiedDate().toLocalTime().toTime_t());
+  qDebug() << "remote db date = "+
+    remoteDbInfo.getModifiedDate().toLocalTime().toString();
+  qDebug() << "local db date  = "+
+    localDb->metadata()->lastModifiedDate().toLocalTime().toString();
   // compare seconds because milliseconds ommited while saving db file on filesystem
   if (remoteDbInfo.getModifiedDate().toLocalTime().toTime_t()
       == localDb->metadata()->lastModifiedDate().toLocalTime().toTime_t()) {
     qDebug() << QString("Databases have the same modification time %1. Will skip sync").arg(
       localDb->metadata()->lastModifiedDate().toLocalTime().toString());
-    emitSuccess();
+    emitCustomSuccess(Q_NULLPTR,  QSharedPointer<SyncObject>(new SyncObject()), remoteDbInfo.getModifiedDate());
     return;
   }
   KeePassxDriveSync::Command downloadCommand
@@ -100,10 +100,46 @@ void SyncCommand::execute(const QVariantMap options)
   // it will help to run sync when both local and remote database were modified simultaneously
   // and remote database has older timestamp
   remoteDbLastModified = remoteDbInfo.getModifiedDate().toLocalTime();
+  emitCustomSuccess(remoteDb, syncObject, remoteDbLastModified);
+}
+
+void SyncCommand::emitCustomSuccess(Database * remoteDb, QSharedPointer<SyncObject> syncObject,
+                                    QDateTime remoteDbLastModified)
+{
   setResult(KeePassxDriveSync::ResultBuilder().addValue(syncObject).addValue(
               remoteDbLastModified).build());
-  delete remoteDb;
+  if (remoteDb != Q_NULLPTR) {
+    delete remoteDb;
+  }
   emitSuccess();
+}
+
+void SyncCommand::updateRemoteDatabase(QSharedPointer<SyncObject> syncObject, Database &localDb,
+                                       Database &remoteDb, const QString &localDbPath,
+                                       RemoteFile remoteFileInfo)
+{
+  int remoteChanges = syncObject->get(SEntry(), SMissing(), SRemote()) +syncObject->get(
+    SGroup(), SMissing(), SRemote())
+                      +syncObject->get(SEntry(), SOlder(), SRemote()) + syncObject->get(
+    SGroup(), SOlder(), SRemote())
+                      +syncObject->get(SEntry(), SRemoved(), SRemote()) + syncObject->get(
+    SGroup(), SRemoved(), SRemote());
+  bool remoteOlder = remoteDb.metadata()->lastModifiedDate()
+                     < localDb.metadata()->lastModifiedDate();
+  QDateTime lastModifiedDate
+    = remoteOlder ? localDb.metadata()->lastModifiedDate() : remoteDb.metadata()->lastModifiedDate();
+  QString parentDir = config()->get(RemoteDrive::CONFIG_KEEPASS_REMOTE_FOLDER).toString();
+  // Upload db because sync has new changes for remote database or we need update db modification date
+  if (remoteChanges > 0 || remoteOlder) {
+    KeePassxDriveSync::Command uploadCommand = KeePassxDriveSync::Command(new UploadCommand(creds));
+
+    uploadCommand->executeAsync(OptionsBuilder().addOption(OPTION_ABSOLUTE_DB_NAME,
+                                                           localDbPath).addOption(
+                                  OPTION_LAST_MODIFIED_TIME,
+                                  lastModifiedDate).addOption(
+                                  OPTION_PARENT_NAME,
+                                  parentDir).build());
+  }
 }
 
 void SyncCommand::printSyncSymmary(QSharedPointer<SyncObject> syncObject)

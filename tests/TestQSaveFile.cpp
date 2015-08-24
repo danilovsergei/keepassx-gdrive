@@ -28,6 +28,7 @@
 
 #include "tests.h"
 #include "core/qsavefile.h"
+#include <core/Tools.h>
 
 class DirCleanup
 {
@@ -196,6 +197,20 @@ QString TestQSaveFile::tmpDir()
     }
 
     return dirName;
+}
+
+void TestQSaveFile::testModificationTimeUpdate() {
+    const QString dir = tmpDir();
+    QVERIFY(!dir.isEmpty());
+    const QString targetFile = dir + QString::fromLatin1("/outfile");
+    QScopedPointer<QTemporaryFile> tmpFile(new QTemporaryFile());
+    tmpFile->open();
+    tmpFile->close();
+    QSaveFile file(targetFile);
+    int num = 1438746441155;
+    RemoteTools::setLastModificationDate(tmpFile.data()->fileName(), QDateTime::fromMSecsSinceEpoch(num));
+    QFileInfo fileObj(tmpFile->fileName());
+    QCOMPARE(fileObj.lastModified().toMSecsSinceEpoch(), QDateTime::fromTime_t(num).toMSecsSinceEpoch());
 }
 
 QTEST_GUILESS_MAIN(TestQSaveFile)

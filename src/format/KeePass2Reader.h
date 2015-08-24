@@ -21,6 +21,9 @@
 #include <QtCore/QCoreApplication>
 
 #include "keys/CompositeKey.h"
+#include <QtCore/QDateTime>
+#include <QtCore/QFileInfo>
+#include <core/Metadata.h>
 
 class Database;
 class QIODevice;
@@ -31,7 +34,7 @@ class KeePass2Reader
 
 public:
     KeePass2Reader();
-    Database* readDatabase(QIODevice* device, const CompositeKey& key);
+    Database* readDatabase(QIODevice* device, const CompositeKey& key, const QDateTime &lastModified = QDateTime::currentDateTime());
     Database* readDatabase(const QString& filename, const CompositeKey& key);
     bool hasError();
     QString errorString();

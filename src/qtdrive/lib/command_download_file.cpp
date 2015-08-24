@@ -32,9 +32,7 @@ public:
 
 CommandDownloadFile::CommandDownloadFile(Session* session)
     : AuthorizedCommand(new CommandDownloadFilePrivate, session)
-{
-     qDebug() << "drive download api thread =" << this->thread();
-}
+{}
 
 qint64 CommandDownloadFile::bufferSize() const
 {

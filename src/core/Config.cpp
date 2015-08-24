@@ -105,6 +105,8 @@ void Config::init(const QString& fileName)
     //default value means all keepass databases will stored in the Google drive root folder
     m_defaults.insert("cloud/GdriveKeepassFolder","");
     m_defaults.insert("cloud/refresh_token","");
+    // automatically upload db to the cloud on each local save
+    m_defaults.insert("cloud/upload_on_save", "true");
 }
 
 Config* Config::instance()

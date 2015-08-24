@@ -11,6 +11,9 @@ void AuthCredentials::credentialsUpdated() {
 
 QVariantMap AuthCredentials::getCredentials()
 {
+    if (!initialized) {
+        init();
+    }
     return creds;
 }
 

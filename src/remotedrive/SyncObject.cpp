@@ -93,4 +93,18 @@ QMap < SyncMapKey, QPair < int, int
     }
     return result;
 }
+
+void SyncObject::setLocalModificationDate(const QDateTime& dateTime) {
+    localModificationDate = dateTime;
+}
+const QDateTime SyncObject::getLocalModificationDate() {
+    return localModificationDate;
+}
+void SyncObject::setRemoteModificationDate(const QDateTime& dateTime) {
+    remoteModificationDate = dateTime;
+}
+const QDateTime SyncObject::getRemoteModificationDate() {
+    return remoteModificationDate;
+}
+
 }

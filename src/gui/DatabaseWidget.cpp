@@ -154,7 +154,6 @@ DatabaseWidget::DatabaseWidget(Database* db, QWidget* parent)
     connect(m_changeMasterKeyWidget, SIGNAL(editFinished(bool)), SLOT(updateMasterKey(bool)));
     connect(m_databaseSettingsWidget, SIGNAL(editFinished(bool)), SLOT(switchToView(bool)));
     connect(m_databaseOpenWidget, SIGNAL(editFinished(bool)), SLOT(openDatabase(bool)));
-    connect(m_databaseOpenWidget, SIGNAL(syncError(int, QString)), this,SLOT(syncError(int, QString)));
     connect(m_keepass1OpenWidget, SIGNAL(editFinished(bool)), SLOT(openDatabase(bool)));
     connect(m_databaseOpenWidgetCloud, SIGNAL(dbRejected()),SLOT(rejectDb()));
     connect(m_databaseOpenWidgetCloud,SIGNAL(dbSelected(QString)),this,SLOT(cloudDbOpen(QString)));
@@ -175,22 +174,34 @@ DatabaseWidget::DatabaseWidget(Database* db, QWidget* parent)
         // remote drive will be used to call all remote drive functions like sync , upload, download
         remoteDrive = new RemoteDriveApi(this,commandsFactory);
         syncCommand = remoteDrive->sync();
+        uploadCommand  = remoteDrive->upload();
+         syncCloudDir = config()->get(RemoteDrive::CONFIG_KEEPASS_REMOTE_FOLDER).toString();
         // update last db last modification time to use it for sync with remote database
         connect(m_editEntryWidget, SIGNAL(editFinished(bool)), SLOT(setLastModified(bool)));
         connect(m_editGroupWidget, SIGNAL(editFinished(bool)), SLOT(setLastModified(bool)));
         connect(syncCommand.data(), SIGNAL(finished()),      this, SLOT(syncDone()));
+        connect(this, SIGNAL(databaseSaved(Database*, QString)), this, SLOT(saveDatabaseToCloud(Database*, QString)));
+        connect(this, SIGNAL(requestSaveDatabase(Database*, bool)), m_tabWidget, SLOT(saveDatabase(Database*, bool)));
     }
     setCurrentWidget(m_mainWidget);
 }
 
+/**
+ * @brief DatabaseWidget::cloudDbOpen  emits a signal
+ *  that db from the cloud was open by databaseOpenWidgetCloud
+ * @param dbPath
+ */
 void DatabaseWidget::cloudDbOpen(QString dbPath) {
 Q_ASSERT(!dbPath.isNull() && !dbPath.isEmpty());
-qDebug() <<"DB was selected and passed to slot::"+dbPath;
+qDebug() <<"DB was selected and passed to a slot::"+dbPath;
 //Pass path to the downloaded database and key to dbStruct array to get this struct from another widget
 Q_EMIT cloudDbSelected(dbPath,m_db);
 
 }
 
+/**
+ * @brief DatabaseWidget::rejectDb emits a signal when user cancelled cloud db open  dialog
+ */
 void DatabaseWidget::rejectDb() {
     qDebug() << "Emitting cloudDbRejected";
     Q_EMIT cloudDbRejected(m_db);
@@ -504,7 +515,10 @@ void DatabaseWidget::updateMasterKey(bool accepted)
     setCurrentWidget(m_mainWidget);
 }
 
-
+/**
+ * @brief DatabaseWidget::syncDatabase performs sync of the currently open database with database in the cloud
+ * local database file will be updated as well to prevent loosing changes
+ */
 void DatabaseWidget::syncDatabase() {
     // Perfom asyncronous sync of recent database with remote database if
     // GOOGLE_DRIVE_SYNC feature enabled through CMAKE
@@ -516,6 +530,40 @@ void DatabaseWidget::syncDatabase() {
       //TODO prevent or warn user copy the value if database is still in sync
 }
 
+/**
+ * @brief DatabaseWidget::emitDatabaseSaved emits a signal database was saved.
+ * Used to connect saveDatabase in DatabaseTabWidget with connected slots in DatabaseWidget
+ * @param db database which was saved
+ * @param filePath path to the local database file
+ * @param saveToCloud should signal trigger saving to the cloud.
+ *   In such cases when local databases saved locally after sync with newer remote database
+ *   we don't need to save it again remotely
+ */
+void DatabaseWidget::emitDatabaseSaved(Database *db, const QString filePath) {
+    Q_EMIT databaseSaved(db, filePath);
+}
+
+/**
+ * @brief DatabaseWidget::saveDatabaseToCloud - uploads current version of the database to the selected cloud
+ * @param db - database which will be loaded to cloud
+ */
+void DatabaseWidget::saveDatabaseToCloud(Database *db, const QString filePath)
+{
+  // Perfom asyncronous upload of the local database to the cloud
+  // GOOGLE_DRIVE_SYNC feature enabled through CMAKE
+  if (QString(GOOGLE_DRIVE_SYNC) != "ON") return;
+  uploadCommand->executeAsync(OptionsBuilder().addOption(OPTION_ABSOLUTE_DB_NAME,
+                                                       filePath).addOption(
+                              OPTION_LAST_MODIFIED_TIME,
+                              db->metadata()->
+                              lastModifiedDate()).addOption(OPTION_PARENT_NAME, syncCloudDir).build());
+}
+
+/**
+ * @brief DatabaseWidget::openDatabase loads db view to the current widget
+ * after user entered correct credentials on DatabaseOpenWidget
+ * @param accepted
+ */
 void DatabaseWidget::openDatabase(bool accepted)
 {
     if (accepted) {
@@ -572,6 +620,9 @@ void DatabaseWidget::switchToMasterKeyChange()
     setCurrentWidget(m_changeMasterKeyWidget);
 }
 
+/**
+ * @brief DatabaseWidget::switchToCloudDbOpen switches current widget to the databaseOpenWidgetCloud
+ */
 void DatabaseWidget::switchToCloudDbOpen()
 {
     m_databaseOpenWidgetCloud->loadSupportedCloudEngines();
@@ -584,7 +635,8 @@ void DatabaseWidget::switchToDatabaseSettings()
     setCurrentWidget(m_databaseSettingsWidget);
 }
 /**
- * @brief DatabaseWidget::switchToOpenDatabase passes control to open database widget. Used by DatabaseOpenWidgetCloud
+ * @brief DatabaseWidget::switchToOpenDatabase passes control to databaseOpenWidget
+ * Used by DatabaseOpenWidgetCloud
  * @param fileName - full path of database which used to initialize the widget
  */
 void DatabaseWidget::switchToOpenDatabase(const QString& fileName)
@@ -757,7 +809,9 @@ void DatabaseWidget::updateFilename(const QString& fileName)
 }
 
 
-
+/**
+ * @brief DatabaseWidget::syncDone executed when database sync finished
+ */
 void DatabaseWidget::syncDone() {
    if (syncCommand->getErrorCode()!=static_cast<int>(Errors::NO_ERROR)) {
        syncError(syncCommand->getErrorCode(), syncCommand->getErrorString());
@@ -766,7 +820,7 @@ void DatabaseWidget::syncDone() {
    qRegisterMetaType < QSharedPointer < DatabaseSyncObject::SyncObject >>
     ("QSharedPointer<SyncObject>");
     qRegisterMetaType<SyncType>("SyncType");
-
+  Q_ASSERT(syncCommand->getResult().length() == 2);
   QVariant vSyncObject = syncCommand->getResult().at(0);
   QSharedPointer<SyncObject> syncObject = vSyncObject.value<SyncType>();
 
@@ -786,17 +840,24 @@ void DatabaseWidget::syncDone() {
   syncObject->get(SEntry(), SRemoved(),SRemote()) +
   syncObject->get(SGroup(), SRemoved(),SRemote());
 
-  // upload the database remotely since it's some entries need to be updated
-  // remoteModifiedEntries>0 ? Q_EMIT modified() : void();
-
-  // just update remote database modification time without uploading new revision
-  // since only local database was update
-  //remoteModifiedEntries==0 && localModifiedEntries>0 ?
+  if (localModifiedEntries > 0 || syncObject->getRemoteModificationDate().toTime_t() > syncObject->getLocalModificationDate().toTime_t()) {
+    // save local database. Assume last modified was updated during sync??
+    qDebug() << "Saving local database after sync because it's older or has missing entries";
+    qDebug() <<QString("modified=%1, localTime = %2, remoteTime = %3").arg(localModifiedEntries).arg(syncObject->getLocalModificationDate().toLocalTime().toString()).arg(syncObject->getRemoteModificationDate().toLocalTime().toString());
+    Q_EMIT requestSaveDatabase(m_db, false);
+  }
+  if (remoteModifiedEntries > 0) {
+      qDebug() << "Saving remote database after sync because it's older or has missing entries";
+      saveDatabaseToCloud(m_db, m_filename);
+  }
+  if (remoteModifiedEntries ==0 && syncObject->getRemoteModificationDate() < syncObject->getLocalModificationDate()) {
+    // user just touched local database without updating data. Take care about remote db date
+    // Just update remote last modification date without uploading new revision
+    qDebug() << "Updating modification date of the remote database";
+  }
 }
-
-
 /**
- * @brief DatabaseOpenWidget::syncError shows warning to user that sync was not done
+ * @brief DatabaseOpenWidget::syncError shows warning to user that sync was not done correctly
  */
 void DatabaseWidget::syncError(int ErrorType, QString description) {
   Q_ASSERT(ErrorType);
@@ -809,7 +870,10 @@ void DatabaseWidget::syncError(int ErrorType, QString description) {
                          description));
 }
 
-
+/**
+ * @brief DatabaseWidget::setLastModified updates last modified time of the database
+ * @param accepted
+ */
 void DatabaseWidget::setLastModified(bool accepted) {
   accepted?m_db->metadata()->setLastModifiedDate(QDateTime::currentDateTime()): void();
 }

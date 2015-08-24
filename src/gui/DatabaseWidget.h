@@ -87,6 +87,9 @@ Q_SIGNALS:
     void unlockedDatabase();
     void cloudDbSelected(const QString& fileName,Database* db);
     void cloudDbRejected(Database* db);
+    void databaseSaved(Database* db,  const QString filePath);
+    void requestSaveDatabase(Database* db, bool saveToCloud);
+
 
 public Q_SLOTS:
     void createEntry();
@@ -114,6 +117,8 @@ public Q_SLOTS:
     void cloudDbOpen(QString dbPath);
     void syncDone();
     void syncError(int ErrorType, QString description);
+    void saveDatabaseToCloud(Database *db, const QString filePath);
+    void emitDatabaseSaved(Database *db, const QString filePath);
     //void showSyncLoginPage();
 
 private Q_SLOTS:
@@ -165,6 +170,8 @@ private:
     QString m_filename;
     RemoteDriveApi* remoteDrive;
     KeePassxDriveSync::Command  syncCommand;
+    KeePassxDriveSync::Command uploadCommand;
+    QString syncCloudDir;
 };
 
 #endif // KEEPASSX_DATABASEWIDGET_H

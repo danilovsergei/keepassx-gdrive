@@ -51,11 +51,8 @@ DatabaseTabWidget::DatabaseTabWidget(QWidget *parent) :
   DragTabBar *tabBar = new DragTabBar(this);
   tabBar->setDrawBase(false);
   setTabBar(tabBar);
-
   connect(this, SIGNAL(tabCloseRequested(int)), SLOT(closeDatabase(int)));
   connect(autoType(), SIGNAL(globalShortcutTriggered()), SLOT(performGlobalAutoType()));
-  connect(this, SIGNAL(databaseSavedLocally(Database *)), this, SLOT(saveDatabaseToCloud(
-                                                                       Database *)));
 }
 
 DatabaseTabWidget::~DatabaseTabWidget()
@@ -90,6 +87,11 @@ void DatabaseTabWidget::newDatabase()
   dbStruct.dbWidget->switchToMasterKeyChange();
 }
 
+
+/**
+ * @brief DatabaseTabWidget::openDatabase opens database from system file open dialog
+ * when user selects Open database from menu
+ */
 void DatabaseTabWidget::openDatabase()
 {
   QString filter = QString("%1 (*.kdbx);;%2 (*)").arg(tr("KeePass 2 Database"), tr("All files"));
@@ -180,6 +182,15 @@ void DatabaseTabWidget::openDatabaseDownloadedFromCloud(const QString &fileName,
   dbStruct.dbWidget->switchToOpenDatabase(dbStruct.filePath);
 }
 
+/**
+ * @brief DatabaseTabWidget::openDatabase opens database by provided credentials.
+ * used by main window when user provided credentials from command line
+ * or when user opens database from file open dialog
+ * when db read successfully switch control to DatabaseWidget with opened database
+ * @param fileName path to the database
+ * @param pw password. Empty by default
+ * @param keyFile path to the key file. Empty by default
+ */
 void DatabaseTabWidget::openDatabase(const QString &fileName, const QString &pw,
                                      const QString &keyFile)
 {
@@ -277,7 +288,7 @@ bool DatabaseTabWidget::closeDatabase(Database *db)
   }
   if (dbStruct.modified) {
     if (config()->get("AutoSaveOnExit").toBool()) {
-      saveDatabase(db);
+      saveDatabaseWithSync(db);
     } else {
       QMessageBox::StandardButton result
         = QMessageBox::question(
@@ -285,12 +296,11 @@ bool DatabaseTabWidget::closeDatabase(Database *db)
         tr("\"%1\" was modified.\nSave changes?").arg(dbName),
         QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel, QMessageBox::Yes);
       if (result == QMessageBox::Yes)
-        saveDatabase(db);
+        saveDatabaseWithSync(db);
       else if (result == QMessageBox::Cancel)
         return false;
     }
   }
-
   deleteDatabase(db);
 
   return true;
@@ -325,36 +335,29 @@ bool DatabaseTabWidget::closeAllDatabases()
 }
 
 /**
- * @brief DatabaseTabWidget::saveDatabaseToCloud - loads current version of the database to cloud
- * @param db - database which will be loaded to cloud
+ * @brief DatabaseTabWidget::saveDatabaseWithSync saves database locally  and
+ *   also uploads it to the cloud if cloud/upload_on_save config option set to true
+ * @param db Database to save locally
  */
-void DatabaseTabWidget::saveDatabaseToCloud(Database *db)
-{
-  qDebug() << "Saving database to cloud with modification date:"
-    + db->metadata()->lastModifiedDate().toString();
-  DatabaseManagerStruct &dbStruct = m_dbList[db];
-
-   // TODO remove extra initialization of google api from tabwidget.
-  // It should be specific only for DatabaseWidget
-  AuthCredentials *creds = new GoogleDriveCredentials(this);
-  CommandsFactory *commandsFactory = new CommandsFactoryImpl(this, creds);
-  RemoteDriveApi *remoteDrive = new RemoteDriveApi(this, commandsFactory);
-  KeePassxDriveSync::Command uploadCommand = remoteDrive->upload();
-  uploadCommand->executeAsync(OptionsBuilder().addOption(OPTION_ABSOLUTE_DB_NAME,
-                                                       dbStruct.filePath).addOption(
-                              OPTION_LAST_MODIFIED_TIME,
-                              db->metadata()->
-                              lastModifiedDate()).build());
+void DatabaseTabWidget::saveDatabaseWithSync(Database *db) {
+    if (config()->get("cloud/upload_on_save").toBool()) {
+        saveDatabase(db, true);
+    }
 }
 
-void DatabaseTabWidget::saveDatabase(Database *db)
+/**
+ * @brief DatabaseTabWidget::saveDatabase called when user invokes SaveDatabase from menu
+ * @param db
+ */
+void DatabaseTabWidget::saveDatabase(Database *db, bool syncToCloud)
 {
   DatabaseManagerStruct &dbStruct = m_dbList[db];
 
   if (dbStruct.saveToFilename) {
     bool result = false;
 
-    QSaveFile saveFile(dbStruct.filePath);
+    QSaveFile saveFile(dbStruct.filePath, db->metadata()->lastModifiedDate());
+    qDebug() << "save file with a date: " + db->metadata()->lastModifiedDate().toLocalTime().toString();
     if (saveFile.open(QIODevice::WriteOnly)) {
       m_writer.writeDatabase(&saveFile, db);
       result = saveFile.commit();
@@ -363,12 +366,12 @@ void DatabaseTabWidget::saveDatabase(Database *db)
     if (result) {
       // get local database modification time
       QFileInfo info(dbStruct.filePath);
-      db->metadata()->setLastModifiedDate(info.lastModified());
       dbStruct.modified = false;
 
       updateTabName(db);
-      qDebug() << "Emitting Signal databaseSavedLocally ";
-      Q_EMIT databaseSavedLocally(db);
+      if (syncToCloud) {
+          Q_EMIT currentDatabaseWidget()->emitDatabaseSaved(db,  dbStruct.filePath);
+      }
     } else {
       QMessageBox::critical(this, tr("Error"), tr("Writing the database failed.") + "\n\n"
                             + saveFile.errorString());
@@ -438,7 +441,7 @@ void DatabaseTabWidget::saveDatabase(int index)
   if (index == -1)
     index = currentIndex();
 
-  saveDatabase(indexDatabase(index));
+  saveDatabaseWithSync(indexDatabase(index));
 }
 
 void DatabaseTabWidget::saveDatabaseAs(int index)
@@ -623,7 +626,7 @@ void DatabaseTabWidget::modified()
   DatabaseManagerStruct &dbStruct = m_dbList[db];
 
   if (config()->get("AutoSaveAfterEveryChange").toBool() && dbStruct.saveToFilename) {
-    saveDatabase(db);
+    saveDatabaseWithSync(db);
     return;
   }
 

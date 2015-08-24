@@ -38,7 +38,7 @@ KeePass2Reader::KeePass2Reader()
 {
 }
 
-Database* KeePass2Reader::readDatabase(QIODevice* device, const CompositeKey& key)
+Database* KeePass2Reader::readDatabase(QIODevice* device, const CompositeKey& key, const QDateTime& lastModified)
 {
     QScopedPointer<Database> db(new Database());
     m_db = db.data();
@@ -158,6 +158,10 @@ Database* KeePass2Reader::readDatabase(QIODevice* device, const CompositeKey& ke
             return Q_NULLPTR;
         }
     }
+    // Set last modification date of the database to provide efficient db synchonization
+    // Taken from local  db file modification date
+    // lastModified date will be compared with remote database date to avoid unecessary syncs
+    db->metadata()->setLastModifiedDate(lastModified);
 
     return db.take();
 }
@@ -169,8 +173,7 @@ Database* KeePass2Reader::readDatabase(const QString& filename, const CompositeK
         raiseError(file.errorString());
         return Q_NULLPTR;
     }
-
-    QScopedPointer<Database> db(readDatabase(&file, key));
+    QScopedPointer<Database> db(readDatabase(&file, key, QFileInfo(file).lastModified()));
 
     if (file.error() != QFile::NoError) {
         raiseError(file.errorString());

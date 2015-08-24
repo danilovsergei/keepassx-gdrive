@@ -44,10 +44,10 @@
 
 #include <QtCore/QAbstractFileEngine>
 #include <QtCore/QFileInfo>
-#include <QtCore/QTemporaryFile>
 
-QSaveFilePrivate::QSaveFilePrivate()
-    : tempFile(0), error(QFile::NoError)
+QSaveFilePrivate::QSaveFilePrivate() :
+  tempFile(0),
+  error(QFile::NoError)
 {
 }
 
@@ -90,49 +90,74 @@ QSaveFilePrivate::~QSaveFilePrivate()
 /*!
     \internal
 */
-QSaveFile::QSaveFile()
-    : QIODevice(), d_ptr(new QSaveFilePrivate)
+QSaveFile::QSaveFile() :
+  QIODevice(),
+    d_ptr(new QSaveFilePrivate)
 {
 }
+
 /*!
     Constructs a new file object with the given \a parent.
 */
-QSaveFile::QSaveFile(QObject *parent)
-    : QIODevice(parent), d_ptr(new QSaveFilePrivate)
+QSaveFile::QSaveFile(QObject *parent) :
+  QIODevice(parent),
+  d_ptr(new QSaveFilePrivate)
 {
 }
+
 /*!
     Constructs a new file object to represent the file with the given \a name.
 */
-QSaveFile::QSaveFile(const QString &name)
-    : QIODevice(0), d_ptr(new QSaveFilePrivate)
+QSaveFile::QSaveFile(const QString &name) :
+  QIODevice(0),
+  d_ptr(new QSaveFilePrivate)
 {
-    Q_D(QSaveFile);
-    d->fileName = name;
+  Q_D(QSaveFile);
+  d->fileName = name;
 }
+
 /*!
     Constructs a new file object with the given \a parent to represent the
     file with the specified \a name.
 */
-QSaveFile::QSaveFile(const QString &name, QObject *parent)
-    : QIODevice(parent), d_ptr(new QSaveFilePrivate)
+QSaveFile::QSaveFile(const QString &name, QObject *parent) :
+  QIODevice(parent),
+  d_ptr(new QSaveFilePrivate)
+{
+  Q_D(QSaveFile);
+  d->fileName = name;
+}
+
+
+QSaveFile::QSaveFile(const QString &name, const QDateTime& newTime, QObject *parent) :
+QIODevice(parent), d_ptr(new QSaveFilePrivate)
 {
     Q_D(QSaveFile);
     d->fileName = name;
+    d->newTime = newTime;
 }
+
+QSaveFile::QSaveFile(const QString &name, const QDateTime& newTime) :
+QIODevice(0), d_ptr(new QSaveFilePrivate)
+{
+    Q_D(QSaveFile);
+    d->fileName = name;
+    d->newTime = newTime;
+}
+
 
 /*!
     Destroys the file object, discarding the saved contents unless commit() was called.
 */
 QSaveFile::~QSaveFile()
 {
-    Q_D(QSaveFile);
-    if (d->tempFile) {
-        d->tempFile->setAutoRemove(true);
-        delete d->tempFile;
-    }
-    QIODevice::close();
-    delete d;
+  Q_D(QSaveFile);
+  if (d->tempFile) {
+    d->tempFile->setAutoRemove(true);
+    delete d->tempFile;
+  }
+  QIODevice::close();
+  delete d;
 }
 
 /*!
@@ -142,7 +167,7 @@ QSaveFile::~QSaveFile()
 */
 bool QSaveFile::isSequential() const
 {
-    return false;
+  return false;
 }
 
 /*!
@@ -160,7 +185,7 @@ bool QSaveFile::isSequential() const
 
 QFile::FileError QSaveFile::error() const
 {
-    return d_func()->error;
+  return d_func()->error;
 }
 
 /*!
@@ -174,8 +199,8 @@ QFile::FileError QSaveFile::error() const
 */
 void QSaveFile::unsetError()
 {
-    d_func()->error = QFile::NoError;
-    setErrorString(QString());
+  d_func()->error = QFile::NoError;
+  setErrorString(QString());
 }
 
 /*!
@@ -186,7 +211,7 @@ void QSaveFile::unsetError()
 */
 QString QSaveFile::fileName() const
 {
-    return d_func()->fileName;
+  return d_func()->fileName;
 }
 
 /*!
@@ -197,7 +222,7 @@ QString QSaveFile::fileName() const
 */
 void QSaveFile::setFileName(const QString &name)
 {
-    d_func()->fileName = name;
+  d_func()->fileName = name;
 }
 
 /*!
@@ -213,43 +238,45 @@ void QSaveFile::setFileName(const QString &name)
 */
 bool QSaveFile::open(OpenMode mode)
 {
-    Q_D(QSaveFile);
-    if (isOpen()) {
-        qWarning("QSaveFile::open: File (%s) already open", qPrintable(fileName()));
-        return false;
-    }
-    unsetError();
-    if ((mode & (ReadOnly | WriteOnly)) == 0) {
-        qWarning("QSaveFile::open: Open mode not specified");
-        return false;
-    }
-    // In the future we could implement Append and ReadWrite by copying from the existing file to the temp file...
-    if ((mode & ReadOnly) || (mode & Append)) {
-        qWarning("QSaveFile::open: Unsupported open mode %d", int(mode));
-        return false;
-    }
+  Q_D(QSaveFile);
+  if (isOpen()) {
+    qWarning("QSaveFile::open: File (%s) already open", qPrintable(fileName()));
+    return false;
+  }
+  unsetError();
+  if ((mode & (ReadOnly | WriteOnly)) == 0) {
+    qWarning("QSaveFile::open: Open mode not specified");
+    return false;
+  }
+  // In the future we could implement Append and ReadWrite by copying from the existing file to the temp file...
+  if ((mode & ReadOnly) || (mode & Append)) {
+    qWarning("QSaveFile::open: Unsupported open mode %d", int(mode));
+    return false;
+  }
 
-    // check if existing file is writable
-    QFileInfo existingFile(d->fileName);
-    if (existingFile.exists() && !existingFile.isWritable()) {
-        d->error = QFile::WriteError;
-        setErrorString(QSaveFile::tr("Existing file %1 is not writable").arg(d->fileName));
-        return false;
-    }
-    d->tempFile = new QTemporaryFile;
-    d->tempFile->setAutoRemove(false);
-    d->tempFile->setFileTemplate(d->fileName);
-    if (!d->tempFile->open()) {
-        d->error = d->tempFile->error();
-        setErrorString(d->tempFile->errorString());
-        delete d->tempFile;
-        d->tempFile = 0;
-        return false;
-    }
-    QIODevice::open(mode);
-    if (existingFile.exists())
-        d->tempFile->setPermissions(existingFile.permissions());
-    return true;
+  // check if existing file is writable
+  QFileInfo existingFile(d->fileName);
+  if (existingFile.exists() && !existingFile.isWritable()) {
+    d->error = QFile::WriteError;
+    setErrorString(QSaveFile::tr("Existing file %1 is not writable").arg(d->fileName));
+    return false;
+  }
+  d->tempFile = new QTemporaryFile;
+  d->tempFile->setAutoRemove(false);
+  d->tempFile->setFileTemplate(d->fileName);
+  if (!d->tempFile->open()) {
+    d->error = d->tempFile->error();
+    setErrorString(d->tempFile->errorString());
+    delete d->tempFile;
+    d->tempFile = 0;
+    return false;
+  }
+  QIODevice::open(mode);
+  if (existingFile.exists()) {
+      d->tempFile->setPermissions(existingFile.permissions());
+  }
+
+  return true;
 }
 
 /*!
@@ -259,7 +286,7 @@ bool QSaveFile::open(OpenMode mode)
 */
 void QSaveFile::close()
 {
-    qFatal("QSaveFile::close called");
+  qFatal("QSaveFile::close called");
 }
 
 /*
@@ -276,46 +303,47 @@ void QSaveFile::close()
 */
 bool QSaveFile::commit()
 {
-    Q_D(QSaveFile);
-    if (!d->tempFile)
-        return false;
-    Q_ASSERT(isOpen());
-    QIODevice::close(); // flush and close
-    if (d->error != QFile::NoError) {
-        d->tempFile->remove();
-        unsetError();
-        delete d->tempFile;
-        d->tempFile = 0;
-        return false;
-    }
-    d->tempFile->close();
+  Q_D(QSaveFile);
+  if (!d->tempFile)
+    return false;
+  Q_ASSERT(isOpen());
+  QIODevice::close();   // flush and close
+  if (d->error != QFile::NoError) {
+    d->tempFile->remove();
+    unsetError();
+    delete d->tempFile;
+    d->tempFile = 0;
+    return false;
+  }
+  d->tempFile->close();
+  RemoteTools::setLastModificationDate(d->tempFile->fileName(), d->newTime);
 #ifdef Q_OS_WIN
-    // On Windows QAbstractFileEngine::rename() fails if the the target exists,
-    // so we have to rename the target.
-    // Ideally the winapi ReplaceFile() method should be used.
-    QString bakname = d->fileName + "~";
-    QFile::remove(bakname);
-    QFile::rename(d->fileName, bakname);
+  // On Windows QAbstractFileEngine::rename() fails if the the target exists,
+  // so we have to rename the target.
+  // Ideally the winapi ReplaceFile() method should be used.
+  QString bakname = d->fileName + "~";
+  QFile::remove(bakname);
+  QFile::rename(d->fileName, bakname);
 #endif
-    QAbstractFileEngine* fileEngine = d->tempFile->fileEngine();
-    Q_ASSERT(fileEngine);
-    if (!fileEngine->rename(d->fileName)) {
-        d->error = fileEngine->error();
-        setErrorString(fileEngine->errorString());
-        d->tempFile->remove();
-        delete d->tempFile;
-        d->tempFile = 0;
-#ifdef Q_OS_WIN
-        QFile::rename(bakname, d->fileName);
-#endif
-        return false;
-    }
+  QAbstractFileEngine *fileEngine = d->tempFile->fileEngine();
+  Q_ASSERT(fileEngine);
+  if (!fileEngine->rename(d->fileName)) {
+    d->error = fileEngine->error();
+    setErrorString(fileEngine->errorString());
+    d->tempFile->remove();
     delete d->tempFile;
     d->tempFile = 0;
 #ifdef Q_OS_WIN
-    QFile::remove(bakname);
+    QFile::rename(bakname, d->fileName);
 #endif
-    return true;
+    return false;
+  }
+  delete d->tempFile;
+  d->tempFile = 0;
+#ifdef Q_OS_WIN
+  QFile::remove(bakname);
+#endif
+  return true;
 }
 
 /*!
@@ -328,10 +356,10 @@ bool QSaveFile::commit()
 */
 void QSaveFile::cancelWriting()
 {
-    if (!isOpen())
-        return;
-    d_func()->error = QFile::WriteError;
-    setErrorString(QSaveFile::tr("Writing canceled by application"));
+  if (!isOpen())
+    return;
+  d_func()->error = QFile::WriteError;
+  setErrorString(QSaveFile::tr("Writing canceled by application"));
 }
 
 /*!
@@ -340,8 +368,8 @@ void QSaveFile::cancelWriting()
 */
 qint64 QSaveFile::size() const
 {
-    Q_D(const QSaveFile);
-    return d->tempFile ? d->tempFile->size() : qint64(-1);
+  Q_D(const QSaveFile);
+  return d->tempFile ? d->tempFile->size() : qint64(-1);
 }
 
 /*!
@@ -349,8 +377,8 @@ qint64 QSaveFile::size() const
 */
 qint64 QSaveFile::pos() const
 {
-    Q_D(const QSaveFile);
-    return d->tempFile ? d->tempFile->pos() : qint64(-1);
+  Q_D(const QSaveFile);
+  return d->tempFile ? d->tempFile->pos() : qint64(-1);
 }
 
 /*!
@@ -358,8 +386,8 @@ qint64 QSaveFile::pos() const
 */
 bool QSaveFile::seek(qint64 offset)
 {
-    Q_D(QSaveFile);
-    return d->tempFile ? d->tempFile->seek(offset) : false;
+  Q_D(QSaveFile);
+  return d->tempFile ? d->tempFile->seek(offset) : false;
 }
 
 /*!
@@ -367,8 +395,8 @@ bool QSaveFile::seek(qint64 offset)
 */
 bool QSaveFile::atEnd() const
 {
-    Q_D(const QSaveFile);
-    return d->tempFile ? d->tempFile->atEnd() : true;
+  Q_D(const QSaveFile);
+  return d->tempFile ? d->tempFile->atEnd() : true;
 }
 
 /*!
@@ -377,16 +405,16 @@ bool QSaveFile::atEnd() const
 */
 bool QSaveFile::flush()
 {
-    Q_D(QSaveFile);
-    if (d->tempFile) {
-        if (!d->tempFile->flush()) {
-            d->error = d->tempFile->error();
-            setErrorString(d->tempFile->errorString());
-            return false;
-        }
-        return true;
+  Q_D(QSaveFile);
+  if (d->tempFile) {
+    if (!d->tempFile->flush()) {
+      d->error = d->tempFile->error();
+      setErrorString(d->tempFile->errorString());
+      return false;
     }
-    return false;
+    return true;
+  }
+  return false;
 }
 
 /*!
@@ -396,8 +424,8 @@ bool QSaveFile::flush()
 */
 int QSaveFile::handle() const
 {
-    Q_D(const QSaveFile);
-    return d->tempFile ? d->tempFile->handle() : -1;
+  Q_D(const QSaveFile);
+  return d->tempFile ? d->tempFile->handle() : -1;
 }
 
 /*!
@@ -405,8 +433,8 @@ int QSaveFile::handle() const
 */
 qint64 QSaveFile::readData(char *data, qint64 maxlen)
 {
-    Q_D(QSaveFile);
-    return d->tempFile ? d->tempFile->read(data, maxlen) : -1;
+  Q_D(QSaveFile);
+  return d->tempFile ? d->tempFile->read(data, maxlen) : -1;
 }
 
 /*!
@@ -414,15 +442,15 @@ qint64 QSaveFile::readData(char *data, qint64 maxlen)
 */
 qint64 QSaveFile::writeData(const char *data, qint64 len)
 {
-    Q_D(QSaveFile);
-    if (!d->tempFile)
-        return -1;
-    const qint64 written = d->tempFile->write(data, len);
-    if (written != len) {
-        d->error = QFile::WriteError;
-        setErrorString(QSaveFile::tr("Partial write. Partition full?"));
-    }
-    return written;
+  Q_D(QSaveFile);
+  if (!d->tempFile)
+    return -1;
+  const qint64 written = d->tempFile->write(data, len);
+  if (written != len) {
+    d->error = QFile::WriteError;
+    setErrorString(QSaveFile::tr("Partial write. Partition full?"));
+  }
+  return written;
 }
 
 /*!
@@ -430,6 +458,6 @@ qint64 QSaveFile::writeData(const char *data, qint64 len)
 */
 qint64 QSaveFile::readLineData(char *data, qint64 maxlen)
 {
-    Q_D(QSaveFile);
-    return d->tempFile ? d->tempFile->readLine(data, maxlen) : -1;
+  Q_D(QSaveFile);
+  return d->tempFile ? d->tempFile->readLine(data, maxlen) : -1;
 }

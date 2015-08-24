@@ -39,6 +39,7 @@ public:
   ~UploadCommand();
 private:
   void setLastModificationDate(const FileInfo & fi, const QDateTime& lastModified);
+  RemoteFileList getDbList(const QString &filePath);
 };
 
 #endif // UPLOADCOMMAND_H

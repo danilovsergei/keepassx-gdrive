@@ -30,6 +30,7 @@ private Q_SLOTS:
     void uploadTwoDb();
     void updateDbRevision();
     void testDownloadOneFile();
+    void testDownloadTimeStamp();
     void initTestCase();
 private:
     RemoteDriveApi* remoteDriveApi = Q_NULLPTR;

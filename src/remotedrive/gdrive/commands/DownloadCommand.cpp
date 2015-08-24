@@ -3,8 +3,8 @@ using namespace KeePassxDriveSync;
 
 Q_DECLARE_METATYPE(RemoteFile)
 
-DownloadCommand::DownloadCommand(AuthCredentials *creds)
-    : BaseCommand(creds)
+DownloadCommand::DownloadCommand(AuthCredentials *creds) :
+  BaseCommand(creds)
 {
 }
 
@@ -56,12 +56,14 @@ void DownloadCommand::execute(const QVariantMap options)
   cmd.waitForFinish(false);
   f.close();
 
-  if (cmd.error() == GoogleDrive::Command::NoError) {
-    setResult(KeePassxDriveSync::ResultBuilder().addValue(localDb).build());
-    emitSuccess();
-  } else {
+  if (cmd.error() != GoogleDrive::Command::NoError) {
     emitError(
       Errors::DownloadError::DOWNLOAD_COMMAND_PROBLEM,
       cmd.errorString());
   }
+  if (rFi.getModifiedDate().toLocalTime().toTime_t()
+      != QFileInfo(localDb).lastModified().toLocalTime().toTime_t())
+    RemoteTools::setLastModificationDate(localDb, rFi.getModifiedDate());
+  setResult(KeePassxDriveSync::ResultBuilder().addValue(localDb).build());
+  emitSuccess();
 }
