@@ -56,17 +56,10 @@ DatabaseOpenWidget::DatabaseOpenWidget(QWidget *parent)
           SLOT(openDatabase()));
   connect(m_ui->buttonBox, SIGNAL(rejected()),
           SLOT(reject()));
-  connect(m_ui->checkGDrive, SIGNAL(toggled(bool)),
-          SLOT(cloudDbLoad()));
 }
 
 DatabaseOpenWidget::~DatabaseOpenWidget()
 {}
-
-void DatabaseOpenWidget::cloudDbLoad()
-{
-
-}
 
 void DatabaseOpenWidget::load(const QString& filename)
 {

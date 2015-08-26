@@ -111,6 +111,7 @@ set(keepassx_SOURCES
     gui/group/EditGroupWidget.cpp
     gui/group/GroupModel.cpp
     gui/group/GroupView.cpp
+    gui/PasswordEdit.cpp
     keys/CompositeKey.cpp
     keys/FileKey.cpp
     keys/Key.h
@@ -206,6 +207,7 @@ set(keepassx_MOC
     gui/group/EditGroupWidget.h
     gui/group/GroupModel.h
     gui/group/GroupView.h
+    gui/PasswordEdit.h
     keys/CompositeKey_p.h
     streams/HashedBlockStream.h
     streams/LayeredStream.h

@@ -7,10 +7,10 @@
     <x>0</x>
     <y>0</y>
     <width>596</width>
-    <height>590</height>
+    <height>250</height>
    </rect>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout" stretch="1,0,0,0,1,0,0,0,3">
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="1,0,0,1,0,0,3">
    <property name="spacing">
     <number>8</number>
    </property>
@@ -26,13 +26,6 @@
       </size>
      </property>
     </spacer>
-   </item>
-   <item>
-    <widget class="QLabel" name="db_name">
-     <property name="text">
-      <string>Database: Empty</string>
-     </property>
-    </widget>
    </item>
    <item>
     <widget class="QLabel" name="labelHeadline">
@@ -62,28 +55,39 @@
      <property name="verticalSpacing">
       <number>8</number>
      </property>
-     <item row="0" column="0">
-      <widget class="QCheckBox" name="checkGDrive">
-       <property name="text">
-        <string>Use Google Drive</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="0">
+     <item row="1" column="0">
       <widget class="QCheckBox" name="checkKeyFile">
        <property name="text">
         <string>Key File:</string>
        </property>
       </widget>
      </item>
-     <item row="1" column="0">
+     <item row="0" column="0">
       <widget class="QCheckBox" name="checkPassword">
        <property name="text">
         <string>Password:</string>
        </property>
       </widget>
      </item>
-     <item row="2" column="2">
+     <item row="0" column="1">
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="PasswordEdit" name="editPassword">
+         <property name="echoMode">
+          <enum>QLineEdit::Password</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="buttonTogglePassword">
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item row="1" column="1">
       <layout class="QHBoxLayout" name="horizontalLayout_2">
        <item>
         <widget class="QComboBox" name="comboKeyFile">
@@ -107,33 +111,6 @@
        </item>
       </layout>
      </item>
-     <item row="1" column="2">
-      <layout class="QHBoxLayout" name="horizontalLayout">
-       <item>
-        <widget class="QLineEdit" name="editPassword">
-         <property name="echoMode">
-          <enum>QLineEdit::Password</enum>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QToolButton" name="buttonTogglePassword">
-         <property name="text">
-          <string>...</string>
-         </property>
-         <property name="checkable">
-          <bool>true</bool>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item row="0" column="2">
-      <widget class="QComboBox" name="selectCloudDb"/>
-     </item>
     </layout>
    </item>
    <item>
@@ -145,9 +122,6 @@
       <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
      </property>
     </widget>
-   </item>
-   <item>
-    <widget class="QTextEdit" name="mytext"/>
    </item>
    <item>
     <spacer name="verticalSpacer">
@@ -164,6 +138,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>PasswordEdit</class>
+   <extends>QLineEdit</extends>
+   <header>gui/PasswordEdit.h</header>
+  </customwidget>
+ </customwidgets>
  <tabstops>
   <tabstop>checkPassword</tabstop>
   <tabstop>editPassword</tabstop>
@@ -171,6 +152,7 @@
   <tabstop>checkKeyFile</tabstop>
   <tabstop>comboKeyFile</tabstop>
   <tabstop>buttonBrowseFile</tabstop>
+  <tabstop>buttonBox</tabstop>
  </tabstops>
  <resources/>
  <connections/>

@@ -58,7 +58,6 @@ private Q_SLOTS:
     void activateKeyFile();
     void setOkButtonEnabled();
     void browseKeyFile();
-    void cloudDbLoad();
 
 
 protected:
