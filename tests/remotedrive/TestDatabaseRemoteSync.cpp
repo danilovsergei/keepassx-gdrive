@@ -553,10 +553,8 @@ template<> void TestDatabaseRemoteSync::validateMissingLocal<Group *>(
  */
 void TestDatabaseRemoteSync::testRemoveLocalEntryToRecycleBin()
 {
-  qDebug() << "testRemoveLocalEntryToRecycleBin started";
-
   Q_ASSERT(testUtils->saveDatabase(db.data(), oldDbPath));
-
+  Tools::sleep(1000);
   // create new entry which will present only in remote db
   newEntry.reset(testUtils->createEntry(db.data(), "NewEntry", "New Password"));
   db->recycleEntry(newEntry.data());
