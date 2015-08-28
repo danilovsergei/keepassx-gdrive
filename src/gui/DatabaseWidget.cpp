@@ -108,28 +108,40 @@ DatabaseWidget::DatabaseWidget(Database* db, QWidget* parent)
     splitter->addWidget(rightHandSideWidget);
 
     layout->addWidget(splitter);
+
     m_mainWidget->setLayout(layout);
 
     m_editEntryWidget = new EditEntryWidget();
     m_editEntryWidget->setObjectName("editEntryWidget");
+
     m_historyEditEntryWidget = new EditEntryWidget();
+
     m_editGroupWidget = new EditGroupWidget();
     m_editGroupWidget->setObjectName("editGroupWidget");
+
     m_changeMasterKeyWidget = new ChangeMasterKeyWidget();
-    m_databaseOpenWidgetCloud= new DatabaseOpenWidgetCloud();
     m_changeMasterKeyWidget->headlineLabel()->setText(tr("Change master key"));
     QFont headlineLabelFont = m_changeMasterKeyWidget->headlineLabel()->font();
     headlineLabelFont.setBold(true);
     headlineLabelFont.setPointSize(headlineLabelFont.pointSize() + 2);
     m_changeMasterKeyWidget->headlineLabel()->setFont(headlineLabelFont);
+
+    m_databaseOpenWidgetCloud= new DatabaseOpenWidgetCloud();
+    m_databaseOpenWidgetCloud->headlineLabel()->setText(tr("Open cloud database"));
+    m_databaseOpenWidgetCloud->headlineLabel()->setFont(headlineLabelFont);
+
     m_databaseSettingsWidget = new DatabaseSettingsWidget();
     m_databaseSettingsWidget->setObjectName("databaseSettingsWidget");
+
     m_databaseOpenWidget = new DatabaseOpenWidget();
     m_databaseOpenWidget->setObjectName("databaseOpenWidget");
+
     m_keepass1OpenWidget = new KeePass1OpenWidget();
     m_keepass1OpenWidget->setObjectName("keepass1OpenWidget");
+
     m_unlockDatabaseWidget = new UnlockDatabaseWidget();
     m_unlockDatabaseWidget->setObjectName("unlockDatabaseWidget");
+
     addWidget(m_mainWidget);
     addWidget(m_editEntryWidget);
     addWidget(m_editGroupWidget);

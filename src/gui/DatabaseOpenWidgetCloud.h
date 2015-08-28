@@ -11,6 +11,9 @@
 #include "remotedrive/Errors.h"
 #include "remotedrive/OptionsBuilder.h"
 #include "remotedrive/RemoteFile.h"
+
+class QLabel;
+
 namespace Ui {
 class DatabaseOpenWidgetCloud;
 }
@@ -38,15 +41,20 @@ public Q_SLOTS:
 
 public:
     explicit DatabaseOpenWidgetCloud(QWidget *parent = 0);
+    QLabel* headlineLabel();
     ~DatabaseOpenWidgetCloud();
 
 private:
-    Ui::DatabaseOpenWidgetCloud *ui;
-    RemoteDriveApi* remoteDrive = Q_NULLPTR;
+    RemoteDriveApi*  remoteDrive;
     KeePassxDriveSync::Command downloadCommand;
     KeePassxDriveSync::Command listCommand;
 private Q_SLOTS:
     void downloadDbFinished();
+private:
+    const QScopedPointer<Ui::DatabaseOpenWidgetCloud> m_ui;
+    const QString formatDate(const QDateTime& dateTime);
+    static bool compareByDateTime(const RemoteFile &rf1,  const RemoteFile &rf2);
+    const QString DATETIME_FORMAT = "ddMMMyyyy hh::mm::ss";
 };
 
 #endif // DATABASEOPENWIDGETCLOUD_H

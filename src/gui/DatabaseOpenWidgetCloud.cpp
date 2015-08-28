@@ -8,7 +8,6 @@
 
 #include <QtCore/QMetaType>
 
-
 using namespace GoogleDrive;
 Q_DECLARE_METATYPE(RemoteFile)
 Q_DECLARE_METATYPE(RemoteFileList)
@@ -17,41 +16,52 @@ QString fullDbName;
 
 DatabaseOpenWidgetCloud::DatabaseOpenWidgetCloud(QWidget *parent) :
   DialogyWidget(parent),
-  ui(new Ui::DatabaseOpenWidgetCloud)
+  m_ui(new Ui::DatabaseOpenWidgetCloud)
 {
-  ui->setupUi(this);
-  connect(ui->buttonBox, SIGNAL(rejected()), SIGNAL(dbRejected()));
-  connect(ui->buttonBox, SIGNAL(accepted()), SLOT(downloadDb()));
-  AuthCredentials* creds = new GoogleDriveCredentials(this);
-  CommandsFactory* commandsFactory = new CommandsFactoryImpl(this, creds);
-  // remote drive will be used to call all remote drive functions like sync , upload, download
+  m_ui->setupUi(this);
+  connect(m_ui->buttonBox, SIGNAL(rejected()), SIGNAL(dbRejected()));
+  connect(m_ui->buttonBox, SIGNAL(accepted()), SLOT(downloadDb()));
+  AuthCredentials *creds = new GoogleDriveCredentials(this);
+  CommandsFactory *commandsFactory = new CommandsFactoryImpl(this, creds);
   remoteDrive = new RemoteDriveApi(this, commandsFactory);
 }
 
 /**
- * @brief DatabaseOpenWidgetCloud::cloudDbLoad - shows the latest version of
- *each available database with unique name
+ * @brief DatabaseOpenWidgetCloud::cloudDbLoad - populates databases combobox with the list of
+ * available databases.
+ * Chooses only one database with latest modification time if there are two databases with the same name.
+ * Combobox display format is modification_time: database_name
+ *
  * @param db_files - list all databases available including all revisions
  */
 void DatabaseOpenWidgetCloud::cloudDbLoad()
 {
-  Q_ASSERT(listCommand->getErrorCode()==static_cast<int>(Errors::NO_ERROR));
+  Q_ASSERT(listCommand->getErrorCode() == static_cast<int>(Errors::NO_ERROR));
   qRegisterMetaType<RemoteFileList>("RemoteFileList");
   const RemoteFileList db_files = listCommand->getResult().at(0).value<RemoteFileList>();
   QMap<QString, RemoteFile> files;
-  Q_FOREACH(const RemoteFile& fi, db_files) {
-    if (!files.contains(fi.getTitle()) ||
-        (files.contains(fi.getTitle()) &&
-         (fi.getModifiedDate().toMSecsSinceEpoch() >=
-      files[fi.getTitle()].getModifiedDate().toMSecsSinceEpoch()))) {
+  Q_FOREACH(const RemoteFile &fi, db_files) {
+    if (!files.contains(fi.getTitle()))
       files[fi.getTitle()] = fi;
-    }
+
+    if (fi.getModifiedDate() > files[fi.getTitle()].getModifiedDate())
+         files[fi.getTitle()] = fi;
   }
-  Q_FOREACH(const QString db_name, files.keys()) {
-    ui->comboCloudDbLatest->addItem(files.value(
-                                      db_name).getModifiedDate().toString() + "----" + db_name,
-                                    QVariant::fromValue(files.value(db_name)));
+
+  QList<RemoteFile> sortedFiles = files.values();
+  qSort(sortedFiles.begin(), sortedFiles.end(), compareByDateTime);
+
+  Q_FOREACH(RemoteFile fi, sortedFiles) {
+    const QString formattedDate = formatDate(fi.getModifiedDate());
+    m_ui->comboCloudDbLatest->addItem(formattedDate+ " : " + fi.getTitle(),
+                                    QVariant::fromValue(fi));
   }
+}
+
+bool DatabaseOpenWidgetCloud::compareByDateTime(const RemoteFile &rf1,
+                                                const RemoteFile &rf2)
+{
+  return rf1.getModifiedDate() > rf2.getModifiedDate();
 }
 
 void DatabaseOpenWidgetCloud::reject()
@@ -66,33 +76,36 @@ void DatabaseOpenWidgetCloud::reject()
   // QFile(fullDbName).remove();
 }
 
-
-void DatabaseOpenWidgetCloud::selectCloud(int cloud) {
+void DatabaseOpenWidgetCloud::selectCloud(int cloud)
+{
   // if (cloud==0) {
   Q_EMIT cloudSelected();
 
   // }
 }
 
-void DatabaseOpenWidgetCloud::loadSupportedCloudEngines() {
+void DatabaseOpenWidgetCloud::loadSupportedCloudEngines()
+{
   // TODO load list of supported engines from config file
-  ui->comboCloudEngine->addItem("Google Drive");
-  ui->comboCloudEngine->setCurrentIndex(0);
+  m_ui->comboCloudEngine->addItem("Google Drive");
+  m_ui->comboCloudEngine->setCurrentIndex(0);
   listCommand = remoteDrive->list();
-  connect(listCommand.data(), SIGNAL(finished()),this, SLOT(cloudDbLoad()));
+  connect(listCommand.data(), SIGNAL(finished()), this, SLOT(cloudDbLoad()));
   listCommand->executeAsync(OptionsBuilder().build());
 }
 
 DatabaseOpenWidgetCloud::~DatabaseOpenWidgetCloud()
-{}
+{
+}
 
 /**
  * @brief DatabaseOpenWidgetCloud::downloadDb downloads selected database from
  *cloud and emits dbSelected signal
  */
-void DatabaseOpenWidgetCloud::downloadDb() {
-  RemoteFile fi = ui->comboCloudDbLatest->itemData(
-    ui->comboCloudDbLatest->currentIndex(),
+void DatabaseOpenWidgetCloud::downloadDb()
+{
+  RemoteFile fi = m_ui->comboCloudDbLatest->itemData(
+    m_ui->comboCloudDbLatest->currentIndex(),
     Qt::UserRole).value<RemoteFile>();
 
   // Avoid unnecessary downloading of cloud db if it exists locally.Instead call
@@ -107,16 +120,33 @@ void DatabaseOpenWidgetCloud::downloadDb() {
     qDebug() << QString("Database %1 downloaded locally first time.").arg(
       fi.getTitle());
     downloadCommand = remoteDrive->download();
-    connect(downloadCommand.data(), SIGNAL(finished()),         this,
-          SLOT(downloadDbFinished()) );
+    connect(downloadCommand.data(), SIGNAL(finished()), this,
+            SLOT(downloadDbFinished()));
     downloadCommand->executeAsync(OptionsBuilder().addOption(OPTION_FI, fi).build());
   }
   Q_EMIT editFinished(true);
 }
 
-void DatabaseOpenWidgetCloud::downloadDbFinished() {
-    Q_ASSERT(downloadCommand->getErrorCode()==static_cast<int>(Errors::NO_ERROR));
-    QString dbPath = downloadCommand->getResult().at(0).toString();
-    Q_ASSERT (!dbPath.isNull() && !dbPath.isEmpty());
-    Q_EMIT dbSelected(dbPath);
+void DatabaseOpenWidgetCloud::downloadDbFinished()
+{
+  Q_ASSERT(downloadCommand->getErrorCode() == static_cast<int>(Errors::NO_ERROR));
+  QString dbPath = downloadCommand->getResult().at(0).toString();
+  Q_ASSERT(!dbPath.isNull() && !dbPath.isEmpty());
+  Q_EMIT dbSelected(dbPath);
+}
+
+/**
+ * @brief DatabaseOpenWidgetCloud::formatDate formats datetime to the compact user readable format
+ * to fit combobox
+ * @param dateTime input date time
+ * @return formatted time
+ */
+const QString DatabaseOpenWidgetCloud::formatDate(const QDateTime &dateTime)
+{
+  return dateTime.toString(DATETIME_FORMAT);
+}
+
+QLabel* DatabaseOpenWidgetCloud::headlineLabel()
+{
+    return m_ui->headlineLabel;
 }
