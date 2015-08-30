@@ -182,7 +182,4 @@ void SettingsWidget::browseDbDirectory()
     if (!fileName.isEmpty()) {
         m_cloudUi->dbDirectory->setText(fileName);
     }
-    else {
-        m_cloudUi->dbDirectory->setText("Test");
-    }
 }
