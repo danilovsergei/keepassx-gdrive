@@ -58,6 +58,7 @@ set(keepassx_SOURCES
     core/TimeInfo.cpp
     core/Tools.cpp
     core/Uuid.cpp
+    core/Translator.cpp
     crypto/Crypto.cpp
     crypto/CryptoHash.cpp
     crypto/Random.cpp
@@ -122,7 +123,6 @@ set(keepassx_SOURCES
     streams/StoreDataStream.cpp
     streams/SymmetricCipherStream.cpp
     gui/DatabaseOpenWidgetCloud.cpp
-    gui/SettingsWidgetCloud.cpp
 
     remotedrive/CommandsFactory.cpp
     remotedrive/RemoteCommand.cpp
@@ -175,6 +175,7 @@ set(keepassx_MOC
     core/Group.h
     core/Metadata.h
     core/qsavefile.h
+    core/Translator.h
     gui/AboutDialog.h
     gui/Application.h
     gui/ChangeMasterKeyWidget.h
@@ -215,7 +216,6 @@ set(keepassx_MOC
     streams/StoreDataStream.h
     streams/SymmetricCipherStream.h
     gui/DatabaseOpenWidgetCloud.h
-    gui/SettingsWidgetCloud.h
 
     remotedrive/RemoteCommand.h
     remotedrive/RemoteDriveApi.h
@@ -271,7 +271,6 @@ set(keepassx_FORMS
     gui/entry/EditEntryWidgetMain.ui
     gui/group/EditGroupWidgetMain.ui
     gui/DatabaseOpenWidgetCloud.ui
-    gui/SettingsWidgetCloud.ui
 )
 
 if(MINGW)

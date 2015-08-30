@@ -50,9 +50,10 @@ private:
     QWidget* const m_cloudWidget;
     const QScopedPointer<Ui::SettingsWidgetSecurity> m_secUi;
     const QScopedPointer<Ui::SettingsWidgetGeneral> m_generalUi;
-    const QScopedPointer<Ui::SettingsWidgetCloud> m_cloudUi;
     Qt::Key m_globalAutoTypeKey;
     Qt::KeyboardModifiers m_globalAutoTypeModifiers;
+    const QScopedPointer<Ui::SettingsWidgetCloud> m_cloudUi;
+
 };
 
 #endif // KEEPASSX_SETTINGSWIDGET_H

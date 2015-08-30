@@ -22,24 +22,31 @@
 
 #include "autotype/AutoType.h"
 #include "core/Config.h"
+#include "core/Translator.h"
 #include "QtGui/QFileDialog"
 
 SettingsWidget::SettingsWidget(QWidget* parent)
     : EditWidget(parent)
     , m_secWidget(new QWidget())
     , m_generalWidget(new QWidget())
-    , m_cloudWidget(new QWidget)
     , m_secUi(new Ui::SettingsWidgetSecurity())
     , m_generalUi(new Ui::SettingsWidgetGeneral())
+    , m_globalAutoTypeKey(static_cast<Qt::Key>(0))
+    , m_globalAutoTypeModifiers(Qt::NoModifier)
+    , m_cloudWidget(new QWidget)
     , m_cloudUi(new Ui::SettingsWidgetCloud())
 {
     setHeadline(tr("Application Settings"));
 
     m_secUi->setupUi(m_secWidget);
     m_generalUi->setupUi(m_generalWidget);
-    m_cloudUi->setupUi(m_cloudWidget);
     add(tr("General"), m_generalWidget);
     add(tr("Security"), m_secWidget);
+
+    m_generalUi->autoTypeShortcutWidget->setVisible(autoType()->isAvailable());
+    m_generalUi->autoTypeShortcutLabel->setVisible(autoType()->isAvailable());
+
+    m_cloudUi->setupUi(m_cloudWidget);
     add(tr("Cloud"),m_cloudWidget);
 
     connect(this, SIGNAL(accepted()), SLOT(saveSettings()));
@@ -47,11 +54,15 @@ SettingsWidget::SettingsWidget(QWidget* parent)
 
     connect(m_generalUi->autoSaveAfterEveryChangeCheckBox, SIGNAL(toggled(bool)),
             this, SLOT(enableAutoSaveOnExit(bool)));
+    connect(m_generalUi->systrayShowCheckBox, SIGNAL(toggled(bool)),
+            m_generalUi->systrayMinimizeToTrayCheckBox, SLOT(setEnabled(bool)));
 
     connect(m_secUi->clearClipboardCheckBox, SIGNAL(toggled(bool)),
             m_secUi->clearClipboardSpinBox, SLOT(setEnabled(bool)));
-    connect(m_cloudUi->browseButton, SIGNAL(clicked()), SLOT(browseDbDirectory()));
+    connect(m_secUi->lockDatabaseIdleCheckBox, SIGNAL(toggled(bool)),
+            m_secUi->lockDatabaseIdleSpinBox, SLOT(setEnabled(bool)));
 
+    connect(m_cloudUi->browseButton, SIGNAL(clicked()), SLOT(browseDbDirectory()));
 }
 
 SettingsWidget::~SettingsWidget()
@@ -61,19 +72,45 @@ SettingsWidget::~SettingsWidget()
 void SettingsWidget::loadSettings()
 {
     m_generalUi->rememberLastDatabasesCheckBox->setChecked(config()->get("RememberLastDatabases").toBool());
-    m_generalUi->openPreviousDatabasesOnStartupCheckBox->setChecked(config()->get("OpenPreviousDatabasesOnStartup").toBool());
-    m_generalUi->modifiedExpandedChangedCheckBox->setChecked(config()->get("ModifiedOnExpandedStateChanges").toBool());
+    m_generalUi->rememberLastKeyFilesCheckBox->setChecked(config()->get("RememberLastKeyFiles").toBool());
+    m_generalUi->openPreviousDatabasesOnStartupCheckBox->setChecked(
+        config()->get("OpenPreviousDatabasesOnStartup").toBool());
     m_generalUi->autoSaveAfterEveryChangeCheckBox->setChecked(config()->get("AutoSaveAfterEveryChange").toBool());
     m_generalUi->autoSaveOnExitCheckBox->setChecked(config()->get("AutoSaveOnExit").toBool());
+    m_generalUi->minimizeOnCopyCheckBox->setChecked(config()->get("MinimizeOnCopy").toBool());
+    m_generalUi->useGroupIconOnEntryCreationCheckBox->setChecked(config()->get("UseGroupIconOnEntryCreation").toBool());
+    m_generalUi->autoTypeEntryTitleMatchCheckBox->setChecked(config()->get("AutoTypeEntryTitleMatch").toBool());
 
-    m_globalAutoTypeKey = static_cast<Qt::Key>(config()->get("GlobalAutoTypeKey").toInt());
-    m_globalAutoTypeModifiers = static_cast<Qt::KeyboardModifiers>(config()->get("GlobalAutoTypeModifiers").toInt());
-    if (m_globalAutoTypeKey > 0 && m_globalAutoTypeModifiers > 0) {
-        m_generalUi->autoTypeShortcutWidget->setShortcut(m_globalAutoTypeKey, m_globalAutoTypeModifiers);
+    m_generalUi->languageComboBox->clear();
+    QList<QPair<QString, QString> > languages = Translator::availableLanguages();
+    for (int i = 0; i < languages.size(); i++) {
+        m_generalUi->languageComboBox->addItem(languages[i].second, languages[i].first);
+    }
+    int defaultIndex = m_generalUi->languageComboBox->findData(config()->get("GUI/Language"));
+    if (defaultIndex > 0) {
+        m_generalUi->languageComboBox->setCurrentIndex(defaultIndex);
+    }
+
+    m_generalUi->systrayShowCheckBox->setChecked(config()->get("GUI/ShowTrayIcon").toBool());
+    m_generalUi->systrayMinimizeToTrayCheckBox->setChecked(config()->get("GUI/MinimizeToTray").toBool());
+
+    if (autoType()->isAvailable()) {
+        m_globalAutoTypeKey = static_cast<Qt::Key>(config()->get("GlobalAutoTypeKey").toInt());
+        m_globalAutoTypeModifiers = static_cast<Qt::KeyboardModifiers>(config()->get("GlobalAutoTypeModifiers").toInt());
+        if (m_globalAutoTypeKey > 0 && m_globalAutoTypeModifiers > 0) {
+            m_generalUi->autoTypeShortcutWidget->setShortcut(m_globalAutoTypeKey, m_globalAutoTypeModifiers);
+        }
     }
 
     m_secUi->clearClipboardCheckBox->setChecked(config()->get("security/clearclipboard").toBool());
     m_secUi->clearClipboardSpinBox->setValue(config()->get("security/clearclipboardtimeout").toInt());
+
+    m_secUi->lockDatabaseIdleCheckBox->setChecked(config()->get("security/lockdatabaseidle").toBool());
+    m_secUi->lockDatabaseIdleSpinBox->setValue(config()->get("security/lockdatabaseidlesec").toInt());
+
+    m_secUi->passwordCleartextCheckBox->setChecked(config()->get("security/passwordscleartext").toBool());
+
+    m_secUi->autoTypeAskCheckBox->setChecked(config()->get("security/autotypeask").toBool());
 
     m_cloudUi->dbDirectory->setText(config()->get("cloud/dbdir").toString());
 
@@ -83,15 +120,38 @@ void SettingsWidget::loadSettings()
 void SettingsWidget::saveSettings()
 {
     config()->set("RememberLastDatabases", m_generalUi->rememberLastDatabasesCheckBox->isChecked());
-    config()->set("OpenPreviousDatabasesOnStartup", m_generalUi->openPreviousDatabasesOnStartupCheckBox->isChecked());
-    config()->set("ModifiedOnExpandedStateChanges", m_generalUi->modifiedExpandedChangedCheckBox->isChecked());
-    config()->set("AutoSaveAfterEveryChange", m_generalUi->autoSaveAfterEveryChangeCheckBox->isChecked());
+    config()->set("RememberLastKeyFiles", m_generalUi->rememberLastKeyFilesCheckBox->isChecked());
+    config()->set("OpenPreviousDatabasesOnStartup",
+                  m_generalUi->openPreviousDatabasesOnStartupCheckBox->isChecked());
+    config()->set("AutoSaveAfterEveryChange",
+                  m_generalUi->autoSaveAfterEveryChangeCheckBox->isChecked());
     config()->set("AutoSaveOnExit", m_generalUi->autoSaveOnExitCheckBox->isChecked());
-    config()->set("GlobalAutoTypeKey", m_generalUi->autoTypeShortcutWidget->key());
-    config()->set("GlobalAutoTypeModifiers", static_cast<int>(m_generalUi->autoTypeShortcutWidget->modifiers()));
+    config()->set("MinimizeOnCopy", m_generalUi->minimizeOnCopyCheckBox->isChecked());
+    config()->set("UseGroupIconOnEntryCreation",
+                  m_generalUi->useGroupIconOnEntryCreationCheckBox->isChecked());
+    config()->set("AutoTypeEntryTitleMatch",
+                  m_generalUi->autoTypeEntryTitleMatchCheckBox->isChecked());
+    int currentLangIndex = m_generalUi->languageComboBox->currentIndex();
+    config()->set("GUI/Language", m_generalUi->languageComboBox->itemData(currentLangIndex).toString());
+
+    config()->set("GUI/ShowTrayIcon", m_generalUi->systrayShowCheckBox->isChecked());
+    config()->set("GUI/MinimizeToTray", m_generalUi->systrayMinimizeToTrayCheckBox->isChecked());
+
+    if (autoType()->isAvailable()) {
+        config()->set("GlobalAutoTypeKey", m_generalUi->autoTypeShortcutWidget->key());
+        config()->set("GlobalAutoTypeModifiers",
+                      static_cast<int>(m_generalUi->autoTypeShortcutWidget->modifiers()));
+    }
     config()->set("security/clearclipboard", m_secUi->clearClipboardCheckBox->isChecked());
     config()->set("security/clearclipboardtimeout", m_secUi->clearClipboardSpinBox->value());
-    config()->set("cloud/dbdir",m_cloudUi->dbDirectory->toPlainText());
+
+    config()->set("security/lockdatabaseidle", m_secUi->lockDatabaseIdleCheckBox->isChecked());
+    config()->set("security/lockdatabaseidlesec", m_secUi->lockDatabaseIdleSpinBox->value());
+
+    config()->set("security/passwordscleartext", m_secUi->passwordCleartextCheckBox->isChecked());
+
+    config()->set("security/autotypeask", m_secUi->autoTypeAskCheckBox->isChecked());
+    config()->set("cloud/dbdir",m_cloudUi->dbDirectory->text());
 
     Q_EMIT editFinished(true);
 }
@@ -110,6 +170,7 @@ void SettingsWidget::enableAutoSaveOnExit(bool checked)
 {
     m_generalUi->autoSaveOnExitCheckBox->setEnabled(!checked);
 }
+
 
 void SettingsWidget::browseDbDirectory()
 {
