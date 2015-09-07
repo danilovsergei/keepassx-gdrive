@@ -18,8 +18,8 @@
 #ifndef KEEPASSX_TRANSLATOR_H
 #define KEEPASSX_TRANSLATOR_H
 
-#include <QtCore/QPair>
-#include <QtCore/QString>
+#include <QPair>
+#include <QString>
 
 class Translator
 {

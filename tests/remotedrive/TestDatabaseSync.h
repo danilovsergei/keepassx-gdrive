@@ -1,6 +1,6 @@
 #ifndef TESTDATABASESYNC_H
 #define TESTDATABASESYNC_H
-#include <QtCore/QObject>
+#include <QObject>
 #include "remotedrive/EntriesSync.h"
 #include "remotedrive/GroupsSync.h"
 #include "remotedrive/DatabaseSyncBase.h"

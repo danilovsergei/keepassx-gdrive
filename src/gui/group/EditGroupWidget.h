@@ -18,8 +18,8 @@
 #ifndef KEEPASSX_EDITGROUPWIDGET_H
 #define KEEPASSX_EDITGROUPWIDGET_H
 
-#include <QtCore/QScopedPointer>
-#include <QtGui/QComboBox>
+#include <QScopedPointer>
+#include <QComboBox>
 
 #include "core/Group.h"
 #include "gui/EditWidget.h"

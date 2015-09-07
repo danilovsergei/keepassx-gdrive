@@ -31,10 +31,10 @@
 #ifndef GOOGLE_DRIVE_FILE_INFO_H
 #define GOOGLE_DRIVE_FILE_INFO_H
 
-#include <QtCore/QVariant>
-#include <QtCore/QStringList>
-#include <QtCore/QDateTime>
-#include <QtCore/QList>
+#include <QVariant>
+#include <QStringList>
+#include <QDateTime>
+#include <QList>
 
 namespace GoogleDrive
 {

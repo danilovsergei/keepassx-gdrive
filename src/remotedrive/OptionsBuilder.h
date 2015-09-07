@@ -1,6 +1,6 @@
 #ifndef OPTIONSBUILDER_H
 #define OPTIONSBUILDER_H
-#include <QtCore/QVariantMap>
+#include <QVariantMap>
 /**
  * @brief The OptionsBuilder class used to create options for Command::execute()
  */

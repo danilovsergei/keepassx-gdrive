@@ -18,11 +18,11 @@
 #ifndef KEEPASSX_METADATA_H
 #define KEEPASSX_METADATA_H
 
-#include <QtCore/QDateTime>
-#include <QtCore/QHash>
-#include <QtCore/QPointer>
-#include <QtGui/QColor>
-#include <QtGui/QImage>
+#include <QDateTime>
+#include <QHash>
+#include <QPointer>
+#include <QColor>
+#include <QImage>
 
 #include "core/Global.h"
 #include "core/Uuid.h"

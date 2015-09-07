@@ -17,12 +17,12 @@
 
 #include "Config.h"
 
-#include <QtCore/QDir>
-#include <QtCore/QSettings>
-#include <QtCore/QTemporaryFile>
-#include <QtGui/QApplication>
-#include <QtGui/QDesktopServices>
-#include <QtCore/QDebug>
+#include <QDir>
+#include <QSettings>
+#include <QTemporaryFile>
+#include <QApplication>
+#include <QDesktopServices>
+#include <QDebug>
 
 Config* Config::m_instance(Q_NULLPTR);
 

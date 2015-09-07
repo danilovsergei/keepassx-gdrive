@@ -1,14 +1,14 @@
 #ifndef RemoteCommand_H
 #define RemoteCommand_H
-#include <QtCore/QObject>
-#include <QtCore/QDebug>
-#include <QtCore/QString>
-#include <QtCore/QtConcurrentRun>
+#include <QObject>
+#include <QDebug>
+#include <QString>
+#include <QtConcurrentRun>
 #include <remotedrive/Errors.h>
-#include <QtCore/QEventLoop>
+#include <QEventLoop>
 #include <core/Global.h>
-#include <QtCore/QUuid>
-#include <QtCore/QSharedPointer>
+#include <QUuid>
+#include <QSharedPointer>
 
 namespace KeePassxDriveSync {
 class RemoteCommand;

@@ -42,12 +42,12 @@
 #ifndef QSAVEFILE_H
 #define QSAVEFILE_H
 
-#include <QtCore/QFile>
-#include <QtCore/QString>
-#include <QtCore/QDateTime>
-#include <QtCore/QScopedPointer>
-#include <QtCore/QTemporaryFile>
-#include <QtCore/QDebug>
+#include <QFile>
+#include <QString>
+#include <QDateTime>
+#include <QScopedPointer>
+#include <QTemporaryFile>
+#include <QDebug>
 #include <remotedrive/RemoteTools.h>
 
 #ifdef open

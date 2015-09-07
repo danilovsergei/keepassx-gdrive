@@ -1,5 +1,5 @@
 #include "RemoteCommand.h"
-#include <QtCore/QObject>
+#include <QObject>
 
 namespace KeePassxDriveSync {
 RemoteCommand::RemoteCommand()

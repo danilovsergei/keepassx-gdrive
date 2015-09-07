@@ -1,12 +1,12 @@
 #include "DatabaseOpenWidgetCloud.h"
 #include "ui_DatabaseOpenWidgetCloud.h"
 
-#include <QtCore/QSettings>
+#include <QSettings>
 #include <iostream>
-#include <QtGui/QMessageBox>
-#include <QtCore/QDebug>
+#include <QMessageBox>
+#include <QDebug>
 
-#include <QtCore/QMetaType>
+#include <QMetaType>
 
 using namespace GoogleDrive;
 Q_DECLARE_METATYPE(RemoteFile)

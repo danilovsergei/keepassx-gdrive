@@ -1,7 +1,7 @@
 #ifndef ALLSYNC_H
 #define ALLSYNC_H
 #include <remotedrive/GroupsSync.h>
-#include <QtCore/QDebug>
+#include <QDebug>
 #include <remotedrive/DatabaseSyncFactory.h>
 
 class AllSync : public GroupsSync

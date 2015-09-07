@@ -1,15 +1,15 @@
 #ifndef GOOGLEDRIVETOOLS_H
 #define GOOGLEDRIVETOOLS_H
-#include <QtCore/QString>
-#include <QtCore/QDateTime>
+#include <QString>
+#include <QDateTime>
 #include <remotedrive/gdrive/QueryEntry.h>
 #include <core/Database.h>
 #include <core/Metadata.h>
 #include "core/Config.h"
-#include <QtCore/QDir>
-#include <QtCore/QEventLoop>
-#include <QtCore/QTimer>
-#include <QtCore/QDebug>
+#include <QDir>
+#include <QEventLoop>
+#include <QTimer>
+#include <QDebug>
 
 class GoogleDriveTools : public QObject
 {

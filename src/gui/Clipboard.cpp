@@ -17,9 +17,9 @@
 
 #include "Clipboard.h"
 
-#include <QtCore/QTimer>
-#include <QtGui/QApplication>
-#include <QtGui/QClipboard>
+#include <QTimer>
+#include <QApplication>
+#include <QClipboard>
 
 #if defined(Q_OS_UNIX) && !defined(Q_OS_MAC)
 #include <QtDBus/QDBusConnection>

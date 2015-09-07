@@ -18,17 +18,17 @@
 #ifndef KEEPASSX_KEEPASS2XMLWRITER_H
 #define KEEPASSX_KEEPASS2XMLWRITER_H
 
-#include <QtCore/QDateTime>
-#include <QtCore/QXmlStreamWriter>
-#include <QtGui/QColor>
-#include <QtGui/QImage>
+#include <QDateTime>
+#include <QXmlStreamWriter>
+#include <QColor>
+#include <QImage>
 
 #include "core/Database.h"
 #include "core/Entry.h"
 #include "core/Group.h"
 #include "core/TimeInfo.h"
 #include "core/Uuid.h"
-#include <QtCore/QCryptographicHash>
+#include <QCryptographicHash>
 
 class KeePass2RandomStream;
 class Metadata;

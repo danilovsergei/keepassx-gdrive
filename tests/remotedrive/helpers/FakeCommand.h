@@ -3,8 +3,8 @@
 
 
 #include <remotedrive/RemoteCommand.h>
-#include <QtCore/QDebug>
-#include <QtCore/QThread>
+#include <QDebug>
+#include <QThread>
 namespace FakeCommands {
 class FakeSyncCommand : public KeePassxDriveSync::RemoteCommand
 {

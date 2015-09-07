@@ -1,13 +1,13 @@
 #ifndef SyncObject_H
 #define SyncObject_H
 
-#include <QtCore/QSharedPointer>
-#include <QtCore/QPair>
-#include <QtCore/QMap>
-#include <QtCore/QSet>
-#include <QtCore/QChar>
-#include <QtCore/QDebug>
-#include <QtCore/QDateTime>
+#include <QSharedPointer>
+#include <QPair>
+#include <QMap>
+#include <QSet>
+#include <QChar>
+#include <QDebug>
+#include <QDateTime>
 
 namespace DatabaseSyncObject {
 enum class ObjectType : char

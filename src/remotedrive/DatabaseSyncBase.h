@@ -1,11 +1,11 @@
 #ifndef DATABASESYNCBASE_H
 #define DATABASESYNCBASE_H
-#include <QtCore/QSharedPointer>
-#include <QtCore/QMap>
-#include <QtCore/QList>
-#include <QtCore/QMutableMapIterator>
+#include <QSharedPointer>
+#include <QMap>
+#include <QList>
+#include <QMutableMapIterator>
 #include "remotedrive/SyncObject.h"
-#include <QtCore/QDebug>
+#include <QDebug>
 #include <core/Database.h>
 #include <core/Metadata.h>
 #include <core/Group.h>

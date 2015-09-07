@@ -2,7 +2,7 @@
 #define SyncCommand_H
 #include "core/Database.h"
 #include "remotedrive/gdrive/GoogleDriveTools.h"
-#include <QtCore/QDebug>
+#include <QDebug>
 #include "remotedrive/Errors.h"
 #include "remotedrive/DatabaseSyncFactory.h"
 #include "remotedrive/DatabaseSync.h"
@@ -10,7 +10,7 @@
 #include "format/KeePass2Reader.h"
 #include "keys/CompositeKey.h"
 #include "QtCore/QtConcurrentRun"
-#include <QtCore/QSharedPointer>
+#include <QSharedPointer>
 #include "remotedrive/RemoteCommand.h"
 #include "qtdrive/lib/session.h"
 #include "remotedrive/SyncObject.h"

@@ -18,10 +18,10 @@
 #ifndef KEEPASSX_DATABASEICONS_H
 #define KEEPASSX_DATABASEICONS_H
 
-#include <QtCore/QVector>
-#include <QtGui/QImage>
-#include <QtGui/QPixmap>
-#include <QtGui/QPixmapCache>
+#include <QVector>
+#include <QImage>
+#include <QPixmap>
+#include <QPixmapCache>
 
 #include "core/Global.h"
 

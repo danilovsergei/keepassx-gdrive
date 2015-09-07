@@ -17,9 +17,9 @@
 
 #include "DragTabBar.h"
 
-#include <QtCore/QTimer>
-#include <QtGui/QApplication>
-#include <QtGui/QDragEnterEvent>
+#include <QTimer>
+#include <QApplication>
+#include <QDragEnterEvent>
 
 DragTabBar::DragTabBar(QWidget* parent)
     : QTabBar(parent)

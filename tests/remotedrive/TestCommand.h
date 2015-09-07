@@ -1,7 +1,7 @@
 #ifndef TestCommand_H
 #define TestCommand_H
 
-#include <QtCore/QObject>
+#include <QObject>
 #include "tests.h"
 
 #include <remotedrive/AuthCredentials.h>
@@ -11,7 +11,7 @@
 #include <remotedrive/gdrive/GoogleDriveCredentials.h>
 #include <remotedrive/helpers/FakeCommandsFactoryImpl.h>
 #include <remotedrive/helpers/FakeRemoteDriveApi.h>
-#include <QtTest/QSignalSpy>
+#include <QSignalSpy>
 
 class TestCommand : public QObject
 {

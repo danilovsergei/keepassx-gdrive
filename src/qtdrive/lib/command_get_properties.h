@@ -3,7 +3,7 @@
 
 #include "authorized_command.h"
 #include "file_info.h"
-#include <QtNetwork/QNetworkReply>
+#include <QNetworkReply>
 
 namespace GoogleDrive
 {

@@ -3,10 +3,10 @@
 
 #include <remotedrive/RemoteCommand.h>
 #include <qtdrive/lib/session.h>
-#include <QtCore/QThreadStorage>
-#include <QtNetwork/QNetworkAccessManager>
+#include <QThreadStorage>
+#include <QNetworkAccessManager>
 #include <remotedrive/gdrive/GDriveConstants.h>
-#include <QtCore/QTimer>
+#include <QTimer>
 #include <remotedrive/AuthCredentials.h>
 
 using namespace GoogleDrive;

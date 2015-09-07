@@ -18,9 +18,9 @@
 #ifndef KEEPASSX_TOOLS_H
 #define KEEPASSX_TOOLS_H
 
-#include <QtCore/QObject>
-#include <QtCore/QString>
-#include <QtCore/QDateTime>
+#include <QObject>
+#include <QString>
+#include <QDateTime>
 
 #include "core/Global.h"
 

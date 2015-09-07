@@ -4,13 +4,13 @@
 #include "remotedrive/RemoteCommand.h"
 #include "qtdrive/lib/file_info.h"
 #include "qtdrive/lib/command_download_file.h"
-#include <QtCore/QDir>
+#include <QDir>
 #include <remotedrive/Errors.h>
 #include "remotedrive/gdrive/GoogleDriveTools.h"
 #include "qtdrive/lib/session.h"
 #include "remotedrive/RemoteFile.h"
 #include "remotedrive/gdrive/RemoteFileImpl.h"
-#include <QtCore/QUrl>
+#include <QUrl>
 #include <remotedrive/gdrive/BaseCommand.h>
 #include <remotedrive/AuthCredentials.h>
 #include <remotedrive/RemoteTools.h>

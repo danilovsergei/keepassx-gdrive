@@ -31,8 +31,8 @@
 #ifndef GOOGLE_DRIVE_COMMAND_OAUTH2_H
 #define GOOGLE_DRIVE_COMMAND_OAUTH2_H
 
-#include <QtCore/QString>
-#include <QtCore/QUrl>
+#include <QString>
+#include <QUrl>
 
 #include "command.h"
 

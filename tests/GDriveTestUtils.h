@@ -1,22 +1,22 @@
 #ifndef GDRIVETESTUTILS_H
 #define GDRIVETESTUTILS_H
 
-#include <QtCore/QSharedPointer>
+#include <QSharedPointer>
 #include "remotedrive/SyncObject.h"
 #include "core/Database.h"
 #include "core/Entry.h"
 #include "core/Group.h"
 #include "remotedrive/gdrive/GoogleDriveTools.h"
-#include <QtCore/QDebug>
-#include <QtCore/QDir>
+#include <QDebug>
+#include <QDir>
 #include <keys/PasswordKey.h>
 #include <format/KeePass2Writer.h>
 #include <format/KeePass2Reader.h>
 #include <core/qsavefile.h>
-#include <QtCore/qmath.h>
-#include <QtTest/QSignalSpy>
-#include <QtTest/QTest>
-#include <QtCore/QObject>
+#include <qmath.h>
+#include <QSignalSpy>
+#include <QTest>
+#include <QObject>
 
 #include "remotedrive/CommandsFactory.h"
 #include "remotedrive/AuthCredentials.h"

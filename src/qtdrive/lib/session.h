@@ -31,8 +31,8 @@
 #ifndef GOOGLE_DRIVE_SESSION_H
 #define GOOGLE_DRIVE_SESSION_H
 
-#include <QtCore/QObject>
-#include <QtCore/QDebug>
+#include <QObject>
+#include <QDebug>
 
 class QNetworkAccessManager;
 

@@ -1,8 +1,8 @@
 #include "session.h"
 
-#include <QtCore/QPointer>
-#include <QtNetwork/QNetworkAccessManager>
-#include <QtCore/QTime>
+#include <QPointer>
+#include <QNetworkAccessManager>
+#include <QTime>
 
 namespace GoogleDrive
 {

@@ -2,7 +2,7 @@
 #define FAKEREMOTEDRIVEAPI_H
 
 #include <remotedrive/RemoteDriveApi.h>
-#include <QtCore/QObject>
+#include <QObject>
 #include <remotedrive/CommandsFactory.h>
 #include <remotedrive/helpers/FakeCommandsFactoryImpl.h>
 

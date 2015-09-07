@@ -1,8 +1,8 @@
 #ifndef QUERYENTRY_H
 #define QUERYENTRY_H
-#include <QtCore/QStringList>
-#include <QtCore/QString>
-#include <QtCore/QMap>
+#include <QStringList>
+#include <QString>
+#include <QMap>
 #include "remotedrive/gdrive/GDriveConstants.h"
 class QueryEntry
 {

@@ -7,7 +7,7 @@
 
 #include "session.h"
 #include "command_private.h"
-#include <QtCore/QThread>
+#include <QThread>
 
 namespace GoogleDrive {
 Command::Command(Session *session) :

@@ -7,8 +7,8 @@
 #include "core/Tools.h"
 #include "core/Metadata.h"
 #include "DatabaseSync.h"
-#include <QtCore/QDebug>
-#include <QtCore/QObject>
+#include <QDebug>
+#include <QObject>
 using namespace DatabaseSyncObject;
 class GroupsSync : public DatabaseSync<Group>
 {

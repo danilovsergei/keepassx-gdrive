@@ -18,11 +18,11 @@
 #ifndef KEEPASSX_KEEPASS2READER_H
 #define KEEPASSX_KEEPASS2READER_H
 
-#include <QtCore/QCoreApplication>
+#include <QCoreApplication>
 
 #include "keys/CompositeKey.h"
-#include <QtCore/QDateTime>
-#include <QtCore/QFileInfo>
+#include <QDateTime>
+#include <QFileInfo>
 #include <core/Metadata.h>
 
 class Database;

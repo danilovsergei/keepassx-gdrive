@@ -18,14 +18,14 @@
 #include "DatabaseWidget.h"
 #include "ui_SearchWidget.h"
 
-#include <QtCore/QTimer>
-#include <QtGui/QAction>
-#include <QtGui/QDesktopServices>
-#include <QtGui/QHBoxLayout>
-#include <QtGui/QLabel>
-#include <QtGui/QLineEdit>
-#include <QtGui/QMessageBox>
-#include <QtGui/QSplitter>
+#include <QTimer>
+#include <QAction>
+#include <QDesktopServices>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QLineEdit>
+#include <QMessageBox>
+#include <QSplitter>
 
 #include "autotype/AutoType.h"
 #include "core/FilePath.h"
@@ -42,7 +42,7 @@
 #include "gui/entry/EntryView.h"
 #include "gui/group/EditGroupWidget.h"
 #include "gui/group/GroupView.h"
-#include <QtCore/QDebug>
+#include <QDebug>
 #include "config-keepassx.h"
 Q_DECLARE_METATYPE(Database*)
 Q_DECLARE_METATYPE(QSharedPointer<SyncObject >)

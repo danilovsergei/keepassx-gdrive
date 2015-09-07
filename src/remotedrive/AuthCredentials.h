@@ -1,6 +1,6 @@
 #ifndef AUTHCREDENTIALS_H
 #define AUTHCREDENTIALS_H
-#include <QtCore/QVariant>
+#include <QVariant>
 #include "core/Global.h"
 class AuthCredentials : public QObject
 {

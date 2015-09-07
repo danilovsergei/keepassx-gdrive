@@ -1,7 +1,7 @@
 #ifndef REMOTEFILEIMPL_H
 #define REMOTEFILEIMPL_H
 #include "remotedrive/RemoteFile.h"
-#include <QtCore/QObject>
+#include <QObject>
 #include "qtdrive/lib/file_info.h"
 using namespace GoogleDrive;
 class RemoteFileImpl : public QObject

@@ -22,7 +22,7 @@
 #include "core/Group.h"
 #include "core/Metadata.h"
 #include "core/Tools.h"
-#include <QtCore/QDebug>
+#include <QDebug>
 
 const int Entry::DefaultIconNumber = 0;
 

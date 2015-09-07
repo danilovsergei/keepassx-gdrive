@@ -1,7 +1,7 @@
 #ifndef DATABASESYNC_H
 #define DATABASESYNC_H
 #include "core/Database.h"
-#include <QtCore/QDebug>
+#include <QDebug>
 #include "core/Tools.h"
 #include "DatabaseSyncBase.h"
 #include "core/Metadata.h"

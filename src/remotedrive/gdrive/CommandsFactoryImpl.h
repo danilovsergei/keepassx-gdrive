@@ -4,7 +4,7 @@
 #include "qtdrive/lib/session.h"
 #include "remotedrive/AuthCredentials.h"
 #include "GDriveConstants.h"
-#include <QtNetwork/QNetworkAccessManager>
+#include <QNetworkAccessManager>
 #include "GDriveConstants.h"
 
 #include "remotedrive/CommandsFactory.h"
@@ -14,7 +14,7 @@
 #include "remotedrive/gdrive/commands/UploadCommand.h"
 #include "remotedrive/gdrive/commands/DeleteCommand.h"
 #include "remotedrive/RemoteCommand.h"
-#include <QtCore/QThreadStorage>
+#include <QThreadStorage>
 
 using namespace GoogleDrive;
 class CommandsFactoryImpl : public CommandsFactory

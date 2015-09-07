@@ -18,8 +18,8 @@
 #ifndef KEEPASSX_TEST_ARGUMENT_PARSER_H
 #define KEEPASSX_TEST_ARGUMENT_PARSER_H
 
-#include <QtCore/QObject>
-#include <QtCore/QHash>
+#include <QObject>
+#include <QHash>
 
 class TestArgumentParser : public QObject
 {

@@ -17,12 +17,12 @@
 
 #include "Translator.h"
 
-#include <QtCore/QCoreApplication>
-#include <QtCore/QDir>
-#include <QtCore/QLibraryInfo>
-#include <QtCore/QLocale>
-#include <QtCore/QRegExp>
-#include <QtCore/QTranslator>
+#include <QCoreApplication>
+#include <QDir>
+#include <QLibraryInfo>
+#include <QLocale>
+#include <QRegExp>
+#include <QTranslator>
 
 #include "config-keepassx.h"
 #include "core/Config.h"

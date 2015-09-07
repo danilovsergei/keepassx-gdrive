@@ -1,17 +1,17 @@
 #ifndef TESTUPLOADDELETECOMMAND_H
 #define TESTUPLOADDELETECOMMAND_H
-#include <QtCore/QObject>
+#include <QObject>
 #include "tests.h"
 #include <remotedrive/AuthCredentials.h>
 #include <remotedrive/gdrive/GoogleDriveCredentials.h>
 #include <remotedrive/CommandsFactory.h>
 #include <GDriveTestUtils.h>
-#include <QtCore/QScopedPointer>
-#include <QtCore/QTemporaryFile>
+#include <QScopedPointer>
+#include <QTemporaryFile>
 #include "crypto/Crypto.h"
-#include <QtCore/QDebug>
+#include <QDebug>
 #include <remotedrive/RemoteCommand.h>
-#include <QtTest/QSignalSpy>
+#include <QSignalSpy>
 #include "config-keepassx-tests.h"
 #include <core/Tools.h>
 

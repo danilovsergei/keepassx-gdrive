@@ -1,15 +1,15 @@
 #ifndef LOGINPAGE_H
 #define LOGINPAGE_H
-#include <QtCore/QObject>
-#include <QtCore/QPair>
-#include <QtWebKit/QWebView>
-#include <QtCore/QDebug>
-#include <QtCore/QEventLoop>
-#include <QtCore/QTimer>
+#include <QObject>
+#include <QPair>
+#include <QWebView>
+#include <QDebug>
+#include <QEventLoop>
+#include <QTimer>
 #include <qtdrive/lib/command_oauth2.h>
 #include "qtdrive/lib/session.h"
 #include <remotedrive/Errors.h>
-#include <QtGui/QApplication>
+#include <QApplication>
 #include "GDriveConstants.h"
 using namespace GoogleDrive;
 class LoginPage : public QObject

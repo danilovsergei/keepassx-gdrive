@@ -4,7 +4,7 @@
 #include "LoginPage.h"
 #include "qtdrive/lib/session.h"
 #include "core/Config.h"
-#include <QtCore/QScopedPointer>
+#include <QScopedPointer>
 #include "remotedrive/gdrive/GDriveConstants.h"
 
 class GoogleDriveCredentials : public AuthCredentials

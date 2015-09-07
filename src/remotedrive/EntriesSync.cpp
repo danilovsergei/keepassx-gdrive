@@ -1,5 +1,5 @@
 #include "EntriesSync.h"
-#include <QtCore/QDebug>
+#include <QDebug>
 #include "DatabaseSyncFactory.h"
 
 EntriesSync::EntriesSync(Database *db1, Database *db2) :

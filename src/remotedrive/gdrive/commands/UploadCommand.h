@@ -4,9 +4,9 @@
 #include <remotedrive/RemoteCommand.h>
 #include "qtdrive/lib/session.h"
 #include <remotedrive/gdrive/GDriveConstants.h>
-#include <QtCore/QDateTime>
+#include <QDateTime>
 #include <core/Database.h>
-#include <QtCore/QDebug>
+#include <QDebug>
 
 #include <qtdrive/lib/command_upload_file.h>
 #include <qtdrive/lib/command_update.h>

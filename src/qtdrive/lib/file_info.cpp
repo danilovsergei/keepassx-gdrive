@@ -2,7 +2,7 @@
 
 #include <QUrl>
 #include <map>
-#include <QtCore/QtDebug>
+#include <QtDebug>
 
 namespace GoogleDrive
 {

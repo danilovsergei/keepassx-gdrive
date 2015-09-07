@@ -1,8 +1,8 @@
 #include "TestDatabaseSync.h"
 
-#include <QtTest/QTest>
+#include <QTest>
 #include "tests.h"
-#include <QtCore/QDebug>
+#include <QDebug>
 #include "crypto/Crypto.h"
 #include "core/Tools.h"
 

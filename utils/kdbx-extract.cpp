@@ -17,10 +17,10 @@
 
 #include <stdio.h>
 
-#include <QtCore/QCoreApplication>
-#include <QtCore/QFile>
-#include <QtCore/QStringList>
-#include <QtCore/QTextStream>
+#include <QCoreApplication>
+#include <QFile>
+#include <QStringList>
+#include <QTextStream>
 
 #include "core/Database.h"
 #include "crypto/Crypto.h"
@@ -28,8 +28,8 @@
 #include "keys/CompositeKey.h"
 #include "keys/FileKey.h"
 #include "keys/PasswordKey.h"
-#include <QtCore/QtGlobal>
-#include <QtCore/QDebug>
+#include <QtGlobal>
+#include <QDebug>
 
 int main(int argc, char **argv)
 {

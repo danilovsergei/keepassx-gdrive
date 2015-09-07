@@ -1,12 +1,12 @@
 #ifndef REMOTEFILE_H
 #define REMOTEFILE_H
 
-#include <QtCore/QList>
-#include <QtCore/QObject>
-#include <QtCore/QDateTime>
-#include <QtCore/QStringList>
-#include <QtCore/QSharedData>
-#include <QtCore/QUrl>
+#include <QList>
+#include <QObject>
+#include <QDateTime>
+#include <QStringList>
+#include <QSharedData>
+#include <QUrl>
 
 class RemoteFileData : public QSharedData
 {

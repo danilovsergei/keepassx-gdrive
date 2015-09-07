@@ -17,9 +17,9 @@
 
 #include "DatabaseTabWidget.h"
 
-#include <QtCore/QFileInfo>
-#include <QtGui/QTabWidget>
-#include <QtGui/QMessageBox>
+#include <QFileInfo>
+#include <QTabWidget>
+#include <QMessageBox>
 
 #include "autotype/AutoType.h"
 #include "core/Config.h"
@@ -32,7 +32,7 @@
 #include "gui/FileDialog.h"
 #include "gui/entry/EntryView.h"
 #include "gui/group/GroupView.h"
-#include <QtCore/QDebug>;
+#include <QDebug>;
 #include "config-keepassx.h"
 
 DatabaseManagerStruct::DatabaseManagerStruct() :

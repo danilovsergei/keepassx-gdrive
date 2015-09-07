@@ -18,8 +18,8 @@
 #include "EditWidgetIcons.h"
 #include "ui_EditWidgetIcons.h"
 
-#include <QtGui/QMessageBox>
-#include <QtGui/QFileDialog>
+#include <QMessageBox>
+#include <QFileDialog>
 
 #include "core/Group.h"
 #include "core/Metadata.h"

@@ -18,11 +18,11 @@
 #ifndef KEEPASSX_DATABASEOPENWIDGET_H
 #define KEEPASSX_DATABASEOPENWIDGET_H
 #include "core/Config.h"
-#include <QtCore/QScopedPointer>
+#include <QScopedPointer>
 #include "gui/DialogyWidget.h"
 #include "keys/CompositeKey.h"
 #include "remotedrive/gdrive/GoogleDriveTools.h"
-#include <QtGui/QMessageBox>
+#include <QMessageBox>
 class Database;
 class QFile;
 

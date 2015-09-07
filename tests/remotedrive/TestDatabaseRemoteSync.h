@@ -1,22 +1,22 @@
 #ifndef TESTDATABASEREMOTESYNC_H
 #define TESTDATABASEREMOTESYNC_H
 
-#include <QtCore/QObject>
+#include <QObject>
 #include <core/Database.h>
 #include <core/Tools.h>
 #include <remotedrive/gdrive/GoogleDriveTools.h>
-#include <QtTest/QSignalSpy>
+#include <QSignalSpy>
 #include <remotedrive/Errors.h>
 #include <core/Entry.h>
 #include <core/Group.h>
-#include <QtCore/QScopedPointer>
+#include <QScopedPointer>
 #include <keys/PasswordKey.h>
 #include <format/KeePass2Writer.h>
 #include <core/qsavefile.h>
-#include <QtCore/QDebug>
-#include <QtCore/qmath.h>
+#include <QDebug>
+#include <qmath.h>
 #include <core/Entry.h>
-#include <QtTest/QTest>
+#include <QTest>
 #include "tests.h"
 #include "crypto/Crypto.h"
 

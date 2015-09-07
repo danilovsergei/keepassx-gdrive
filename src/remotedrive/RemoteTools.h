@@ -1,9 +1,9 @@
 #ifndef REMOTETOOLS_H
 #define REMOTETOOLS_H
-#include <QtCore/QFile>
-#include <QtCore/QDateTime>
+#include <QFile>
+#include <QDateTime>
 #include <utime.h>
-#include <QtCore/QDebug>
+#include <QDebug>
 
 class RemoteTools
 {

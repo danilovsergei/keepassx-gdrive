@@ -18,14 +18,14 @@
 #ifndef KEEPASSX_ENTRY_H
 #define KEEPASSX_ENTRY_H
 
-#include <QtCore/QMap>
-#include <QtCore/QPointer>
-#include <QtCore/QSet>
-#include <QtCore/QUrl>
-#include <QtGui/QColor>
-#include <QtGui/QImage>
-#include <QtGui/QPixmap>
-#include <QtGui/QPixmapCache>
+#include <QMap>
+#include <QPointer>
+#include <QSet>
+#include <QUrl>
+#include <QColor>
+#include <QImage>
+#include <QPixmap>
+#include <QPixmapCache>
 
 #include "core/AutoTypeAssociations.h"
 #include "core/EntryAttachments.h"

@@ -23,9 +23,9 @@
 #include "format/KeePass2Reader.h"
 #include "keys/FileKey.h"
 #include "keys/PasswordKey.h"
-#include <QtCore/QSettings>
+#include <QSettings>
 #include "core/Group.h"
-#include <QtCore/QDebug>
+#include <QDebug>
 
 DatabaseOpenWidget::DatabaseOpenWidget(QWidget *parent)
   : DialogyWidget(parent)

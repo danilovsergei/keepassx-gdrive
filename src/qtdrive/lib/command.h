@@ -31,8 +31,8 @@
 #ifndef GOOGLE_DRIVE_COMMAND_H
 #define GOOGLE_DRIVE_COMMAND_H
 
-#include <QtCore/QObject>
-#include <QtCore/QVariant>
+#include <QObject>
+#include <QVariant>
 
 class QNetworkRequest;
 class QNetworkReply;

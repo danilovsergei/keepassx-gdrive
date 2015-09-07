@@ -18,7 +18,7 @@
 #ifndef KEEPASSX_PASSWORDEDIT_H
 #define KEEPASSX_PASSWORDEDIT_H
 
-#include <QtGui/QLineEdit>
+#include <QLineEdit>
 
 #include "core/Global.h"
 

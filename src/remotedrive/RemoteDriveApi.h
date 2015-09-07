@@ -1,9 +1,9 @@
 #ifndef REMOTEDRIVEAPI_H
 #define REMOTEDRIVEAPI_H
 #include "remotedrive/CommandsFactory.h"
-#include <QtCore/QScopedPointer>
-#include <QtCore/QVariantMap>
-#include <QtCore/QThread>
+#include <QScopedPointer>
+#include <QVariantMap>
+#include <QThread>
 #include "Errors.h"
 #include "remotedrive/RemoteCommand.h"
 #include "core/Global.h"

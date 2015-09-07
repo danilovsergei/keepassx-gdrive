@@ -1,9 +1,9 @@
 #ifndef COMMANDSFACTORY_H
 #define COMMANDSFACTORY_H
-#include <QtCore/QObject>
-#include <QtCore/QVariantMap>
+#include <QObject>
+#include <QVariantMap>
 #include "remotedrive/RemoteCommand.h"
-#include <QtCore/QThread>
+#include <QThread>
 
 class CommandsFactory : public QObject
 {
