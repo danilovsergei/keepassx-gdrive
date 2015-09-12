@@ -37,17 +37,17 @@ Uuid::Uuid(const QByteArray& data)
 
 Uuid Uuid::random()
 {
-    return Uuid(Random::randomArray(Length));
+    return Uuid(randomGen()->randomArray(Length));
 }
 
 QString Uuid::toBase64() const
 {
-    return QString::fromAscii(m_data.toBase64());
+    return QString::fromLatin1(m_data.toBase64());
 }
 
 QString Uuid::toHex() const
 {
-    return QString::fromAscii(m_data.toHex());
+    return QString::fromLatin1(m_data.toHex());
 }
 
 QByteArray Uuid::toByteArray() const
@@ -78,16 +78,6 @@ bool Uuid::operator==(const Uuid& other) const
     return m_data == other.m_data;
 }
 
-bool Uuid::operator<(const Uuid& other) const
-{
-  return m_data < other.m_data;
-}
-
-bool Uuid::operator>(const Uuid& other) const
-{
-  return m_data > other.m_data;
-}
-
 bool Uuid::operator!=(const Uuid& other) const
 {
     return !operator==(other);
@@ -95,7 +85,7 @@ bool Uuid::operator!=(const Uuid& other) const
 
 Uuid Uuid::fromBase64(const QString& str)
 {
-    QByteArray data = QByteArray::fromBase64(str.toAscii());
+    QByteArray data = QByteArray::fromBase64(str.toLatin1());
     return Uuid(data);
 }
 

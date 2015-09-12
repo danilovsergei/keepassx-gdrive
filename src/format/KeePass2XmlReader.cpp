@@ -34,8 +34,15 @@ KeePass2XmlReader::KeePass2XmlReader()
     : m_randomStream(Q_NULLPTR)
     , m_db(Q_NULLPTR)
     , m_meta(Q_NULLPTR)
+    , m_tmpParent(Q_NULLPTR)
     , m_error(false)
+    , m_strictMode(false)
 {
+}
+
+void KeePass2XmlReader::setStrictMode(bool strictMode)
+{
+    m_strictMode = strictMode;
 }
 
 void KeePass2XmlReader::readDatabase(QIODevice* device, Database* db, KeePass2RandomStream* randomStream)
@@ -350,7 +357,7 @@ void KeePass2XmlReader::parseIcon()
     while (!m_xml.error() && m_xml.readNextStartElement()) {
         if (m_xml.name() == "UUID") {
             uuid = readUuid();
-            uuidSet = true;
+            uuidSet = !uuid.isNull();
         }
         else if (m_xml.name() == "Data") {
             icon.loadFromData(readBinary());
@@ -493,7 +500,12 @@ Group* KeePass2XmlReader::parseGroup()
         if (m_xml.name() == "UUID") {
             Uuid uuid = readUuid();
             if (uuid.isNull()) {
+                if (m_strictMode) {
                 raiseError("Null group uuid");
+            }
+            else {
+                    group->setUuid(Uuid::random());
+                }
             }
             else {
                 group->setUuid(uuid);
@@ -508,7 +520,9 @@ Group* KeePass2XmlReader::parseGroup()
         else if (m_xml.name() == "IconID") {
             int iconId = readNumber();
             if (iconId < 0) {
+                if (m_strictMode) {
                 raiseError("Invalid group icon number");
+            }
             }
             else {
                 if (iconId >= DatabaseIcons::IconCount) {
@@ -584,6 +598,10 @@ Group* KeePass2XmlReader::parseGroup()
         }
     }
 
+    if (group->uuid().isNull() && !m_strictMode) {
+        group->setUuid(Uuid::random());
+    }
+
     if (!group->uuid().isNull()) {
         Group* tmpGroup = group;
         group = getGroup(tmpGroup->uuid());
@@ -630,7 +648,9 @@ void KeePass2XmlReader::parseDeletedObject()
         if (m_xml.name() == "UUID") {
             Uuid uuid = readUuid();
             if (uuid.isNull()) {
+                if (m_strictMode) {
                 raiseError("Null DeleteObject uuid");
+            }
             }
             else {
                 delObj.uuid = uuid;
@@ -647,7 +667,7 @@ void KeePass2XmlReader::parseDeletedObject()
     if (!delObj.uuid.isNull() && !delObj.deletionTime.isNull()) {
         m_db->addDeletedObject(delObj);
     }
-    else {
+    else if (m_strictMode) {
         raiseError("Missing DeletedObject uuid or time");
     }
 }
@@ -665,7 +685,12 @@ Entry* KeePass2XmlReader::parseEntry(bool history)
         if (m_xml.name() == "UUID") {
             Uuid uuid = readUuid();
             if (uuid.isNull()) {
+                if (m_strictMode) {
                 raiseError("Null entry uuid");
+            }
+            else {
+                    entry->setUuid(Uuid::random());
+                }
             }
             else {
                 entry->setUuid(uuid);
@@ -674,7 +699,9 @@ Entry* KeePass2XmlReader::parseEntry(bool history)
         else if (m_xml.name() == "IconID") {
             int iconId = readNumber();
             if (iconId < 0) {
-                raiseError("Invalud entry icon number");
+                if (m_strictMode) {
+                    raiseError("Invalid entry icon number");
+            }
             }
             else {
                 entry->setIcon(iconId);
@@ -726,12 +753,16 @@ Entry* KeePass2XmlReader::parseEntry(bool history)
         }
     }
 
+    if (entry->uuid().isNull() && !m_strictMode) {
+        entry->setUuid(Uuid::random());
+    }
+
     if (!entry->uuid().isNull()) {
         if (history) {
             entry->setUpdateTimeinfo(false);
         }
         else {
-            // TODO find out why we replace locationChanged time here for Entry
+            // TODO Sdanilov: find out why we replace locationChanged time here for Entry
             Entry* tmpEntry = entry;
 
             entry = getEntry(tmpEntry->uuid());
@@ -780,7 +811,16 @@ void KeePass2XmlReader::parseEntryString(Entry* entry)
 
             if (isProtected && !value.isEmpty()) {
                 if (m_randomStream) {
-                    value = QString::fromUtf8(m_randomStream->process(QByteArray::fromBase64(value.toAscii())));
+                    QByteArray ciphertext = QByteArray::fromBase64(value.toLatin1());
+                    bool ok;
+                    QByteArray plaintext = m_randomStream->process(ciphertext, &ok);
+                    if (!ok) {
+                        value.clear();
+                        raiseError(m_randomStream->errorString());
+                }
+                else {
+                        value = QString::fromUtf8(plaintext);
+                    }
                 }
                 else {
                     raiseError("Unable to decrypt entry string");
@@ -796,7 +836,13 @@ void KeePass2XmlReader::parseEntryString(Entry* entry)
     }
 
     if (keySet && valueSet) {
+        // the default attributes are always there so additionally check if it's empty
+        if (entry->attributes()->hasKey(key) && !entry->attributes()->value(key).isEmpty()) {
+            raiseError("Duplicate custom attribute found");
+        }
+        else {
         entry->attributes()->set(key, value, protect);
+    }
     }
     else {
         raiseError("Entry string key or value missing");
@@ -827,13 +873,15 @@ QPair<QString, QString> KeePass2XmlReader::parseEntryBinary(Entry* entry)
                 m_xml.skipCurrentElement();
             }
             else {
-                // format compatbility
+                // format compatibility
                 value = readBinary();
                 bool isProtected = attr.hasAttribute("Protected")
                         && (attr.value("Protected") == "True");
 
                 if (isProtected && !value.isEmpty()) {
-                    m_randomStream->processInPlace(value);
+                    if (!m_randomStream->processInPlace(value)) {
+                        raiseError(m_randomStream->errorString());
+                    }
                 }
             }
 
@@ -845,7 +893,12 @@ QPair<QString, QString> KeePass2XmlReader::parseEntryBinary(Entry* entry)
     }
 
     if (keySet && valueSet) {
+        if (entry->attachments()->hasKey(key)) {
+            raiseError("Duplicate attachment found");
+        }
+        else {
         entry->attachments()->set(key, value);
+    }
     }
     else {
         raiseError("Entry binary key or value missing");
@@ -987,7 +1040,12 @@ QDateTime KeePass2XmlReader::readDateTime()
     QDateTime dt = QDateTime::fromString(str, Qt::ISODate);
 
     if (!dt.isValid()) {
+        if (m_strictMode) {
         raiseError("Invalid date time value");
+    }
+        else {
+            dt = Tools::currentDateTimeUtc();
+        }
     }
 
     return dt;
@@ -1002,7 +1060,9 @@ QColor KeePass2XmlReader::readColor()
     }
 
     if (colorStr.length() != 7 || colorStr[0] != '#') {
+        if (m_strictMode) {
         raiseError("Invalid color value");
+        }
         return QColor();
     }
 
@@ -1012,7 +1072,9 @@ QColor KeePass2XmlReader::readColor()
         bool ok;
         int rgbPart = rgbPartStr.toInt(&ok, 16);
         if (!ok || rgbPart > 255) {
+            if (m_strictMode) {
             raiseError("Invalid color rgb part");
+            }
             return QColor();
         }
 
@@ -1043,8 +1105,13 @@ int KeePass2XmlReader::readNumber()
 Uuid KeePass2XmlReader::readUuid()
 {
     QByteArray uuidBin = readBinary();
-    if (uuidBin.length() != Uuid::Length) {
+    if (uuidBin.isEmpty()) {
+        return Uuid();
+    }
+    else if (uuidBin.length() != Uuid::Length) {
+        if (m_strictMode) {
         raiseError("Invalid uuid value");
+        }
         return Uuid();
     }
     else {
@@ -1054,7 +1121,7 @@ Uuid KeePass2XmlReader::readUuid()
 
 QByteArray KeePass2XmlReader::readBinary()
 {
-    return QByteArray::fromBase64(readString().toAscii());
+    return QByteArray::fromBase64(readString().toLatin1());
 }
 
 QByteArray KeePass2XmlReader::readCompressedBinary()

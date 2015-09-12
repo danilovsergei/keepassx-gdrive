@@ -19,8 +19,8 @@
 #define KEEPASSX_FILEPATH_H
 
 #include <QHash>
-#include <QString>
 #include <QIcon>
+#include <QString>
 
 #include "core/Global.h"
 
@@ -31,6 +31,7 @@ public:
     QString pluginPath(const QString& name);
     QIcon applicationIcon();
     QIcon icon(const QString& category, const QString& name, bool fromTheme = true);
+    QIcon onOffIcon(const QString& category, const QString& name);
 
     static FilePath* instance();
 

@@ -21,18 +21,12 @@
 #include <QHash>
 #include <QTabWidget>
 
+#include "core/qlockfile.h"
 #include "format/KeePass2Writer.h"
 #include "gui/DatabaseWidget.h"
-// TODO remove these includes with google part from tabwidget
-#include "remotedrive/AuthCredentials.h"
-#include "remotedrive/CommandsFactory.h"
-#include "remotedrive/gdrive/CommandsFactoryImpl.h"
-#include "remotedrive/gdrive/GoogleDriveCredentials.h"
-#include "remotedrive/OptionsBuilder.h"
-#include "remotedrive/gdrive/GDriveConstants.h"
-#include "remotedrive/RemoteCommand.h"
 
 class DatabaseWidget;
+class DatabaseWidgetStateSync;
 class DatabaseOpenWidget;
 class QFile;
 
@@ -41,6 +35,7 @@ struct DatabaseManagerStruct
     DatabaseManagerStruct();
 
     DatabaseWidget* dbWidget;
+    QLockFile* lockFile;
     QString filePath;
     QString canonicalFilePath;
     QString fileName;
@@ -61,19 +56,19 @@ public:
     void openDatabase(const QString& fileName, const QString& pw = QString(),
                       const QString& keyFile = QString());
     DatabaseWidget* currentDatabaseWidget();
-    bool hasLockableDatabases();
+    bool hasLockableDatabases() const;
 
     static const int LastDatabasesCount;
 
 public Q_SLOTS:
     void newDatabase();
     void openDatabase();
-    void openCloudDatabase();
     void importKeePass1Database();
-    void saveDatabase(int index = -1);
-    void saveDatabaseAs(int index = -1);
+    bool saveDatabase(int index = -1);
+    bool saveDatabaseAs(int index = -1);
     void saveDatabase(Database* db, bool syncToCloud = false);
     void saveDatabaseWithSync(Database *db);
+    void exportToCsv();
     bool closeDatabase(int index = -1);
     void closeDatabaseFromSender();
     bool closeAllDatabases();
@@ -82,15 +77,12 @@ public Q_SLOTS:
     bool readOnly(int index = -1);
     void performGlobalAutoType();
     void lockDatabases();
-    void openDatabaseDownloadedFromCloud(const QString& fileName, Database *db);
-
-
 
 Q_SIGNALS:
     void tabNameChanged();
     void databaseWithFileClosed(QString filePath);
+    void activateDatabaseChanged(DatabaseWidget* dbWidget);
     void databaseSavedLocally(Database* db);
-
 
 private Q_SLOTS:
     void updateTabName(Database* db);
@@ -99,11 +91,11 @@ private Q_SLOTS:
     void modified();
     void toggleTabbar();
     void changeDatabase(Database* newDb);
+    void emitActivateDatabaseChanged();
     void destroyCloudDatabaseStub(Database* db);
 
-
 private:
-    void saveDatabaseAs(Database* db);
+    bool saveDatabaseAs(Database* db);
     bool closeDatabase(Database* db);
     void deleteDatabase(Database* db);
     int databaseIndex(Database* db);
@@ -116,6 +108,7 @@ private:
 
     KeePass2Writer m_writer;
     QHash<Database*, DatabaseManagerStruct> m_dbList;
+    DatabaseWidgetStateSync* m_dbWidgetSateSync;
 };
 
 #endif // KEEPASSX_DATABASETABWIDGET_H

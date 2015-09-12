@@ -29,17 +29,20 @@ class SymmetricCipherStream : public LayeredStream
     Q_OBJECT
 
 public:
-    SymmetricCipherStream(QIODevice* baseDevice, SymmetricCipher::Algorithm algo, SymmetricCipher::Mode mode,
-                          SymmetricCipher::Direction direction, const QByteArray& key, const QByteArray& iv);
+    SymmetricCipherStream(QIODevice* baseDevice, SymmetricCipher::Algorithm algo,
+                          SymmetricCipher::Mode mode, SymmetricCipher::Direction direction);
     ~SymmetricCipherStream();
-    bool reset();
-    void close();
+    bool init(const QByteArray& key, const QByteArray& iv);
+    bool open(QIODevice::OpenMode mode) Q_DECL_OVERRIDE;
+    bool reset() Q_DECL_OVERRIDE;
+    void close() Q_DECL_OVERRIDE;
 
 protected:
     qint64 readData(char* data, qint64 maxSize) Q_DECL_OVERRIDE;
     qint64 writeData(const char* data, qint64 maxSize) Q_DECL_OVERRIDE;
 
 private:
+    void resetInternalState();
     bool readBlock();
     bool writeBlock(bool lastBlock);
 
@@ -48,6 +51,8 @@ private:
     int m_bufferPos;
     bool m_bufferFilling;
     bool m_error;
+    bool m_isInitalized;
+    bool m_dataWritten;
 };
 
 #endif // KEEPASSX_SYMMETRICCIPHERSTREAM_H

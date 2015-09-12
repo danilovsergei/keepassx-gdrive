@@ -18,8 +18,8 @@
 #include "DialogyWidget.h"
 
 #include <QDialogButtonBox>
-#include <QPushButton>
 #include <QKeyEvent>
+#include <QPushButton>
 
 DialogyWidget::DialogyWidget(QWidget* parent)
     : QWidget(parent)
@@ -46,7 +46,9 @@ void DialogyWidget::keyPressEvent(QKeyEvent* e)
                 break;
             case Qt::Key_Escape:
                 if (!clickButton(QDialogButtonBox::Cancel)) {
+                    if (!clickButton(QDialogButtonBox::Close)) {
                     e->ignore();
+                }
                 }
                 break;
             default:
@@ -60,10 +62,14 @@ void DialogyWidget::keyPressEvent(QKeyEvent* e)
 
 bool DialogyWidget::clickButton(QDialogButtonBox::StandardButton standardButton)
 {
-    QPushButton* pb = qobject_cast<QPushButton*>(focusWidget());
+    QPushButton* pb;
+
+    if (standardButton == QDialogButtonBox::Ok) {
+        pb = qobject_cast<QPushButton*>(focusWidget());
     if (pb && pb->isVisible() && pb->isEnabled() && pb->hasFocus()) {
         pb->click();
         return true;
+    }
     }
 
     QList<QDialogButtonBox*> buttonBoxes = findChildren<QDialogButtonBox*>();

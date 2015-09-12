@@ -13,16 +13,24 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
-
-
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-find_package(Qt4 REQUIRED QtCore QtNetwork QtGui QtWebKit)
+
 configure_file(config-keepassx.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config-keepassx.h)
 
+include(GetGitRevisionDescription)
+get_git_head_revision(GIT_REFSPEC GIT_HEAD)
+git_describe(GIT_DESCRIBE --long)
+
+if (NOT GIT_HEAD OR NOT GIT_DESCRIBE)
+    set(GIT_HEAD "")
+    set(GIT_DESCRIBE "")
+endif()
+
+configure_file(version.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/version.h @ONLY)
+# configure google drive sync
+# TODO move qtdrive into the separate lib
 add_subdirectory(qtdrive)
 add_subdirectory(remotedrive)
-
 set(GDRIVE_DEPS
     google_drive
 )
@@ -37,7 +45,6 @@ set(keepassx_SOURCES
     autotype/WildcardMatcher.cpp
     autotype/WindowSelectComboBox.cpp
     autotype/test/AutoTypeTestInterface.h
-    core/ArgumentParser.cpp
     core/AutoTypeAssociations.cpp
     core/Config.cpp
     core/Database.cpp
@@ -46,31 +53,33 @@ set(keepassx_SOURCES
     core/Entry.cpp
     core/EntryAttachments.cpp
     core/EntryAttributes.cpp
+    core/EntrySearcher.cpp
     core/FilePath.cpp
     core/Global.h
     core/Group.cpp
+    core/InactivityTimer.cpp
     core/ListDeleter.h
     core/Metadata.cpp
     core/PasswordGenerator.cpp
+    core/qlockfile.cpp
     core/qsavefile.cpp
+    core/qsavefile_p.h
     core/SignalMultiplexer.cpp
     core/TimeDelta.cpp
     core/TimeInfo.cpp
+    core/ToDbExporter.cpp
     core/Tools.cpp
-    core/Uuid.cpp
     core/Translator.cpp
+    core/Uuid.cpp
+    core/qcommandlineoption.cpp
+    core/qcommandlineparser.cpp
     crypto/Crypto.cpp
     crypto/CryptoHash.cpp
     crypto/Random.cpp
-    crypto/salsa20/ecrypt-config.h
-    crypto/salsa20/ecrypt-machine.h
-    crypto/salsa20/ecrypt-portable.h
-    crypto/salsa20/ecrypt-sync.h
-    crypto/salsa20/salsa20.c
     crypto/SymmetricCipher.cpp
     crypto/SymmetricCipherBackend.h
     crypto/SymmetricCipherGcrypt.cpp
-    crypto/SymmetricCipherSalsa20.cpp
+    format/CsvExporter.cpp
     format/KeePass1.h
     format/KeePass1Reader.cpp
     format/KeePass2.h
@@ -87,6 +96,7 @@ set(keepassx_SOURCES
     gui/DatabaseSettingsWidget.cpp
     gui/DatabaseTabWidget.cpp
     gui/DatabaseWidget.cpp
+    gui/DatabaseWidgetStateSync.cpp
     gui/DialogyWidget.cpp
     gui/DragTabBar.cpp
     gui/EditWidget.cpp
@@ -97,13 +107,17 @@ set(keepassx_SOURCES
     gui/KeePass1OpenWidget.cpp
     gui/LineEdit.cpp
     gui/MainWindow.cpp
+    gui/MessageBox.cpp
+    gui/PasswordEdit.cpp
     gui/PasswordGeneratorWidget.cpp
+    gui/PasswordComboBox.cpp
     gui/SettingsWidget.cpp
     gui/SortFilterHideProxyModel.cpp
     gui/UnlockDatabaseWidget.cpp
     gui/WelcomeWidget.cpp
     gui/entry/AutoTypeAssociationsModel.cpp
     gui/entry/EditEntryWidget.cpp
+    gui/entry/EditEntryWidget_p.h
     gui/entry/EntryAttachmentsModel.cpp
     gui/entry/EntryAttributesModel.cpp
     gui/entry/EntryHistoryModel.cpp
@@ -112,8 +126,9 @@ set(keepassx_SOURCES
     gui/group/EditGroupWidget.cpp
     gui/group/GroupModel.cpp
     gui/group/GroupView.cpp
-    gui/PasswordEdit.cpp
+    gui/DatabaseOpenWidgetCloud.cpp
     keys/CompositeKey.cpp
+    keys/CompositeKey_p.h
     keys/FileKey.cpp
     keys/Key.h
     keys/PasswordKey.cpp
@@ -122,7 +137,6 @@ set(keepassx_SOURCES
     streams/qtiocompressor.cpp
     streams/StoreDataStream.cpp
     streams/SymmetricCipherStream.cpp
-    gui/DatabaseOpenWidgetCloud.cpp
 
     remotedrive/CommandsFactory.cpp
     remotedrive/RemoteCommand.cpp
@@ -148,13 +162,36 @@ set(keepassx_SOURCES
     remotedrive/gdrive/QueryEntry.cpp
     remotedrive/gdrive/BaseCommand.cpp
 
-
     remotedrive/gdrive/commands/DownloadCommand.cpp
     remotedrive/gdrive/commands/SyncCommand.cpp
     remotedrive/gdrive/commands/ListCommand.cpp
     remotedrive/gdrive/commands/UploadCommand.cpp
     remotedrive/gdrive/commands/DeleteCommand.cpp
 )
+
+if(NOT GCRYPT_HAS_SALSA20)
+  set(keepassx_SOURCES
+      ${keepassx_SOURCES}
+      crypto/salsa20/ecrypt-config.h
+      crypto/salsa20/ecrypt-machine.h
+      crypto/salsa20/ecrypt-portable.h
+      crypto/salsa20/ecrypt-sync.h
+      crypto/salsa20/salsa20.c
+      crypto/SymmetricCipherSalsa20.cpp
+  )
+endif()
+
+if(UNIX)
+  set(keepassx_SOURCES
+      ${keepassx_SOURCES}
+      core/qlockfile_unix.cpp
+  )
+elseif(MINGW)
+  set(keepassx_SOURCES
+      ${keepassx_SOURCES}
+      core/qlockfile_win.cpp
+)
+endif()
 
 set(keepassx_SOURCES_MAINEXE
     main.cpp
@@ -173,9 +210,9 @@ set(keepassx_MOC
     core/EntryAttachments.h
     core/EntryAttributes.h
     core/Group.h
+    core/InactivityTimer.h
     core/Metadata.h
     core/qsavefile.h
-    core/Translator.h
     gui/AboutDialog.h
     gui/Application.h
     gui/ChangeMasterKeyWidget.h
@@ -184,6 +221,7 @@ set(keepassx_MOC
     gui/DatabaseSettingsWidget.h
     gui/DatabaseTabWidget.h
     gui/DatabaseWidget.h
+    gui/DatabaseWidgetStateSync.h
     gui/DialogyWidget.h
     gui/DragTabBar.h
     gui/EditWidget.h
@@ -193,7 +231,9 @@ set(keepassx_MOC
     gui/KeePass1OpenWidget.h
     gui/LineEdit.h
     gui/MainWindow.h
+    gui/PasswordEdit.h
     gui/PasswordGeneratorWidget.h
+    gui/PasswordComboBox.h
     gui/SettingsWidget.h
     gui/SortFilterHideProxyModel.h
     gui/UnlockDatabaseWidget.h
@@ -208,7 +248,6 @@ set(keepassx_MOC
     gui/group/EditGroupWidget.h
     gui/group/GroupModel.h
     gui/group/GroupView.h
-    gui/PasswordEdit.h
     keys/CompositeKey_p.h
     streams/HashedBlockStream.h
     streams/LayeredStream.h
@@ -225,7 +264,6 @@ set(keepassx_MOC
     remotedrive/SyncObject.h
     remotedrive/RemoteFile.h
     remotedrive/OptionsBuilder.h
-    remotedrive/DatabaseSyncBase.cpp
     remotedrive/DatabaseSyncFactory.h
     remotedrive/GroupsSync.h
     remotedrive/EntriesSync.h
@@ -248,7 +286,6 @@ set(keepassx_MOC
     remotedrive/gdrive/commands/ListCommand.h
     remotedrive/gdrive/commands/UploadCommand.h
     remotedrive/gdrive/commands/DeleteCommand.h
-
 )
 
 set(keepassx_FORMS
@@ -270,7 +307,6 @@ set(keepassx_FORMS
     gui/entry/EditEntryWidgetHistory.ui
     gui/entry/EditEntryWidgetMain.ui
     gui/group/EditGroupWidgetMain.ui
-    gui/DatabaseOpenWidgetCloud.ui
 )
 
 if(MINGW)
@@ -293,10 +329,6 @@ target_link_libraries(${PROGNAME}
                       ${GCRYPT_LIBRARIES}
                       ${ZLIB_LIBRARIES}
                       ${GDRIVE_DEPS})
-
-if(UNIX AND NOT APPLE)
-  target_link_libraries(${PROGNAME} ${QT_QTDBUS_LIBRARY})
-endif()
 
 set_target_properties(${PROGNAME} PROPERTIES ENABLE_EXPORTS ON)
 
@@ -339,4 +371,3 @@ if(MINGW AND NOT (${CMAKE_VERSION} VERSION_LESS 2.8.8))
   include(DeployQt4)
   install_qt4_executable(${PROGNAME}.exe "qjpeg;qgif;qico;qtaccessiblewidgets")
 endif()
-

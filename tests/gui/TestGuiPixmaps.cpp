@@ -17,7 +17,11 @@
 
 #include "TestGuiPixmaps.h"
 
+<<<<<<< HEAD
 #include <QtTest/QTest>
+=======
+#include <QTest>
+>>>>>>> original_2_0_beta
 
 #include "tests.h"
 #include "core/Database.h"
@@ -29,7 +33,7 @@
 
 void TestGuiPixmaps::initTestCase()
 {
-    Crypto::init();
+    QVERIFY(Crypto::init());
 }
 
 void TestGuiPixmaps::testDatabaseIcons()

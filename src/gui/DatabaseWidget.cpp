@@ -18,34 +18,33 @@
 #include "DatabaseWidget.h"
 #include "ui_SearchWidget.h"
 
-#include <QTimer>
 #include <QAction>
 #include <QDesktopServices>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
-#include <QMessageBox>
 #include <QSplitter>
+#include <QTimer>
+#include <QProcess>
 
 #include "autotype/AutoType.h"
+#include "core/Config.h"
+#include "core/EntrySearcher.h"
 #include "core/FilePath.h"
+#include "core/Group.h"
 #include "core/Metadata.h"
 #include "core/Tools.h"
 #include "gui/ChangeMasterKeyWidget.h"
 #include "gui/Clipboard.h"
 #include "gui/DatabaseOpenWidget.h"
-#include "gui/DatabaseOpenWidgetCloud.h"
 #include "gui/DatabaseSettingsWidget.h"
 #include "gui/KeePass1OpenWidget.h"
+#include "gui/MessageBox.h"
 #include "gui/UnlockDatabaseWidget.h"
 #include "gui/entry/EditEntryWidget.h"
 #include "gui/entry/EntryView.h"
 #include "gui/group/EditGroupWidget.h"
 #include "gui/group/GroupView.h"
-#include <QDebug>
-#include "config-keepassx.h"
-Q_DECLARE_METATYPE(Database*)
-Q_DECLARE_METATYPE(QSharedPointer<SyncObject >)
 
 DatabaseWidget::DatabaseWidget(Database* db, QWidget* parent)
     : QStackedWidget(parent)
@@ -55,7 +54,6 @@ DatabaseWidget::DatabaseWidget(Database* db, QWidget* parent)
     , m_newGroup(Q_NULLPTR)
     , m_newEntry(Q_NULLPTR)
     , m_newParent(Q_NULLPTR)
-    , m_tabWidget(parent)
 {
     m_searchUi->setupUi(m_searchWidget);
 
@@ -64,12 +62,13 @@ DatabaseWidget::DatabaseWidget(Database* db, QWidget* parent)
 
     m_mainWidget = new QWidget(this);
     QLayout* layout = new QHBoxLayout(m_mainWidget);
-    QSplitter* splitter = new QSplitter(m_mainWidget);
+    m_splitter = new QSplitter(m_mainWidget);
+    m_splitter->setChildrenCollapsible(false);
 
-    QWidget* rightHandSideWidget = new QWidget(splitter);
+    QWidget* rightHandSideWidget = new QWidget(m_splitter);
     m_searchWidget->setParent(rightHandSideWidget);
 
-    m_groupView = new GroupView(db, splitter);
+    m_groupView = new GroupView(db, m_splitter);
     m_groupView->setObjectName("groupView");
     m_groupView->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(m_groupView, SIGNAL(customContextMenuRequested(QPoint)),
@@ -81,13 +80,6 @@ DatabaseWidget::DatabaseWidget(Database* db, QWidget* parent)
     m_entryView->setGroup(db->rootGroup());
     connect(m_entryView, SIGNAL(customContextMenuRequested(QPoint)),
             SLOT(emitEntryContextMenuRequested(QPoint)));
-    QSizePolicy policy;
-    policy = m_groupView->sizePolicy();
-    policy.setHorizontalStretch(30);
-    m_groupView->setSizePolicy(policy);
-    policy = rightHandSideWidget->sizePolicy();
-    policy.setHorizontalStretch(70);
-    rightHandSideWidget->setSizePolicy(policy);
 
     QAction* closeAction = new QAction(m_searchWidget);
     QIcon closeIcon = filePath()->icon("actions", "dialog-close");
@@ -104,44 +96,38 @@ DatabaseWidget::DatabaseWidget(Database* db, QWidget* parent)
 
     rightHandSideWidget->setLayout(vLayout);
 
-    splitter->addWidget(m_groupView);
-    splitter->addWidget(rightHandSideWidget);
+    setTabOrder(m_searchUi->searchRootRadioButton, m_entryView);
+    setTabOrder(m_entryView, m_groupView);
+    setTabOrder(m_groupView, m_searchWidget);
 
-    layout->addWidget(splitter);
+    m_splitter->addWidget(m_groupView);
+    m_splitter->addWidget(rightHandSideWidget);
 
+    m_splitter->setStretchFactor(0, 30);
+    m_splitter->setStretchFactor(1, 70);
+
+    layout->addWidget(m_splitter);
     m_mainWidget->setLayout(layout);
 
     m_editEntryWidget = new EditEntryWidget();
     m_editEntryWidget->setObjectName("editEntryWidget");
-
     m_historyEditEntryWidget = new EditEntryWidget();
-
     m_editGroupWidget = new EditGroupWidget();
     m_editGroupWidget->setObjectName("editGroupWidget");
-
     m_changeMasterKeyWidget = new ChangeMasterKeyWidget();
     m_changeMasterKeyWidget->headlineLabel()->setText(tr("Change master key"));
     QFont headlineLabelFont = m_changeMasterKeyWidget->headlineLabel()->font();
     headlineLabelFont.setBold(true);
     headlineLabelFont.setPointSize(headlineLabelFont.pointSize() + 2);
     m_changeMasterKeyWidget->headlineLabel()->setFont(headlineLabelFont);
-
-    m_databaseOpenWidgetCloud= new DatabaseOpenWidgetCloud();
-    m_databaseOpenWidgetCloud->headlineLabel()->setText(tr("Open cloud database"));
-    m_databaseOpenWidgetCloud->headlineLabel()->setFont(headlineLabelFont);
-
     m_databaseSettingsWidget = new DatabaseSettingsWidget();
     m_databaseSettingsWidget->setObjectName("databaseSettingsWidget");
-
     m_databaseOpenWidget = new DatabaseOpenWidget();
     m_databaseOpenWidget->setObjectName("databaseOpenWidget");
-
     m_keepass1OpenWidget = new KeePass1OpenWidget();
     m_keepass1OpenWidget->setObjectName("keepass1OpenWidget");
-
     m_unlockDatabaseWidget = new UnlockDatabaseWidget();
     m_unlockDatabaseWidget->setObjectName("unlockDatabaseWidget");
-
     addWidget(m_mainWidget);
     addWidget(m_editEntryWidget);
     addWidget(m_editGroupWidget);
@@ -151,8 +137,9 @@ DatabaseWidget::DatabaseWidget(Database* db, QWidget* parent)
     addWidget(m_databaseOpenWidget);
     addWidget(m_keepass1OpenWidget);
     addWidget(m_unlockDatabaseWidget);
-    addWidget(m_databaseOpenWidgetCloud);
 
+    connect(m_splitter, SIGNAL(splitterMoved(int,int)), SIGNAL(splitterSizesChanged()));
+    connect(m_entryView->header(), SIGNAL(sectionResized(int,int,int)), SIGNAL(entryColumnSizesChanged()));
     connect(m_groupView, SIGNAL(groupChanged(Group*)), this, SLOT(clearLastGroup(Group*)));
     connect(m_groupView, SIGNAL(groupChanged(Group*)), SIGNAL(groupChanged()));
     connect(m_groupView, SIGNAL(groupChanged(Group*)), m_entryView, SLOT(setGroup(Group*)));
@@ -167,64 +154,24 @@ DatabaseWidget::DatabaseWidget(Database* db, QWidget* parent)
     connect(m_databaseSettingsWidget, SIGNAL(editFinished(bool)), SLOT(switchToView(bool)));
     connect(m_databaseOpenWidget, SIGNAL(editFinished(bool)), SLOT(openDatabase(bool)));
     connect(m_keepass1OpenWidget, SIGNAL(editFinished(bool)), SLOT(openDatabase(bool)));
-    connect(m_databaseOpenWidgetCloud, SIGNAL(dbRejected()),SLOT(rejectDb()));
-    connect(m_databaseOpenWidgetCloud,SIGNAL(dbSelected(QString)),this,SLOT(cloudDbOpen(QString)));
     connect(m_unlockDatabaseWidget, SIGNAL(editFinished(bool)), SLOT(unlockDatabase(bool)));
     connect(this, SIGNAL(currentChanged(int)), this, SLOT(emitCurrentModeChanged()));
     connect(m_searchUi->searchEdit, SIGNAL(textChanged(QString)), this, SLOT(startSearchTimer()));
     connect(m_searchUi->caseSensitiveCheckBox, SIGNAL(toggled(bool)), this, SLOT(startSearch()));
     connect(m_searchUi->searchCurrentRadioButton, SIGNAL(toggled(bool)), this, SLOT(startSearch()));
     connect(m_searchUi->searchRootRadioButton, SIGNAL(toggled(bool)), this, SLOT(startSearch()));
+    connect(m_searchUi->searchEdit, SIGNAL(returnPressed()), m_entryView, SLOT(setFocus()));
     connect(m_searchTimer, SIGNAL(timeout()), this, SLOT(search()));
     connect(closeAction, SIGNAL(triggered()), this, SLOT(closeSearch()));
-    // TODO find better way to check whether cmake google drive is enabled
-    if (QString(GOOGLE_DRIVE_SYNC) == "ON") {
-        // initialize credentials in gui thread because it could contain UI pages
-        // to let user approve access to accounts like GMAIL
-        AuthCredentials* creds = new GoogleDriveCredentials(this);
-        CommandsFactory* commandsFactory = new CommandsFactoryImpl(this,creds);
-        // remote drive will be used to call all remote drive functions like sync , upload, download
-        remoteDrive = new RemoteDriveApi(this,commandsFactory);
-        syncCommand = remoteDrive->sync();
-        uploadCommand  = remoteDrive->upload();
-         syncCloudDir = config()->get(RemoteDrive::CONFIG_KEEPASS_REMOTE_FOLDER).toString();
-        // update last db last modification time to use it for sync with remote database
-        connect(m_editEntryWidget, SIGNAL(editFinished(bool)), SLOT(setLastModified(bool)));
-        connect(m_editGroupWidget, SIGNAL(editFinished(bool)), SLOT(setLastModified(bool)));
-        connect(syncCommand.data(), SIGNAL(finished()),      this, SLOT(syncDone()));
-        connect(this, SIGNAL(databaseSaved(Database*, QString)), this, SLOT(saveDatabaseToCloud(Database*, QString)));
-        connect(this, SIGNAL(requestSaveDatabase(Database*, bool)), m_tabWidget, SLOT(saveDatabase(Database*, bool)));
-    }
+
     setCurrentWidget(m_mainWidget);
-}
-
-/**
- * @brief DatabaseWidget::cloudDbOpen  emits a signal
- *  that db from the cloud was open by databaseOpenWidgetCloud
- * @param dbPath
- */
-void DatabaseWidget::cloudDbOpen(QString dbPath) {
-Q_ASSERT(!dbPath.isNull() && !dbPath.isEmpty());
-qDebug() <<"DB was selected and passed to a slot::"+dbPath;
-//Pass path to the downloaded database and key to dbStruct array to get this struct from another widget
-Q_EMIT cloudDbSelected(dbPath,m_db);
-
-}
-
-/**
- * @brief DatabaseWidget::rejectDb emits a signal when user cancelled cloud db open  dialog
- */
-void DatabaseWidget::rejectDb() {
-    qDebug() << "Emitting cloudDbRejected";
-    Q_EMIT cloudDbRejected(m_db);
-
 }
 
 DatabaseWidget::~DatabaseWidget()
 {
 }
 
-DatabaseWidget::Mode DatabaseWidget::currentMode()
+DatabaseWidget::Mode DatabaseWidget::currentMode() const
 {
     if (currentWidget() == Q_NULLPTR) {
         return DatabaseWidget::None;
@@ -240,19 +187,54 @@ DatabaseWidget::Mode DatabaseWidget::currentMode()
     }
 }
 
+bool DatabaseWidget::isInEditMode() const
+{
+    return currentMode() == DatabaseWidget::EditMode;
+}
+
+QList<int> DatabaseWidget::splitterSizes() const
+{
+    return m_splitter->sizes();
+}
+
+void DatabaseWidget::setSplitterSizes(const QList<int>& sizes)
+{
+    m_splitter->setSizes(sizes);
+}
+
+QList<int> DatabaseWidget::entryHeaderViewSizes() const
+{
+    QList<int> sizes;
+
+    for (int i = 0; i < m_entryView->header()->count(); i++) {
+        sizes.append(m_entryView->header()->sectionSize(i));
+    }
+
+    return sizes;
+}
+
+void DatabaseWidget::setEntryViewHeaderSizes(const QList<int>& sizes)
+{
+    if (sizes.size() != m_entryView->header()->count()) {
+        Q_ASSERT(false);
+        return;
+    }
+
+    for (int i = 0; i < sizes.size(); i++) {
+        m_entryView->header()->resizeSection(i, sizes[i]);
+    }
+}
+
+void DatabaseWidget::clearAllWidgets()
+{
+    m_editEntryWidget->clear();
+    m_historyEditEntryWidget->clear();
+    m_editGroupWidget->clear();
+}
+
 void DatabaseWidget::emitCurrentModeChanged()
 {
     Q_EMIT currentModeChanged(currentMode());
-}
-
-GroupView* DatabaseWidget::groupView()
-{
-    return m_groupView;
-}
-
-EntryView* DatabaseWidget::entryView()
-{
-    return m_entryView;
 }
 
 Database* DatabaseWidget::database()
@@ -271,7 +253,35 @@ void DatabaseWidget::createEntry()
     m_newEntry->setUuid(Uuid::random());
     m_newEntry->setUsername(m_db->metadata()->defaultUserName());
     m_newParent = m_groupView->currentGroup();
+    setIconFromParent();
     switchToEntryEdit(m_newEntry, true);
+}
+
+void DatabaseWidget::setIconFromParent()
+{
+    if (!config()->get("UseGroupIconOnEntryCreation").toBool()) {
+        return;
+    }
+
+    if (m_newParent->iconNumber() == Group::DefaultIconNumber && m_newParent->iconUuid().isNull()) {
+        return;
+    }
+
+    if (m_newParent->iconUuid().isNull()) {
+        m_newEntry->setIcon(m_newParent->iconNumber());
+    }
+    else {
+        m_newEntry->setIcon(m_newParent->iconUuid());
+    }
+}
+
+void DatabaseWidget::replaceDatabase(Database* db)
+{
+    Database* oldDb = m_db;
+    m_db = db;
+    m_groupView->changeDatabase(m_db);
+    Q_EMIT databaseChanged(m_db);
+    delete oldDb;
 }
 
 void DatabaseWidget::cloneEntry()
@@ -282,13 +292,70 @@ void DatabaseWidget::cloneEntry()
         return;
     }
 
-    Entry* entry = currentEntry->clone();
+    Entry* entry = currentEntry->clone(Entry::CloneNewUuid | Entry::CloneResetTimeInfo);
     entry->setGroup(currentEntry->group());
     m_entryView->setFocus();
     m_entryView->setCurrentEntry(entry);
 }
 
-void DatabaseWidget::deleteEntry()
+void DatabaseWidget::deleteEntries()
+{
+    const QModelIndexList selected = m_entryView->selectionModel()->selectedRows();
+
+    if (selected.isEmpty()) {
+        Q_ASSERT(false);
+        return;
+    }
+
+    // get all entry pointers as the indexes change when removing multiple entries
+    QList<Entry*> selectedEntries;
+    Q_FOREACH (const QModelIndex& index, selected) {
+        selectedEntries.append(m_entryView->entryFromIndex(index));
+    }
+
+    bool inRecylceBin = Tools::hasChild(m_db->metadata()->recycleBin(), selectedEntries.first());
+    if (inRecylceBin || !m_db->metadata()->recycleBinEnabled()) {
+        QMessageBox::StandardButton result;
+
+        if (selected.size() == 1) {
+            result = MessageBox::question(
+            this, tr("Delete entry?"),
+            tr("Do you really want to delete the entry \"%1\" for good?")
+                .arg(selectedEntries.first()->title()),
+            QMessageBox::Yes | QMessageBox::No);
+        }
+        else {
+            result = MessageBox::question(
+                this, tr("Delete entries?"),
+                tr("Do you really want to delete %1 entries for good?")
+                .arg(selected.size()),
+                QMessageBox::Yes | QMessageBox::No);
+        }
+
+        if (result == QMessageBox::Yes) {
+            Q_FOREACH (Entry* entry, selectedEntries) {
+                delete entry;
+        }
+    }
+    }
+    else {
+        if (selected.size() > 1) {
+            QMessageBox::StandardButton result = MessageBox::question(
+                this, tr("Move entries to recycle bin?"),
+                tr("Do you really want to move %n entry(s) to the recycle bin?", 0, selected.size()),
+                QMessageBox::Yes | QMessageBox::No);
+            if (result == QMessageBox::No) {
+                return;
+            }
+        }
+
+        Q_FOREACH (Entry* entry, selectedEntries) {
+            m_db->recycleEntry(entry);
+        }
+    }
+}
+
+void DatabaseWidget::copyTitle()
 {
     Entry* currentEntry = m_entryView->currentEntry();
     if (!currentEntry) {
@@ -296,20 +363,7 @@ void DatabaseWidget::deleteEntry()
         return;
     }
 
-    bool inRecylceBin = Tools::hasChild(m_db->metadata()->recycleBin(), currentEntry);
-    if (inRecylceBin || !m_db->metadata()->recycleBinEnabled()) {
-        QMessageBox::StandardButton result = QMessageBox::question(
-            this, tr("Delete entry?"),
-            tr("Do you really want to delete the entry \"%1\" for good?")
-            .arg(currentEntry->title()),
-            QMessageBox::Yes | QMessageBox::No);
-        if (result == QMessageBox::Yes) {
-            delete currentEntry;
-        }
-    }
-    else {
-        m_db->recycleEntry(currentEntry);
-    }
+    setClipboardTextAndMinimize(currentEntry->title());
 }
 
 void DatabaseWidget::copyUsername()
@@ -320,7 +374,7 @@ void DatabaseWidget::copyUsername()
         return;
     }
 
-    clipboard()->setText(currentEntry->username());
+    setClipboardTextAndMinimize(currentEntry->username());
 }
 
 void DatabaseWidget::copyPassword()
@@ -331,7 +385,29 @@ void DatabaseWidget::copyPassword()
         return;
     }
 
-    clipboard()->setText(currentEntry->password());
+    setClipboardTextAndMinimize(currentEntry->password());
+}
+
+void DatabaseWidget::copyURL()
+{
+    Entry* currentEntry = m_entryView->currentEntry();
+    if (!currentEntry) {
+        Q_ASSERT(false);
+        return;
+    }
+
+    setClipboardTextAndMinimize(currentEntry->url());
+}
+
+void DatabaseWidget::copyNotes()
+{
+    Entry* currentEntry = m_entryView->currentEntry();
+    if (!currentEntry) {
+        Q_ASSERT(false);
+        return;
+    }
+
+    setClipboardTextAndMinimize(currentEntry->notes());
 }
 
 void DatabaseWidget::copyAttribute(QAction* action)
@@ -342,7 +418,15 @@ void DatabaseWidget::copyAttribute(QAction* action)
         return;
     }
 
-    clipboard()->setText(currentEntry->attributes()->value(action->text()));
+    setClipboardTextAndMinimize(currentEntry->attributes()->value(action->text()));
+}
+
+void DatabaseWidget::setClipboardTextAndMinimize(const QString& text)
+{
+    clipboard()->setText(text);
+    if (config()->get("MinimizeOnCopy").toBool()) {
+        window()->showMinimized();
+    }
 }
 
 void DatabaseWidget::performAutoType()
@@ -369,8 +453,19 @@ void DatabaseWidget::openUrl()
 
 void DatabaseWidget::openUrlForEntry(Entry* entry)
 {
-    if (!entry->url().isEmpty()) {
-        QDesktopServices::openUrl(entry->url());
+    QString urlString = entry->resolvePlaceholders(entry->url());
+    if (urlString.isEmpty()) {
+        return;
+    }
+
+    if (urlString.startsWith("cmd://")) {
+        if (urlString.length() > 6) {
+            QProcess::startDetached(urlString.mid(6));
+    }
+}
+    else {
+        QUrl url = QUrl::fromUserInput(urlString);
+        QDesktopServices::openUrl(url);
     }
 }
 
@@ -390,14 +485,14 @@ void DatabaseWidget::createGroup()
 void DatabaseWidget::deleteGroup()
 {
     Group* currentGroup = m_groupView->currentGroup();
-    if (!currentGroup || !canDeleteCurrentGoup()) {
+    if (!currentGroup || !canDeleteCurrentGroup()) {
         Q_ASSERT(false);
         return;
     }
 
     bool inRecylceBin = Tools::hasChild(m_db->metadata()->recycleBin(), currentGroup);
     if (inRecylceBin || !m_db->metadata()->recycleBinEnabled()) {
-        QMessageBox::StandardButton result = QMessageBox::question(
+        QMessageBox::StandardButton result = MessageBox::question(
             this, tr("Delete group?"),
             tr("Do you really want to delete the group \"%1\" for good?")
             .arg(currentGroup->name()),
@@ -516,8 +611,13 @@ void DatabaseWidget::updateMasterKey(bool accepted)
 {
     if (accepted) {
         QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
-        m_db->setKey(m_changeMasterKeyWidget->newMasterKey());
+        bool result = m_db->setKey(m_changeMasterKeyWidget->newMasterKey());
         QApplication::restoreOverrideCursor();
+
+        if (!result) {
+            MessageBox::critical(this, tr("Error"), tr("Unable to calculate master key"));
+            return;
+        }
     }
     else if (!m_db->hasKey()) {
         Q_EMIT closeRequest();
@@ -527,66 +627,23 @@ void DatabaseWidget::updateMasterKey(bool accepted)
     setCurrentWidget(m_mainWidget);
 }
 
-/**
- * @brief DatabaseWidget::syncDatabase performs sync of the currently open database with database in the cloud
- * local database file will be updated as well to prevent loosing changes
- */
-void DatabaseWidget::syncDatabase() {
-    // Perfom asyncronous sync of recent database with remote database if
-    // GOOGLE_DRIVE_SYNC feature enabled through CMAKE
-    if (QString(GOOGLE_DRIVE_SYNC) != "ON") return;
-      // write general method to run commands in thread
-      syncCommand->executeAsync(OptionsBuilder().addOption(OPTION_DB_POINTER,m_db).addOption(OPTION_ABSOLUTE_DB_NAME,m_filename).build());
-      //Changes will be applied to the already opened database
-      //typically it will take 1-2 seconds while user will browse to an item
-      //TODO prevent or warn user copy the value if database is still in sync
-}
-
-/**
- * @brief DatabaseWidget::emitDatabaseSaved emits a signal database was saved.
- * Used to connect saveDatabase in DatabaseTabWidget with connected slots in DatabaseWidget
- * @param db database which was saved
- * @param filePath path to the local database file
- * @param saveToCloud should signal trigger saving to the cloud.
- *   In such cases when local databases saved locally after sync with newer remote database
- *   we don't need to save it again remotely
- */
-void DatabaseWidget::emitDatabaseSaved(Database *db, const QString filePath) {
-    Q_EMIT databaseSaved(db, filePath);
-}
-
-/**
- * @brief DatabaseWidget::saveDatabaseToCloud - uploads current version of the database to the selected cloud
- * @param db - database which will be loaded to cloud
- */
-void DatabaseWidget::saveDatabaseToCloud(Database *db, const QString filePath)
-{
-  // Perfom asyncronous upload of the local database to the cloud
-  // GOOGLE_DRIVE_SYNC feature enabled through CMAKE
-  if (QString(GOOGLE_DRIVE_SYNC) != "ON") return;
-  uploadCommand->executeAsync(OptionsBuilder().addOption(OPTION_ABSOLUTE_DB_NAME,
-                                                       filePath).addOption(
-                              OPTION_LAST_MODIFIED_TIME,
-                              db->metadata()->
-                              lastModifiedDate()).addOption(OPTION_PARENT_NAME, syncCloudDir).build());
-}
-
-/**
- * @brief DatabaseWidget::openDatabase loads db view to the current widget
- * after user entered correct credentials on DatabaseOpenWidget
- * @param accepted
- */
 void DatabaseWidget::openDatabase(bool accepted)
 {
     if (accepted) {
-        m_db = static_cast<DatabaseOpenWidget*>(sender())->database();
-        // save the time when initial db opened
+        replaceDatabase(static_cast<DatabaseOpenWidget*>(sender())->database());
+        setCurrentWidget(m_mainWidget);
+
+         // save the time when initial db opened
         // will update it each time when database in memory changed and use to decide where to run sync
         m_db->metadata()->setLastModifiedDate(QFileInfo(m_filename).lastModified());
         syncDatabase();
-        m_groupView->changeDatabase(m_db);
-        Q_EMIT databaseChanged(m_db);
-        setCurrentWidget(m_mainWidget);
+
+        // We won't need those anymore and KeePass1OpenWidget closes
+        // the file in its dtor.
+        delete m_databaseOpenWidget;
+        m_databaseOpenWidget = Q_NULLPTR;
+        delete m_keepass1OpenWidget;
+        m_keepass1OpenWidget = Q_NULLPTR;
     }
     else {
         if (m_databaseOpenWidget->database()) {
@@ -598,11 +655,24 @@ void DatabaseWidget::openDatabase(bool accepted)
 
 void DatabaseWidget::unlockDatabase(bool accepted)
 {
-    // cancel button is disabled
-    Q_ASSERT(accepted);
-    Q_UNUSED(accepted);
+    if (!accepted) {
+        Q_EMIT closeRequest();
+        return;
+    }
 
-    setCurrentWidget(widgetBeforeLock);
+    replaceDatabase(static_cast<DatabaseOpenWidget*>(sender())->database());
+
+    QList<Group*> groups = m_db->rootGroup()->groupsRecursive(true);
+    Q_FOREACH (Group* group, groups) {
+        if (group->uuid() == m_groupBeforeLock) {
+            m_groupView->setCurrentGroup(group);
+            break;
+        }
+    }
+
+    m_groupBeforeLock = Uuid();
+    setCurrentWidget(m_mainWidget);
+    m_unlockDatabaseWidget->clearForms();
     Q_EMIT unlockedDatabase();
 }
 
@@ -618,12 +688,24 @@ void DatabaseWidget::entryActivationSignalReceived(Entry* entry, EntryModel::Mod
 
 void DatabaseWidget::switchToEntryEdit()
 {
-    switchToEntryEdit(m_entryView->currentEntry(), false);
+    Entry* entry = m_entryView->currentEntry();
+    Q_ASSERT(entry);
+    if (!entry) {
+        return;
+}
+
+    switchToEntryEdit(entry, false);
 }
 
 void DatabaseWidget::switchToGroupEdit()
 {
-    switchToGroupEdit(m_groupView->currentGroup(), false);
+    Group* group = m_groupView->currentGroup();
+    Q_ASSERT(group);
+    if (!group) {
+        return;
+    }
+
+    switchToGroupEdit(group, false);
 }
 
 void DatabaseWidget::switchToMasterKeyChange()
@@ -632,20 +714,12 @@ void DatabaseWidget::switchToMasterKeyChange()
     setCurrentWidget(m_changeMasterKeyWidget);
 }
 
-/**
- * @brief DatabaseWidget::switchToCloudDbOpen switches current widget to the databaseOpenWidgetCloud
- */
-void DatabaseWidget::switchToCloudDbOpen()
-{
-    m_databaseOpenWidgetCloud->loadSupportedCloudEngines();
-    setCurrentWidget(m_databaseOpenWidgetCloud);
-}
-
 void DatabaseWidget::switchToDatabaseSettings()
 {
     m_databaseSettingsWidget->load(m_db);
     setCurrentWidget(m_databaseSettingsWidget);
 }
+
 /**
  * @brief DatabaseWidget::switchToOpenDatabase passes control to databaseOpenWidget
  * Used by DatabaseOpenWidgetCloud
@@ -673,10 +747,16 @@ void DatabaseWidget::switchToImportKeepass1(const QString& fileName)
     setCurrentWidget(m_keepass1OpenWidget);
 }
 
-void DatabaseWidget::toggleSearch()
+void DatabaseWidget::openSearch()
 {
-    if (m_entryView->inEntryListMode()) {
-        closeSearch();
+    if (isInSearchMode()) {
+        m_searchUi->searchEdit->selectAll();
+
+        if (!m_searchUi->searchEdit->hasFocus()) {
+            m_searchUi->searchEdit->setFocus();
+            // make sure the search action is checked again
+            emitCurrentModeChanged();
+        }
     }
     else {
         showSearch();
@@ -686,11 +766,19 @@ void DatabaseWidget::toggleSearch()
 void DatabaseWidget::closeSearch()
 {
     Q_ASSERT(m_lastGroup);
+
+    Q_EMIT listModeAboutToActivate();
+
     m_groupView->setCurrentGroup(m_lastGroup);
+    m_searchTimer->stop();
+
+    Q_EMIT listModeActivated();
 }
 
 void DatabaseWidget::showSearch()
 {
+    Q_EMIT searchModeAboutToActivate();
+
     m_searchUi->searchEdit->blockSignals(true);
     m_searchUi->searchEdit->clear();
     m_searchUi->searchEdit->blockSignals(false);
@@ -724,6 +812,8 @@ void DatabaseWidget::showSearch()
     m_searchWidget->show();
     search();
     m_searchUi->searchEdit->setFocus();
+
+    Q_EMIT searchModeActivated();
 }
 
 void DatabaseWidget::search()
@@ -749,8 +839,8 @@ void DatabaseWidget::search()
     else {
         sensitivity = Qt::CaseInsensitive;
     }
-    QList<Entry*> searchResult = searchGroup->search(m_searchUi->searchEdit->text(), sensitivity);
 
+    QList<Entry*> searchResult = EntrySearcher().search(m_searchUi->searchEdit->text(), searchGroup, sensitivity);
 
     m_entryView->setEntryList(searchResult);
 }
@@ -781,19 +871,19 @@ void DatabaseWidget::emitEntryContextMenuRequested(const QPoint& pos)
     Q_EMIT entryContextMenuRequested(m_entryView->viewport()->mapToGlobal(pos));
 }
 
-bool DatabaseWidget::dbHasKey()
+bool DatabaseWidget::dbHasKey() const
 {
     return m_db->hasKey();
 }
 
-bool DatabaseWidget::canDeleteCurrentGoup()
+bool DatabaseWidget::canDeleteCurrentGroup() const
 {
     bool isRootGroup = m_db->rootGroup() == m_groupView->currentGroup();
     bool isRecycleBin = m_db->metadata()->recycleBin() == m_groupView->currentGroup();
     return !isRootGroup && !isRecycleBin;
 }
 
-bool DatabaseWidget::isInSearchMode()
+bool DatabaseWidget::isInSearchMode() const
 {
     return m_entryView->inEntryListMode();
 }
@@ -809,10 +899,23 @@ void DatabaseWidget::clearLastGroup(Group* group)
 void DatabaseWidget::lock()
 {
     Q_ASSERT(currentMode() != DatabaseWidget::LockedMode);
+    if (isInSearchMode()) {
+        closeSearch();
+    }
 
-    widgetBeforeLock = currentWidget();
-    m_unlockDatabaseWidget->load(m_filename, m_db);
+    if (m_groupView->currentGroup()) {
+        m_groupBeforeLock = m_groupView->currentGroup()->uuid();
+    }
+    else {
+        m_groupBeforeLock = m_db->rootGroup()->uuid();
+    }
+
+    clearAllWidgets();
+    m_unlockDatabaseWidget->load(m_filename);
     setCurrentWidget(m_unlockDatabaseWidget);
+    Database* newDb = new Database();
+    newDb->metadata()->setName(m_db->metadata()->name());
+    replaceDatabase(newDb);
 }
 
 void DatabaseWidget::updateFilename(const QString& fileName)
@@ -820,6 +923,74 @@ void DatabaseWidget::updateFilename(const QString& fileName)
     m_filename = fileName;
 }
 
+int DatabaseWidget::numberOfSelectedEntries() const
+{
+    return m_entryView->numberOfSelectedEntries();
+}
+
+QStringList DatabaseWidget::customEntryAttributes() const
+{
+    Entry* entry = m_entryView->currentEntry();
+    if (!entry) {
+        return QStringList();
+   }
+    return entry->attributes()->customKeys();
+}
+
+bool DatabaseWidget::isGroupSelected() const
+{
+    return m_groupView->currentGroup() != Q_NULLPTR;
+  }
+
+bool DatabaseWidget::currentEntryHasTitle()
+{
+    Entry* currentEntry = m_entryView->currentEntry();
+    if (!currentEntry) {
+        Q_ASSERT(false);
+        return false;
+  }
+    return !currentEntry->title().isEmpty();
+  }
+
+bool DatabaseWidget::currentEntryHasUsername()
+{
+    Entry* currentEntry = m_entryView->currentEntry();
+    if (!currentEntry) {
+        Q_ASSERT(false);
+        return false;
+}
+    return !currentEntry->username().isEmpty();
+}
+
+bool DatabaseWidget::currentEntryHasPassword()
+{
+    Entry* currentEntry = m_entryView->currentEntry();
+    if (!currentEntry) {
+        Q_ASSERT(false);
+        return false;
+}
+    return !currentEntry->password().isEmpty();
+}
+
+bool DatabaseWidget::currentEntryHasUrl()
+{
+    Entry* currentEntry = m_entryView->currentEntry();
+    if (!currentEntry) {
+        Q_ASSERT(false);
+        return false;
+    }
+    return !currentEntry->url().isEmpty();
+}
+
+bool DatabaseWidget::currentEntryHasNotes()
+{
+    Entry* currentEntry = m_entryView->currentEntry();
+    if (!currentEntry) {
+        Q_ASSERT(false);
+        return false;
+    }
+    return !currentEntry->notes().isEmpty();
+}
 
 /**
  * @brief DatabaseWidget::syncDone executed when database sync finished
@@ -890,7 +1061,7 @@ void DatabaseWidget::setLastModified(bool accepted) {
   accepted?m_db->metadata()->setLastModifiedDate(QDateTime::currentDateTime()): void();
 }
 
-
 //void DatabaseWidget::showSyncLoginPage(QWebView* view) {
 //view->show();
 //}
+

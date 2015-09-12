@@ -1,2 +1,6 @@
 CMakeLists.txt.*
+<<<<<<< HEAD
 tests/testDebug.cpp
+=======
+build/
+>>>>>>> original_2_0_beta

@@ -18,17 +18,16 @@
 #ifndef KEEPASSX_KEEPASS2XMLWRITER_H
 #define KEEPASSX_KEEPASS2XMLWRITER_H
 
-#include <QDateTime>
-#include <QXmlStreamWriter>
 #include <QColor>
+#include <QDateTime>
 #include <QImage>
+#include <QXmlStreamWriter>
 
 #include "core/Database.h"
 #include "core/Entry.h"
 #include "core/Group.h"
 #include "core/TimeInfo.h"
 #include "core/Uuid.h"
-#include <QCryptographicHash>
 
 class KeePass2RandomStream;
 class Metadata;
@@ -40,7 +39,7 @@ public:
     void writeDatabase(QIODevice* device, Database* db, KeePass2RandomStream* randomStream = Q_NULLPTR,
                        const QByteArray& headerHash = QByteArray());
     void writeDatabase(const QString& filename, Database* db);
-    bool error();
+    bool hasError();
     QString errorString();
 
 private:
@@ -75,12 +74,16 @@ private:
     void writeTriState(const QString& qualifiedName, Group::TriState triState);
     QString colorPartToString(int value);
 
+    void raiseError(const QString& errorMessage);
+
     QXmlStreamWriter m_xml;
     Database* m_db;
     Metadata* m_meta;
     KeePass2RandomStream* m_randomStream;
     QByteArray m_headerHash;
     QHash<QByteArray, int> m_idMap;
+    bool m_error;
+    QString m_errorStr;
 };
 
 #endif // KEEPASSX_KEEPASS2XMLWRITER_H

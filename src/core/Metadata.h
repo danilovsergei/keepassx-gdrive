@@ -18,11 +18,11 @@
 #ifndef KEEPASSX_METADATA_H
 #define KEEPASSX_METADATA_H
 
+#include <QColor>
 #include <QDateTime>
 #include <QHash>
-#include <QPointer>
-#include <QColor>
 #include <QImage>
+#include <QPointer>
 
 #include "core/Global.h"
 #include "core/Uuid.h"
@@ -37,6 +37,31 @@ class Metadata : public QObject
 public:
     explicit Metadata(QObject* parent = Q_NULLPTR);
 
+    struct MetadataData
+    {
+        QString generator;
+        QString name;
+        QDateTime nameChanged;
+        QString description;
+        QDateTime descriptionChanged;
+        QString defaultUserName;
+        QDateTime defaultUserNameChanged;
+        int maintenanceHistoryDays;
+        QColor color;
+        bool recycleBinEnabled;
+        int historyMaxItems;
+        int historyMaxSize;
+        int masterKeyChangeRec;
+        int masterKeyChangeForce;
+
+        bool protectTitle;
+        bool protectUsername;
+        bool protectPassword;
+        bool protectUrl;
+        bool protectNotes;
+        // bool autoEnableVisualHiding;
+    };
+
     QString generator() const;
     QString name() const;
     QDateTime nameChanged() const;
@@ -44,7 +69,6 @@ public:
     QDateTime descriptionChanged() const;
     QString defaultUserName() const;
     QDateTime defaultUserNameChanged() const;
-    QDateTime lastModifiedDate() const;
     int maintenanceHistoryDays() const;
     QColor color() const;
     bool protectTitle() const;
@@ -82,8 +106,6 @@ public:
     void setDescriptionChanged(const QDateTime& value);
     void setDefaultUserName(const QString& value);
     void setDefaultUserNameChanged(const QDateTime& value);
-    void setLastModifiedDate(const QDateTime& value);
-    void setUpdateLastModifiedDate(bool value);
     void setMaintenanceHistoryDays(int value);
     void setColor(const QColor& value);
     void setProtectTitle(bool value);
@@ -93,6 +115,7 @@ public:
     void setProtectNotes(bool value);
     // void setAutoEnableVisualHiding(bool value);
     void addCustomIcon(const Uuid& uuid, const QImage& icon);
+    void addCustomIconScaled(const Uuid& uuid, const QImage& icon);
     void removeCustomIcon(const Uuid& uuid);
     void copyCustomIcons(const QSet<Uuid>& iconList, const Metadata* otherMetadata);
     void setRecycleBinEnabled(bool value);
@@ -110,6 +133,14 @@ public:
     void addCustomField(const QString& key, const QString& value);
     void removeCustomField(const QString& key);
     void setUpdateDatetime(bool value);
+    /*
+     * Copy all attributes from other except:
+     * - Group pointers/uuids
+     * - Master key changed date
+     * - Custom icons
+     * - Custom fields
+     */
+    void copyAttributesFrom(const Metadata* other);
 
 Q_SIGNALS:
     void nameTextChanged();
@@ -119,30 +150,11 @@ private:
     template <class P, class V> bool set(P& property, const V& value);
     template <class P, class V> bool set(P& property, const V& value, QDateTime& dateTime);
 
-    QString m_generator;
-    QString m_name;
-    QDateTime m_nameChanged;
-    QString m_description;
-    QDateTime m_descriptionChanged;
-    QString m_defaultUserName;
-    QDateTime m_defaultUserNameChanged;
-    int m_maintenanceHistoryDays;
-    QColor m_color;
-    //last modification time of the database
-    QDateTime m_lastModified;
-    bool m_update_lastModified = true;
-
-    bool m_protectTitle;
-    bool m_protectUsername;
-    bool m_protectPassword;
-    bool m_protectUrl;
-    bool m_protectNotes;
-    // bool m_autoEnableVisualHiding;
+    MetadataData m_data;
 
     QHash<Uuid, QImage> m_customIcons;
     QList<Uuid> m_customIconsOrder;
 
-    bool m_recycleBinEnabled;
     QPointer<Group> m_recycleBin;
     QDateTime m_recycleBinChanged;
     QPointer<Group> m_entryTemplatesGroup;
@@ -151,10 +163,11 @@ private:
     QPointer<Group> m_lastTopVisibleGroup;
 
     QDateTime m_masterKeyChanged;
-    int m_masterKeyChangeRec;
-    int m_masterKeyChangeForce;
-    int m_historyMaxItems;
-    int m_historyMaxSize;
+
+    // last modification time of the database
+    // keep track of it to provide smart db sync
+    QDateTime m_lastModified;
+    bool m_update_lastModified = true;
 
     QHash<QString, QString> m_customFields;
 

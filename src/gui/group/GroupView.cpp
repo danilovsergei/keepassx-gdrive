@@ -17,8 +17,8 @@
 
 #include "GroupView.h"
 
-#include <QMetaObject>
 #include <QDragMoveEvent>
+#include <QMetaObject>
 
 #include "core/Database.h"
 #include "core/Group.h"

@@ -17,12 +17,13 @@
 
 #include "EntryModel.h"
 
-#include <QMimeData>
 #include <QFont>
+#include <QMimeData>
 
 #include "core/DatabaseIcons.h"
 #include "core/Entry.h"
 #include "core/Group.h"
+#include "core/Metadata.h"
 
 EntryModel::EntryModel(QObject* parent)
     : QAbstractTableModel(parent)
@@ -84,7 +85,13 @@ void EntryModel::setEntryList(const QList<Entry*>& entries)
 
     Q_FOREACH (Database* db, databases) {
         Q_ASSERT(db);
-        m_allGroups.append(db->rootGroup()->groupsRecursive(true));
+        Q_FOREACH (const Group* group, db->rootGroup()->groupsRecursive(true)) {
+            m_allGroups.append(group);
+        }
+
+        if (db->metadata()->recycleBin()) {
+            m_allGroups.removeOne(db->metadata()->recycleBin());
+        }
     }
 
     Q_FOREACH (const Group* group, m_allGroups) {

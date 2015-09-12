@@ -17,8 +17,8 @@
 
 #include "GroupModel.h"
 
-#include <QMimeData>
 #include <QFont>
+#include <QMimeData>
 
 #include "core/Database.h"
 #include "core/DatabaseIcons.h"
@@ -298,7 +298,7 @@ bool GroupModel::dropMimeData(const QMimeData* data, Qt::DropAction action,
                 entry = dragEntry;
             }
             else {
-                entry = dragEntry->clone();
+                entry = dragEntry->clone(Entry::CloneNewUuid | Entry::CloneResetTimeInfo);
             }
 
             Database* sourceDb = dragEntry->group()->database();

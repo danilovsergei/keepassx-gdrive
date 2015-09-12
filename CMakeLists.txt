@@ -13,6 +13,12 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING
+      "Choose the type of build, options are: None Debug Release RelWithDebInfo Debug Debugfull Profile MinSizeRel."
+      FORCE)
+endif()
+
 project(KeePassX)
 
 cmake_minimum_required(VERSION 2.6.4)
@@ -26,10 +32,9 @@ option(WITH_TESTS "Enable building of unit tests" ON)
 option(WITH_GUI_TESTS "Enable building of GUI tests" OFF)
 option(WITH_LTO "Enable Link Time Optimization (LTO)" OFF)
 option(WITH_CXX11 "Build with the C++ 11 standard" ON)
-option(WITH_GOOGLE_DRIVE "Enable support for syncing with google drive" ON)
 
-set(KEEPASSX_VERSION "2.0 alpha 4")
-set(KEEPASSX_VERSION_NUM "1.9.83")
+set(KEEPASSX_VERSION "2.0 beta 1")
+set(KEEPASSX_VERSION_NUM "1.9.91")
 
 if("${CMAKE_C_COMPILER}" MATCHES "clang$" OR "${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
   set(CMAKE_COMPILER_IS_CLANG 1)
@@ -56,20 +61,23 @@ macro(add_gcc_compiler_flags FLAGS)
   add_gcc_compiler_cflags("${FLAGS}")
 endmacro(add_gcc_compiler_flags)
 
-#add_definitions(-DQT_NO_KEYWORDS -DQT_NO_EXCEPTIONS -DQT_NO_STL -DQT_STRICT_ITERATORS -DQT_NO_CAST_TO_ASCII)
-#Remove DQT_NO_STL because it causes gdrive fail in numerous places
+# Remove DQT_NO_STL because it causes gdrive fail in numerous places
 add_definitions(-DQT_NO_KEYWORDS -DQT_NO_EXCEPTIONS  -DQT_STRICT_ITERATORS -DQT_NO_CAST_TO_ASCII)
 
-add_gcc_compiler_flags("-fno-common -fstack-protector --param=ssp-buffer-size=4 -D_FORTIFY_SOURCE=2")
+add_gcc_compiler_flags("-fno-common -fstack-protector --param=ssp-buffer-size=4")
 add_gcc_compiler_flags("-Wall -Wextra -Wundef -Wpointer-arith -Wno-long-long")
 add_gcc_compiler_flags("-Wformat=2 -Wmissing-format-attribute")
 add_gcc_compiler_flags("-fvisibility=hidden")
 add_gcc_compiler_cxxflags("-fvisibility-inlines-hidden")
 
-#commented because of keepass use this feature
-#add_gcc_compiler_cxxflags("-fno-exceptions -fno-rtti")
+add_gcc_compiler_cxxflags("-fno-exceptions -fno-rtti")
 add_gcc_compiler_cxxflags("-Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual")
 add_gcc_compiler_cflags("-Wchar-subscripts -Wwrite-strings")
+
+string(TOLOWER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE_LOWER)
+if (CMAKE_BUILD_TYPE_LOWER MATCHES (release|relwithdebinfo|minsizerel))
+  add_gcc_compiler_flags("-D_FORTIFY_SOURCE=2")
+endif()
 
 check_c_compiler_flag("-Werror=format-security -Werror=implicit-function-declaration" WERROR_C_AVAILABLE)
 check_cxx_compiler_flag("-Werror=format-security" WERROR_CXX_AVAILABLE)
@@ -143,21 +151,20 @@ else()
 
   set(BIN_INSTALL_DIR    "${CMAKE_INSTALL_BINDIR}")
   set(PLUGIN_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/keepassx")
-  set(DATA_INSTALL_DIR   "${CMAKE_INSTALL_DATAROOTDIR}/keepassx")
+  set(DATA_INSTALL_DIR   "${CMAKE_INSTALL_DATADIR}/keepassx")
 endif()
 
 if(WITH_TESTS)
   enable_testing()
 endif(WITH_TESTS)
 # TODO remove dependency on QtNetwork QtWebKit when drive sync not used
-set(QT_REQUIRED_MODULES QtCore QtGui QtTest QtNetwork QtWebKit)
-if(UNIX AND NOT APPLE)
-  set(QT_REQUIRED_MODULES ${QT_REQUIRED_MODULES} QtDBus)
-endif()
+set(QT_REQUIRED_MODULES QtCore QtGui QtTest  QtNetwork QtWebKit)
 
 find_package(Qt4 4.6.0 REQUIRED ${QT_REQUIRED_MODULES})
-# allows to include Qt headers without lib names
 include(${QT_USE_FILE})
+# Debian sets the the build type to None for package builds.
+# Make sure we don't enable asserts there.
+set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS_NONE QT_NO_DEBUG)
 
 find_package(Gcrypt REQUIRED)
 if(NOT (${GCRYPT_VERSION_STRING} VERSION_LESS "1.6.0"))
@@ -202,7 +209,7 @@ if(UNIX)
   endif()
 endif()
 
-include_directories(SYSTEM ${QT_INCLUDE_DIR} ${GCRYPT_INCLUDE_DIR} ${ZLIB_INCLUDE_DIR})
+include_directories(SYSTEM ${GCRYPT_INCLUDE_DIR} ${ZLIB_INCLUDE_DIR})
 
 if(NOT (${CMAKE_VERSION} VERSION_LESS 2.8.3))
   set(PRINT_SUMMARY ON)
@@ -213,10 +220,6 @@ add_subdirectory(src)
 add_subdirectory(share)
 add_subdirectory(utils)
 if(WITH_TESTS)
-  if(WITH_GOOGLE_DRIVE)
-    #use to set custom parent directory , usermail and password for tests with google drive
-    set(TEST_GOOGLE_DRIVE_DIR "0B8tltL21wts3alc0eS00UVRLNnc")
-  endif(WITH_GOOGLE_DRIVE)
   add_subdirectory(tests)
 endif(WITH_TESTS)
 

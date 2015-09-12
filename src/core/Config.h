@@ -15,8 +15,8 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef KEEPASSX_CONFIG_H
+#define KEEPASSX_CONFIG_H
 
 #include <QScopedPointer>
 #include <QVariant>
@@ -31,32 +31,24 @@ class Config : public QObject
 
 public:
     ~Config();
-    QString getConfigDir();
     QVariant get(const QString& key);
     QVariant get(const QString& key, const QVariant& defaultValue);
     void set(const QString& key, const QVariant& value);
 
     static Config* instance();
-    static void createConfigFromFile(QString file);
+    static void createConfigFromFile(const QString& file);
     static void createTempFileInstance();
-
 
 private:
     Config(const QString& fileName, QObject* parent);
     explicit Config(QObject* parent);
     void init(const QString& fileName);
-    QString userPath;
 
     static Config* m_instance;
 
     QScopedPointer<QSettings> m_settings;
     QHash<QString, QVariant> m_defaults;
-    struct LastCloudDatabases {
-    QString databaseName;
-    QString cloudSyncTime;
-    };
-    typedef QMap<QString,LastCloudDatabases> LastCloudDatabasesMap;
-    LastCloudDatabasesMap m_LastCloudDatabases;
+
     Q_DISABLE_COPY(Config)
 };
 
@@ -64,4 +56,4 @@ inline Config* config() {
     return Config::instance();
 }
 
-#endif // CONFIG_H
+#endif // KEEPASSX_CONFIG_H

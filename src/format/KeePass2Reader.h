@@ -22,8 +22,6 @@
 
 #include "keys/CompositeKey.h"
 #include <QDateTime>
-#include <QFileInfo>
-#include <core/Metadata.h>
 
 class Database;
 class QIODevice;

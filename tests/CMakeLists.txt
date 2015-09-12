@@ -13,7 +13,6 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_SOURCE_DIR}/src)
 
 add_definitions(-DQT_TEST_LIB)
@@ -65,12 +64,10 @@ macro(add_unit_test)
   endif(NOT TEST_OUTPUT)
   set(TEST_OUTPUT ${TEST_OUTPUT} CACHE STRING "The output to generate when running the QTest unit tests")
 
-  get_target_property(loc ${_test_NAME} LOCATION)
-
   if(KDE4_TEST_OUTPUT STREQUAL "xml")
-    add_test(${_test_NAME} ${loc} -xml -o ${_test_NAME}.tml)
+    add_test(${_test_NAME} ${_test_NAME} -xml -o ${_test_NAME}.tml)
   else(KDE4_TEST_OUTPUT STREQUAL "xml")
-    add_test(${_test_NAME} ${loc})
+    add_test(${_test_NAME} ${_test_NAME})
   endif(KDE4_TEST_OUTPUT STREQUAL "xml")
 
   if(NOT MSVC_IDE)   #not needed for the ide
@@ -86,12 +83,11 @@ macro(add_unit_test)
   endif()
 endmacro(add_unit_test)
 
-
 set(GDRIVE_DEPS
     google_drive
 )
 
-set(PROJECT_DEPS
+set(TEST_LIBRARIES
     keepassx_core
     ${QT_QTCORE_LIBRARY}
     ${QT_QTGUI_LIBRARY}
@@ -99,11 +95,6 @@ set(PROJECT_DEPS
     ${GCRYPT_LIBRARIES}
     ${ZLIB_LIBRARIES}
     ${GDRIVE_DEPS}
-)
-
-set(TEST_LIBRARIES
-    ${PROJECT_DEPS}
-    test_tools
 )
 add_subdirectory(remotedrive)
 set(TESTTOOLS_HEADERS
@@ -126,19 +117,13 @@ set(TESTTOOLS_SOURCES
      remotedrive/helpers/FakeCommand.cpp
      remotedrive/helpers/FakeRemoteDriveApi.cpp
 )
-
 qt4_wrap_cpp(TESTTOOLS_SOURCES ${TESTTOOLS_MOC})
 add_library(test_tools STATIC ${TESTTOOLS_SOURCES})
 target_link_libraries(test_tools ${PROJECT_DEPS})
 
-if(UNIX AND NOT APPLE)
-  set(TEST_LIBRARIES ${TEST_LIBRARIES} ${QT_QTDBUS_LIBRARY})
-endif()
-
-set(modeltest_SOURCRS modeltest.cpp)
-qt4_wrap_cpp(modeltest_SOURCRS modeltest.h)
-add_library(modeltest STATIC ${modeltest_SOURCRS})
-
+set(testsupport_SOURCES modeltest.cpp FailDevice.cpp)
+qt4_wrap_cpp(testsupport_SOURCES modeltest.h FailDevice.h)
+add_library(testsupport STATIC ${testsupport_SOURCES})
 
 add_unit_test(NAME testgroup SOURCES TestGroup.cpp MOCS TestGroup.h
               LIBS ${TEST_LIBRARIES})
@@ -153,13 +138,13 @@ add_unit_test(NAME testkeepass2reader SOURCES TestKeePass2Reader.cpp MOCS TestKe
               LIBS ${TEST_LIBRARIES})
 
 add_unit_test(NAME testkeepass2writer SOURCES TestKeePass2Writer.cpp MOCS TestKeePass2Writer.h
-              LIBS ${TEST_LIBRARIES})
+              LIBS testsupport ${TEST_LIBRARIES})
 
 add_unit_test(NAME testgroupmodel SOURCES TestGroupModel.cpp MOCS TestGroupModel.h
-              LIBS modeltest ${TEST_LIBRARIES})
+              LIBS testsupport ${TEST_LIBRARIES})
 
 add_unit_test(NAME testentrymodel SOURCES TestEntryModel.cpp MOCS TestEntryModel.h
-              LIBS modeltest ${TEST_LIBRARIES})
+              LIBS testsupport ${TEST_LIBRARIES})
 
 add_unit_test(NAME testcryptohash SOURCES TestCryptoHash.cpp MOCS TestCryptoHash.h
               LIBS ${TEST_LIBRARIES})
@@ -168,7 +153,7 @@ add_unit_test(NAME testsymmetriccipher SOURCES TestSymmetricCipher.cpp MOCS Test
               LIBS ${TEST_LIBRARIES})
 
 add_unit_test(NAME testhashedblockstream SOURCES TestHashedBlockStream.cpp MOCS TestHashedBlockStream.h
-              LIBS ${TEST_LIBRARIES})
+              LIBS testsupport ${TEST_LIBRARIES})
 
 add_unit_test(NAME testkeepass2randomstream SOURCES TestKeePass2RandomStream.cpp MOCS TestKeePass2RandomStream.h
               LIBS ${TEST_LIBRARIES})
@@ -195,14 +180,21 @@ set_target_properties(testautotype PROPERTIES ENABLE_EXPORTS ON)
 add_unit_test(NAME testentry SOURCES TestEntry.cpp MOCS TestEntry.h
               LIBS ${TEST_LIBRARIES})
 
-add_unit_test(NAME testargumentparser SOURCES TestArgumentParser.cpp MOCS TestArgumentParser.h
+add_unit_test(NAME testqcommandlineparser SOURCES TestQCommandLineParser.cpp MOCS TestQCommandLineParser.h
               LIBS ${TEST_LIBRARIES})
 
+add_unit_test(NAME testrandom SOURCES TestRandom.cpp MOCS TestRandom.h
+              LIBS ${TEST_LIBRARIES})
 
+add_unit_test(NAME testentrysearcher SOURCES TestEntrySearcher.cpp MOCS TestEntrySearcher.h
+              LIBS ${TEST_LIBRARIES})
 
+add_unit_test(NAME testexporter SOURCES TestExporter.cpp MOCS TestExporter.h
+              LIBS ${TEST_LIBRARIES})
+
+add_unit_test(NAME testcsvexporter SOURCES TestCsvExporter.cpp MOCS TestCsvExporter.h
+              LIBS ${TEST_LIBRARIES})
 
 if(WITH_GUI_TESTS)
   add_subdirectory(gui)
 endif(WITH_GUI_TESTS)
-
-

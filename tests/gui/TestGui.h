@@ -18,12 +18,14 @@
 #ifndef KEEPASSX_TESTGUI_H
 #define KEEPASSX_TESTGUI_H
 
-#include <QtCore/QAbstractItemModel>
-#include <QtCore/QObject>
+#include <QAbstractItemModel>
+#include <QObject>
+#include <QTemporaryFile>
 
 class Database;
 class DatabaseTabWidget;
 class DatabaseWidget;
+class QAbstractItemView;
 class MainWindow;
 
 class TestGui : public QObject
@@ -37,6 +39,7 @@ private Q_SLOTS:
     void testEditEntry();
     void testAddEntry();
     void testSearch();
+    void testDeleteEntry();
     void testCloneEntry();
     void testDragAndDropEntry();
     void testDragAndDropGroup();
@@ -52,10 +55,14 @@ private:
     void triggerAction(const QString& name);
     void dragAndDropGroup(const QModelIndex& sourceIndex, const QModelIndex& targetIndex, int row,
                           bool expectedResult, const QString& expectedParentName, int expectedPos);
+    void clickIndex(const QModelIndex& index, QAbstractItemView* view, Qt::MouseButton button,
+                    Qt::KeyboardModifiers stateKey = 0);
 
     MainWindow* m_mainWindow;
     DatabaseTabWidget* m_tabWidget;
     DatabaseWidget* m_dbWidget;
+    QTemporaryFile m_orgDbFile;
+    QString m_orgDbFileName;
     QString m_tmpFileName;
     Database* m_db;
 };

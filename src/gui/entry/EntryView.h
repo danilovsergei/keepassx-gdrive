@@ -37,11 +37,12 @@ public:
     explicit EntryView(QWidget* parent = Q_NULLPTR);
     void setModel(QAbstractItemModel* model) Q_DECL_OVERRIDE;
     Entry* currentEntry();
-    bool isSingleEntrySelected();
     void setCurrentEntry(Entry* entry);
     Entry* entryFromIndex(const QModelIndex& index);
     void setEntryList(const QList<Entry*>& entries);
     bool inEntryListMode();
+    int numberOfSelectedEntries();
+    void setFirstEntryActive();
 
 public Q_SLOTS:
     void setGroup(Group* group);
@@ -49,6 +50,9 @@ public Q_SLOTS:
 Q_SIGNALS:
     void entryActivated(Entry* entry, EntryModel::ModelColumn column);
     void entrySelectionChanged();
+
+protected:
+    void keyPressEvent(QKeyEvent* event) Q_DECL_OVERRIDE;
 
 private Q_SLOTS:
     void emitEntryActivated(const QModelIndex& index);

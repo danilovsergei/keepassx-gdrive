@@ -18,12 +18,12 @@
 #ifndef KEEPASSX_KEEPASS2XMLREADER_H
 #define KEEPASSX_KEEPASS2XMLREADER_H
 
+#include <QColor>
 #include <QCoreApplication>
 #include <QDateTime>
 #include <QHash>
 #include <QPair>
 #include <QXmlStreamReader>
-#include <QColor>
 
 #include "core/Global.h"
 #include "core/TimeInfo.h"
@@ -47,6 +47,7 @@ public:
     bool hasError();
     QString errorString();
     QByteArray headerHash();
+    void setStrictMode(bool strictMode);
 
 private:
     bool parseKeePassFile();
@@ -95,6 +96,7 @@ private:
     QByteArray m_headerHash;
     bool m_error;
     QString m_errorStr;
+    bool m_strictMode;
 };
 
 #endif // KEEPASSX_KEEPASS2XMLREADER_H

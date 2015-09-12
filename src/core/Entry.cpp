@@ -22,16 +22,16 @@
 #include "core/Group.h"
 #include "core/Metadata.h"
 #include "core/Tools.h"
-#include <QDebug>
 
 const int Entry::DefaultIconNumber = 0;
 
-Entry::Entry() :
-  m_attributes(new EntryAttributes(this)),
-  m_attachments(new EntryAttachments(this)),
-  m_autoTypeAssociations(new AutoTypeAssociations(this)),
-  m_tmpHistoryItem(Q_NULLPTR),
-  m_updateTimeinfo(true)
+Entry::Entry()
+    : m_attributes(new EntryAttributes(this))
+    , m_attachments(new EntryAttachments(this))
+    , m_autoTypeAssociations(new AutoTypeAssociations(this))
+    , m_tmpHistoryItem(Q_NULLPTR)
+    , m_modifiedSinceBegin(false)
+    , m_updateTimeinfo(true)
 {
   m_data.iconNumber = DefaultIconNumber;
   m_data.autoTypeEnabled = true;
@@ -51,9 +51,10 @@ Entry::~Entry()
   if (m_group) {
     m_group->removeEntry(this);
 
-    if (m_group->database())
+        if (m_group->database()) {
       m_group->database()->addDeletedObject(m_uuid);
   }
+    }
 
   qDeleteAll(m_history);
 }
@@ -64,7 +65,8 @@ template<class T> inline bool Entry::set(T &property, const T &value)
     property = value;
     Q_EMIT modified();
     return true;
-  } else {
+    }
+    else {
     return false;
   }
 }
@@ -72,10 +74,10 @@ template<class T> inline bool Entry::set(T &property, const T &value)
 void Entry::updateTimeinfo()
 {
   if (m_updateTimeinfo) {
-    QDateTime current = Tools::currentDateTimeUtc();
-    m_data.timeInfo.setLastModificationTime(current);
-    m_data.timeInfo.setLastAccessTime(current);
-    updateLastModified(current);
+       QDateTime current = Tools::currentDateTimeUtc();
+        m_data.timeInfo.setLastModificationTime(current);
+        m_data.timeInfo.setLastAccessTime(current);
+        updateLastModified(current);
   }
 }
 
@@ -93,20 +95,29 @@ QImage Entry::icon() const
 {
   if (m_data.customIcon.isNull()) {
     return databaseIcons()->icon(m_data.iconNumber);
-  } else {
-    // TODO: check if database() is 0
+    }
+    else {
+        Q_ASSERT(database());
+
+        if (database()) {
     return database()->metadata()->customIcon(m_data.customIcon);
   }
+        else {
+            return QImage();
+        }
+    }
 }
 
 QPixmap Entry::iconPixmap() const
 {
   if (m_data.customIcon.isNull()) {
     return databaseIcons()->iconPixmap(m_data.iconNumber);
-  } else {
+    }
+    else {
+        Q_ASSERT(database());
+
     QPixmap pixmap;
-    if (!QPixmapCache::find(m_pixmapCacheKey, &pixmap)) {
-      // TODO: check if database() is 0
+        if (database() && !QPixmapCache::find(m_pixmapCacheKey, &pixmap)) {
       pixmap = QPixmap::fromImage(database()->metadata()->customIcon(m_data.customIcon));
       m_pixmapCacheKey = QPixmapCache::insert(pixmap);
     }
@@ -177,27 +188,27 @@ const AutoTypeAssociations *Entry::autoTypeAssociations() const
 
 QString Entry::title() const
 {
-  return m_attributes->value("Title");
+    return m_attributes->value(EntryAttributes::TitleKey);
 }
 
 QString Entry::url() const
 {
-  return m_attributes->value("URL");
+    return m_attributes->value(EntryAttributes::URLKey);
 }
 
 QString Entry::username() const
 {
-  return m_attributes->value("UserName");
+    return m_attributes->value(EntryAttributes::UserNameKey);
 }
 
 QString Entry::password() const
 {
-  return m_attributes->value("Password");
+    return m_attributes->value(EntryAttributes::PasswordKey);
 }
 
 QString Entry::notes() const
 {
-  return m_attributes->value("Notes");
+    return m_attributes->value(EntryAttributes::NotesKey);
 }
 
 bool Entry::isExpired() const
@@ -303,27 +314,27 @@ void Entry::setDefaultAutoTypeSequence(const QString &sequence)
 
 void Entry::setTitle(const QString &title)
 {
-  m_attributes->set("Title", title, m_attributes->isProtected("Title"));
+    m_attributes->set(EntryAttributes::TitleKey, title, m_attributes->isProtected(EntryAttributes::TitleKey));
 }
 
 void Entry::setUrl(const QString &url)
 {
-  m_attributes->set("URL", url, m_attributes->isProtected("URL"));
+    m_attributes->set(EntryAttributes::URLKey, url, m_attributes->isProtected(EntryAttributes::URLKey));
 }
 
 void Entry::setUsername(const QString &username)
 {
-  m_attributes->set("UserName", username, m_attributes->isProtected("UserName"));
+    m_attributes->set(EntryAttributes::UserNameKey, username, m_attributes->isProtected(EntryAttributes::UserNameKey));
 }
 
 void Entry::setPassword(const QString &password)
 {
-  m_attributes->set("Password", password, m_attributes->isProtected("Password"));
+    m_attributes->set(EntryAttributes::PasswordKey, password, m_attributes->isProtected(EntryAttributes::PasswordKey));
 }
 
 void Entry::setNotes(const QString &notes)
 {
-  m_attributes->set("Notes", notes, m_attributes->isProtected("Notes"));
+    m_attributes->set(EntryAttributes::NotesKey, notes, m_attributes->isProtected(EntryAttributes::NotesKey));
 }
 
 void Entry::setExpires(const bool &value)
@@ -363,8 +374,9 @@ void Entry::addHistoryItem(Entry *entry)
 
 void Entry::removeHistoryItems(const QList<Entry *> &historyEntries)
 {
-  if (historyEntries.isEmpty())
+    if (historyEntries.isEmpty()) {
     return;
+    }
 
   Q_FOREACH(Entry* entry, historyEntries) {
     Q_ASSERT(!entry->parent());
@@ -382,8 +394,9 @@ void Entry::truncateHistory()
 {
   const Database *db = database();
 
-  if (!db)
+    if (!db) {
     return;
+    }
 
   int histMaxItems = db->metadata()->historyMaxItems();
   if (histMaxItems > -1) {
@@ -414,8 +427,7 @@ void Entry::truncateHistory()
       if (size <= histMaxSize) {
         size += historyItem->attributes()->attributesSize();
 
-        QSet<QByteArray> newAttachments = historyItem->attachments()->values().toSet()
-                                          - foundAttachements;
+                QSet<QByteArray> newAttachments = historyItem->attachments()->values().toSet() - foundAttachements;
         Q_FOREACH(const QByteArray &attachment, newAttachments) {
           size += attachment.size();
         }
@@ -430,22 +442,40 @@ void Entry::truncateHistory()
   }
 }
 
-Entry *Entry::clone() const
+Entry* Entry::clone(CloneFlags flags) const
 {
   Entry *entry = new Entry();
   entry->setUpdateTimeinfo(false);
+    if (flags & CloneNewUuid) {
   entry->m_uuid = Uuid::random();
+    }
+    else {
+        entry->m_uuid = m_uuid;
+    }
   entry->m_data = m_data;
   entry->m_attributes->copyDataFrom(m_attributes);
   entry->m_attachments->copyDataFrom(m_attachments);
   entry->m_autoTypeAssociations->copyDataFrom(this->m_autoTypeAssociations);
+    if (flags & CloneIncludeHistory) {
+        Q_FOREACH (Entry* historyItem, m_history) {
+            Entry* historyItemClone = historyItem->clone(flags & ~CloneIncludeHistory & ~CloneNewUuid);
+            historyItemClone->setUpdateTimeinfo(false);
+            historyItemClone->setUuid(entry->uuid());
+            historyItemClone->setUpdateTimeinfo(true);
+            entry->addHistoryItem(historyItemClone);
+        }
+    }
   entry->setUpdateTimeinfo(true);
 
+    if (flags & CloneResetTimeInfo) {
   QDateTime now = Tools::currentDateTimeUtc();
   entry->m_data.timeInfo.setCreationTime(now);
   entry->m_data.timeInfo.setLastModificationTime(now);
   entry->m_data.timeInfo.setLastAccessTime(now);
   entry->m_data.timeInfo.setLocationChanged(now);
+    }
+
+
 
   return entry;
 }
@@ -460,10 +490,6 @@ void Entry::copyDataFrom(const Entry *other)
   setUpdateTimeinfo(true);
 }
 
-/**
- * @brief Entry::beginUpdate copies all information from entry under edit to the temp entry
- * Used to maintain entry history after edits
- */
 void Entry::beginUpdate()
 {
   Q_ASSERT(!m_tmpHistoryItem);
@@ -478,11 +504,6 @@ void Entry::beginUpdate()
   m_modifiedSinceBegin = false;
 }
 
-/**
- * @brief Entry::endUpdate adds temporary item created before entry edit
- * to the history items.
- * Used to maintain entry history after edits
- */
 void Entry::endUpdate()
 {
   Q_ASSERT(m_tmpHistoryItem);
@@ -490,7 +511,8 @@ void Entry::endUpdate()
     m_tmpHistoryItem->setUpdateTimeinfo(true);
     addHistoryItem(m_tmpHistoryItem);
     truncateHistory();
-  } else {
+    }
+    else {
     delete m_tmpHistoryItem;
   }
 
@@ -516,8 +538,9 @@ void Entry::setGroup(Group *group)
 {
   Q_ASSERT(group);
 
-  if (m_group == group)
+    if (m_group == group) {
     return;
+    }
 
   if (m_group) {
     m_group->removeEntry(this);
@@ -527,19 +550,21 @@ void Entry::setGroup(Group *group)
       // copy custom icon to the new database
       if (!iconUuid().isNull() && group->database()
           && m_group->database()->metadata()->containsCustomIcon(iconUuid())
-          && !group->database()->metadata()->containsCustomIcon(iconUuid()))
+                    && !group->database()->metadata()->containsCustomIcon(iconUuid())) {
         group->database()->metadata()->addCustomIcon(iconUuid(), icon());
     }
   }
+    }
 
   m_group = group;
   group->addEntry(this);
 
   QObject::setParent(group);
+
   if (m_updateTimeinfo) {
-    QDateTime current = Tools::currentDateTimeUtc();
-    m_data.timeInfo.setLocationChanged(current);
-    updateLastModified(current);
+        QDateTime current = Tools::currentDateTimeUtc();
+        m_data.timeInfo.setLocationChanged(current);
+        updateLastModified(current);
   }
 }
 
@@ -550,28 +575,12 @@ void Entry::emitDataChanged()
 
 const Database *Entry::database() const
 {
-  if (m_group)
+    if (m_group) {
     return m_group->database();
-  else
+    }
+    else {
     return Q_NULLPTR;
 }
-
-bool Entry::match(const QString &searchTerm, Qt::CaseSensitivity caseSensitivity)
-{
-  QStringList wordList = searchTerm.split(QRegExp("\\s"), QString::SkipEmptyParts);
-  Q_FOREACH(const QString &word, wordList) {
-    if (!wordMatch(word, caseSensitivity))
-      return false;
-  }
-  return true;
-}
-
-bool Entry::wordMatch(const QString &word, Qt::CaseSensitivity caseSensitivity)
-{
-  return title().contains(word, caseSensitivity)
-         || username().contains(word, caseSensitivity)
-         || url().contains(word, caseSensitivity)
-         || notes().contains(word, caseSensitivity);
 }
 
 QString Entry::resolvePlaceholders(const QString &str) const
@@ -587,12 +596,4 @@ QString Entry::resolvePlaceholders(const QString &str) const
   // TODO: lots of other placeholders missing
 
   return result;
-}
-
-void Entry::updateLastModified(QDateTime time)
-{
-  // update db last modification time only if entry attached to some group and group to db
-  // otherwise it does not make a sense to update it
-  if (m_group && m_group->database())
-    m_group->database()->metadata()->setLastModifiedDate(time);
 }

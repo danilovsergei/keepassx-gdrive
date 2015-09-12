@@ -43,8 +43,8 @@
 #ifndef MODELTEST_H
 #define MODELTEST_H
 
-#include <QObject>
 #include <QAbstractItemModel>
+#include <QObject>
 #include <QStack>
 
 class ModelTest : public QObject

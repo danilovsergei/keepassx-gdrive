@@ -17,16 +17,14 @@
 
 #ifndef KEEPASSX_DATABASEWIDGET_H
 #define KEEPASSX_DATABASEWIDGET_H
+
 #include <QScopedPointer>
 #include <QStackedWidget>
+
 #include "core/Global.h"
+#include "core/Uuid.h"
+
 #include "gui/entry/EntryModel.h"
-#include "remotedrive/SyncObject.h"
-#include "remotedrive/RemoteDriveApi.h"
-#include "remotedrive/gdrive/CommandsFactoryImpl.h"
-#include "remotedrive/gdrive/GoogleDriveCredentials.h"
-#include "remotedrive/Errors.h"
-#include "remotedrive/OptionsBuilder.h"
 
 class ChangeMasterKeyWidget;
 class DatabaseOpenWidget;
@@ -41,9 +39,11 @@ class GroupView;
 class KeePass1OpenWidget;
 class QFile;
 class QMenu;
+class QSplitter;
 class UnlockDatabaseWidget;
 class DatabaseOpenWidgetCloud;
 using namespace DatabaseSyncObject;
+
 namespace Ui {
     class SearchWidget;
 }
@@ -63,18 +63,30 @@ public:
 
     explicit DatabaseWidget(Database* db, QWidget* parent = Q_NULLPTR);
     ~DatabaseWidget();
-    GroupView* groupView();
-    EntryView* entryView();
     Database* database();
-    bool dbHasKey();
-    bool canDeleteCurrentGoup();
-    bool isInSearchMode();
+    bool dbHasKey() const;
+    bool canDeleteCurrentGroup() const;
+    bool isInSearchMode() const;
     int addWidget(QWidget* w);
     void setCurrentIndex(int index);
     void setCurrentWidget(QWidget* widget);
-    DatabaseWidget::Mode currentMode();
+    DatabaseWidget::Mode currentMode() const;
     void lock();
     void updateFilename(const QString& filename);
+    int numberOfSelectedEntries() const;
+    QStringList customEntryAttributes() const;
+    bool isGroupSelected() const;
+    bool isInEditMode() const;
+    QList<int> splitterSizes() const;
+    void setSplitterSizes(const QList<int>& sizes);
+    QList<int> entryHeaderViewSizes() const;
+    void setEntryViewHeaderSizes(const QList<int>& sizes);
+    void clearAllWidgets();
+    bool currentEntryHasTitle();
+    bool currentEntryHasUsername();
+    bool currentEntryHasPassword();
+    bool currentEntryHasUrl();
+    bool currentEntryHasNotes();
 
 Q_SIGNALS:
     void closeRequest();
@@ -85,18 +97,26 @@ Q_SIGNALS:
     void groupContextMenuRequested(const QPoint& globalPos);
     void entryContextMenuRequested(const QPoint& globalPos);
     void unlockedDatabase();
+    void listModeAboutToActivate();
+    void listModeActivated();
+    void searchModeAboutToActivate();
+    void searchModeActivated();
+    void splitterSizesChanged();
+    void entryColumnSizesChanged();
     void cloudDbSelected(const QString& fileName,Database* db);
     void cloudDbRejected(Database* db);
     void databaseSaved(Database* db,  const QString filePath);
     void requestSaveDatabase(Database* db, bool saveToCloud);
 
-
 public Q_SLOTS:
     void createEntry();
     void cloneEntry();
-    void deleteEntry();
+    void deleteEntries();
+    void copyTitle();
     void copyUsername();
     void copyPassword();
+    void copyURL();
+    void copyNotes();
     void copyAttribute(QAction* action);
     void performAutoType();
     void openUrl();
@@ -106,15 +126,12 @@ public Q_SLOTS:
     void switchToEntryEdit();
     void switchToGroupEdit();
     void switchToMasterKeyChange();
-    void switchToCloudDbOpen();
     void switchToDatabaseSettings();
     void switchToOpenDatabase(const QString& fileName);
     void switchToOpenDatabase(const QString& fileName, const QString& password, const QString& keyFile);
     void switchToImportKeepass1(const QString& fileName);
-    void toggleSearch();
-    void emitGroupContextMenuRequested(const QPoint& pos);
-    void emitEntryContextMenuRequested(const QPoint& pos);
-    void cloudDbOpen(QString dbPath);
+    void openSearch();
+   void cloudDbOpen(QString dbPath);
     void syncDone();
     void syncError(int ErrorType, QString description);
     void saveDatabaseToCloud(Database *db, const QString filePath);
@@ -129,9 +146,10 @@ private Q_SLOTS:
     void switchToEntryEdit(Entry* entry);
     void switchToEntryEdit(Entry* entry, bool create);
     void switchToGroupEdit(Group* entry, bool create);
+    void emitGroupContextMenuRequested(const QPoint& pos);
+    void emitEntryContextMenuRequested(const QPoint& pos);
     void updateMasterKey(bool accepted);
     void openDatabase(bool accepted);
-    void rejectDb();
     void unlockDatabase(bool accepted);
     void emitCurrentModeChanged();
     void clearLastGroup(Group* group);
@@ -140,25 +158,25 @@ private Q_SLOTS:
     void startSearchTimer();
     void showSearch();
     void closeSearch();
-    void syncDatabase();
-    // set last modification time of database when entry/group was changed
-    void setLastModified(bool accepted);
 
 private:
+    void setClipboardTextAndMinimize(const QString& text);
+    void setIconFromParent();
+    void replaceDatabase(Database* db);
+
     Database* m_db;
     const QScopedPointer<Ui::SearchWidget> m_searchUi;
     QWidget* const m_searchWidget;
     QWidget* m_mainWidget;
-    QWidget* m_tabWidget;
     EditEntryWidget* m_editEntryWidget;
     EditEntryWidget* m_historyEditEntryWidget;
     EditGroupWidget* m_editGroupWidget;
     ChangeMasterKeyWidget* m_changeMasterKeyWidget;
     DatabaseSettingsWidget* m_databaseSettingsWidget;
     DatabaseOpenWidget* m_databaseOpenWidget;
-    DatabaseOpenWidgetCloud* m_databaseOpenWidgetCloud;
     KeePass1OpenWidget* m_keepass1OpenWidget;
     UnlockDatabaseWidget* m_unlockDatabaseWidget;
+    QSplitter* m_splitter;
     GroupView* m_groupView;
     EntryView* m_entryView;
     Group* m_newGroup;
@@ -166,8 +184,8 @@ private:
     Group* m_newParent;
     Group* m_lastGroup;
     QTimer* m_searchTimer;
-    QWidget* widgetBeforeLock;
     QString m_filename;
+    Uuid m_groupBeforeLock;
     RemoteDriveApi* remoteDrive;
     KeePassxDriveSync::Command  syncCommand;
     KeePassxDriveSync::Command uploadCommand;

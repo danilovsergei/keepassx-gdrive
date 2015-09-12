@@ -18,13 +18,14 @@
 #include "DatabaseOpenWidget.h"
 #include "ui_DatabaseOpenWidget.h"
 
+#include "core/Config.h"
 #include "core/Database.h"
+#include "core/FilePath.h"
 #include "gui/FileDialog.h"
+#include "gui/MessageBox.h"
 #include "format/KeePass2Reader.h"
 #include "keys/FileKey.h"
 #include "keys/PasswordKey.h"
-#include <QSettings>
-#include "core/Group.h"
 #include <QDebug>
 
 DatabaseOpenWidget::DatabaseOpenWidget(QWidget *parent)
@@ -33,33 +34,33 @@ DatabaseOpenWidget::DatabaseOpenWidget(QWidget *parent)
     , m_db(Q_NULLPTR)
 {
   m_ui->setupUi(this);
+
   QFont font = m_ui->labelHeadline->font();
   font.setBold(true);
   font.setPointSize(font.pointSize() + 2);
   m_ui->labelHeadline->setFont(font);
+
   m_ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
+
+    m_ui->buttonTogglePassword->setIcon(filePath()->onOffIcon("actions", "password-show"));
   connect(m_ui->buttonTogglePassword, SIGNAL(toggled(bool)),
-          SLOT(togglePassword(bool)));
-  connect(m_ui->buttonBrowseFile, SIGNAL(clicked()),
-          SLOT(browseKeyFile()));
-  connect(m_ui->editPassword, SIGNAL(textChanged(QString)),
-          SLOT(activatePassword()));
-  connect(m_ui->comboKeyFile, SIGNAL(editTextChanged(QString)),
-          SLOT(activateKeyFile()));
-  connect(m_ui->checkPassword, SIGNAL(toggled(bool)),
-          SLOT(setOkButtonEnabled()));
-  connect(m_ui->checkKeyFile, SIGNAL(toggled(bool)),
-          SLOT(setOkButtonEnabled()));
-  connect(m_ui->comboKeyFile, SIGNAL(editTextChanged(QString)),
-          SLOT(setOkButtonEnabled()));
-  connect(m_ui->buttonBox, SIGNAL(accepted()),
-          SLOT(openDatabase()));
-  connect(m_ui->buttonBox, SIGNAL(rejected()),
-          SLOT(reject()));
+            m_ui->editPassword, SLOT(setShowPassword(bool)));
+    connect(m_ui->buttonBrowseFile, SIGNAL(clicked()), SLOT(browseKeyFile()));
+
+    connect(m_ui->editPassword, SIGNAL(textChanged(QString)), SLOT(activatePassword()));
+    connect(m_ui->comboKeyFile, SIGNAL(editTextChanged(QString)), SLOT(activateKeyFile()));
+
+    connect(m_ui->checkPassword, SIGNAL(toggled(bool)), SLOT(setOkButtonEnabled()));
+    connect(m_ui->checkKeyFile, SIGNAL(toggled(bool)), SLOT(setOkButtonEnabled()));
+    connect(m_ui->comboKeyFile, SIGNAL(editTextChanged(QString)), SLOT(setOkButtonEnabled()));
+
+    connect(m_ui->buttonBox, SIGNAL(accepted()), SLOT(openDatabase()));
+    connect(m_ui->buttonBox, SIGNAL(rejected()), SLOT(reject()));
 }
 
 DatabaseOpenWidget::~DatabaseOpenWidget()
-{}
+{
+}
 
 void DatabaseOpenWidget::load(const QString& filename)
 {
@@ -67,12 +68,13 @@ void DatabaseOpenWidget::load(const QString& filename)
 
   m_ui->labelFilename->setText(filename);
 
+    if (config()->get("RememberLastKeyFiles").toBool()) {
   QHash<QString, QVariant> lastKeyFiles = config()->get("LastKeyFiles").toHash();
-
   if (lastKeyFiles.contains(m_filename)) {
     m_ui->checkKeyFile->setChecked(true);
     m_ui->comboKeyFile->addItem(lastKeyFiles[m_filename].toString());
   }
+    }
 
   m_ui->editPassword->setFocus();
 }
@@ -87,9 +89,8 @@ void DatabaseOpenWidget::enterKey(const QString& pw, const QString& keyFile)
   if (!pw.isNull()) {
     m_ui->editPassword->setText(pw);
   }
-
   if (!keyFile.isEmpty()) {
-    m_ui->checkKeyFile->setText(keyFile);
+        m_ui->comboKeyFile->setEditText(keyFile);
   }
 
   openDatabase();
@@ -99,6 +100,15 @@ void DatabaseOpenWidget::openDatabase()
 {
   KeePass2Reader reader;
   CompositeKey   masterKey = databaseKey();
+    if (masterKey.isEmpty()) {
+        return;
+    }
+
+    QFile file(m_filename);
+    if (!file.open(QIODevice::ReadOnly)) {
+        // TODO: error message
+        return;
+    }
   if (m_db) {
     delete m_db;
   }
@@ -107,12 +117,11 @@ void DatabaseOpenWidget::openDatabase()
   QApplication::restoreOverrideCursor();
 
   if (m_db) {
-    //signal switched focus to opened database view
     Q_EMIT editFinished(true);
   }
   else {
-    QMessageBox::warning(this, tr("Error"), tr("Unable to open the database.\n%1")
-                         .arg(reader.errorString()));
+        MessageBox::warning(this, tr("Error"), tr("Unable to open the database.").append("\n")
+                            .append(reader.errorString()));
     m_ui->editPassword->clear();
   }
 }
@@ -131,10 +140,8 @@ CompositeKey DatabaseOpenWidget::databaseKey()
     FileKey key;
     QString keyFilename = m_ui->comboKeyFile->currentText();
     QString errorMsg;
-
     if (!key.load(keyFilename, &errorMsg)) {
-      QMessageBox::warning(this, tr("Error"),
-                           tr("Can't open key file:\n%1").arg(errorMsg));
+            MessageBox::warning(this, tr("Error"), tr("Can't open key file").append(":\n").append(errorMsg));
       return CompositeKey();
     }
     masterKey.addKey(key);
@@ -144,7 +151,9 @@ CompositeKey DatabaseOpenWidget::databaseKey()
     lastKeyFiles.remove(m_filename);
   }
 
+    if (config()->get("RememberLastKeyFiles").toBool()) {
   config()->set("LastKeyFiles", lastKeyFiles);
+    }
 
   return masterKey;
 }
@@ -152,12 +161,6 @@ CompositeKey DatabaseOpenWidget::databaseKey()
 void DatabaseOpenWidget::reject()
 {
   Q_EMIT editFinished(false);
-}
-
-void DatabaseOpenWidget::togglePassword(bool checked)
-{
-  m_ui->editPassword->setEchoMode(
-    checked ? QLineEdit::Password : QLineEdit::Normal);
 }
 
 void DatabaseOpenWidget::activatePassword()
@@ -173,20 +176,15 @@ void DatabaseOpenWidget::activateKeyFile()
 void DatabaseOpenWidget::setOkButtonEnabled()
 {
   bool enable = m_ui->checkPassword->isChecked()
-                || (m_ui->checkKeyFile->isChecked() &&
-                    !m_ui->comboKeyFile->currentText().isEmpty());
+            || (m_ui->checkKeyFile->isChecked() && !m_ui->comboKeyFile->currentText().isEmpty());
 
   m_ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(enable);
 }
 
 void DatabaseOpenWidget::browseKeyFile()
 {
-  QString filters =
-    QString("%1 (*);;%2 (*.key)").
-    arg(tr("All files"), tr("Key files"));
-  QString filename = fileDialog()->getOpenFileName(this, tr(
-                                                     "Select key file"),
-                                                   QString(), filters);
+    QString filters = QString("%1 (*);;%2 (*.key)").arg(tr("All files"), tr("Key files"));
+    QString filename = fileDialog()->getOpenFileName(this, tr("Select key file"), QString(), filters);
 
   if (!filename.isEmpty()) {
     m_ui->comboKeyFile->lineEdit()->setText(filename);

@@ -23,12 +23,12 @@
 #include "core/Metadata.h"
 #include "format/KeePass2RandomStream.h"
 #include "streams/QtIOCompressor"
-#include "QtCore/QDebug"
 
 KeePass2XmlWriter::KeePass2XmlWriter()
     : m_db(Q_NULLPTR)
     , m_meta(Q_NULLPTR)
     , m_randomStream(Q_NULLPTR)
+    , m_error(false)
 {
     m_xml.setAutoFormatting(true);
     m_xml.setAutoFormattingIndent(-1); // 1 tab
@@ -57,6 +57,12 @@ void KeePass2XmlWriter::writeDatabase(QIODevice* device, Database* db, KeePass2R
     m_xml.writeEndElement();
 
     m_xml.writeEndDocument();
+
+#if QT_VERSION >= QT_VERSION_CHECK(4, 8, 0)
+    if (m_xml.hasError()) {
+        raiseError(device->errorString());
+    }
+#endif
 }
 
 void KeePass2XmlWriter::writeDatabase(const QString& filename, Database* db)
@@ -64,6 +70,16 @@ void KeePass2XmlWriter::writeDatabase(const QString& filename, Database* db)
     QFile file(filename);
     file.open(QIODevice::WriteOnly|QIODevice::Truncate);
     writeDatabase(&file, db);
+}
+
+bool KeePass2XmlWriter::hasError()
+{
+    return m_error;
+}
+
+QString KeePass2XmlWriter::errorString()
+{
+    return m_errorStr;
 }
 
 void KeePass2XmlWriter::generateIdMap()
@@ -193,7 +209,7 @@ void KeePass2XmlWriter::writeBinaries()
         }
 
         if (!data.isEmpty()) {
-            m_xml.writeCharacters(QString::fromAscii(data.toBase64()));
+            m_xml.writeCharacters(QString::fromLatin1(data.toBase64()));
         }
         m_xml.writeEndElement();
     }
@@ -341,8 +357,12 @@ void KeePass2XmlWriter::writeEntry(const Entry* entry)
         if (protect) {
             if (m_randomStream) {
                 m_xml.writeAttribute("Protected", "True");
-                QByteArray rawData = m_randomStream->process(entry->attributes()->value(key).toUtf8());
-                value = QString::fromAscii(rawData.toBase64());
+                bool ok;
+                QByteArray rawData = m_randomStream->process(entry->attributes()->value(key).toUtf8(), &ok);
+                if (!ok) {
+                    raiseError(m_randomStream->errorString());
+                }
+                value = QString::fromLatin1(rawData.toBase64());
             }
             else {
                 m_xml.writeAttribute("ProtectInMemory", "True");
@@ -486,7 +506,7 @@ void KeePass2XmlWriter::writeUuid(const QString& qualifiedName, const Entry* ent
 
 void KeePass2XmlWriter::writeBinary(const QString& qualifiedName, const QByteArray& ba)
 {
-    writeString(qualifiedName, QString::fromAscii(ba.toBase64()));
+    writeString(qualifiedName, QString::fromLatin1(ba.toBase64()));
 }
 
 void KeePass2XmlWriter::writeColor(const QString& qualifiedName, const QColor& color)
@@ -527,4 +547,10 @@ QString KeePass2XmlWriter::colorPartToString(int value)
     }
 
     return str;
+}
+
+void KeePass2XmlWriter::raiseError(const QString& errorMessage)
+{
+    m_error = true;
+    m_errorStr = errorMessage;
 }

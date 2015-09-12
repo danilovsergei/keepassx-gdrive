@@ -1,4 +1,4 @@
-/*
+*
  *  Copyright (C) 2010 Felix Geyer <debfx@fobos.de>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -30,6 +30,7 @@ private Q_SLOTS:
     void testAes256CbcDecryption();
     void testSalsa20();
     void testPadding();
+    void testStreamReset();
 };
 
 #endif // KEEPASSX_TESTSYMMETRICCIPHER_H

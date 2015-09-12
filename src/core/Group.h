@@ -18,10 +18,10 @@
 #ifndef KEEPASSX_GROUP_H
 #define KEEPASSX_GROUP_H
 
-#include <QPointer>
 #include <QImage>
 #include <QPixmap>
 #include <QPixmapCache>
+#include <QPointer>
 
 #include "core/Database.h"
 #include "core/Entry.h"
@@ -65,6 +65,8 @@ public:
     QString defaultAutoTypeSequence() const;
     Group::TriState autoTypeEnabled() const;
     Group::TriState searchingEnabled() const;
+    bool resolveSearchingEnabled() const;
+    bool resolveAutoTypeEnabled() const;
     Entry* lastTopVisibleEntry() const;
     bool isExpired() const;
 
@@ -98,16 +100,18 @@ public:
     QList<Entry*> entries();
     const QList<Entry*>& entries() const;
     QList<Entry*> entriesRecursive(bool includeHistoryItems = false) const;
-    QMap<Uuid,Entry*> entriesMapRecursive() const;
-    QMap<Uuid,Group*> groupsMapRecursive(bool includeSelf);
     QList<const Group*> groupsRecursive(bool includeSelf) const;
+    QList<Group*> groupsRecursive(bool includeSelf);
     QSet<Uuid> customIconsRecursive() const;
-    Group* clone() const;
+    /**
+     * Creates a duplicate of this group including all child entries and groups.
+     * The exceptions are that the returned group doesn't have a parent group
+     * and all TimeInfo attributes are set to the current time.
+     * Note that you need to copy the custom icons manually when inserting the
+     * new group into another database.
+     */
+    Group* clone(Entry::CloneFlags entryFlags = Entry::CloneNewUuid | Entry::CloneResetTimeInfo) const;
     void copyDataFrom(const Group* other);
-    QString getGroupName() const;
-
-    QList<Entry*> search(const QString& searchTerm, Qt::CaseSensitivity caseSensitivity,
-                         bool resolveInherit = true);
 
 Q_SIGNALS:
     void dataChanged(Group* group);
@@ -142,7 +146,6 @@ private:
     void cleanupParent();
     void recCreateDelObjects();
     void updateTimeinfo();
-    bool includeInSearch(bool resolveInherit);
     void  updateLastModified(QDateTime time);
 
     QPointer<Database> m_db;

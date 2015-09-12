@@ -53,8 +53,8 @@
 // We mean it.
 //
 
-#include <QtCore/QTemporaryFile>
-#include <QtCore/QDateTime>
+#include <QTemporaryFile>
+#include <QDateTime>
 
 class QSaveFilePrivate
 {
@@ -63,7 +63,6 @@ public:
     ~QSaveFilePrivate();
 
     QString fileName;
-    QDateTime newTime;
     QTemporaryFile *tempFile;
 
     QFile::FileError error;

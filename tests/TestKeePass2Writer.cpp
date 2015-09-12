@@ -21,17 +21,21 @@
 #include <QTest>
 
 #include "tests.h"
+#include "FailDevice.h"
 #include "core/Database.h"
 #include "core/Group.h"
 #include "core/Metadata.h"
 #include "crypto/Crypto.h"
 #include "format/KeePass2Reader.h"
 #include "format/KeePass2Writer.h"
+#include "format/KeePass2XmlWriter.h"
 #include "keys/PasswordKey.h"
+
+QTEST_GUILESS_MAIN(TestKeePass2Writer)
 
 void TestKeePass2Writer::initTestCase()
 {
-    Crypto::init();
+    QVERIFY(Crypto::init());
 
     CompositeKey key;
     key.addKey(PasswordKey("test"));
@@ -99,10 +103,32 @@ void TestKeePass2Writer::testNonAsciiPasswords()
     QCOMPARE(m_dbTest->rootGroup()->entries()[0]->password(), m_dbOrg->rootGroup()->entries()[0]->password());
 }
 
+void TestKeePass2Writer::testDeviceFailure()
+{
+    CompositeKey key;
+    key.addKey(PasswordKey("test"));
+    Database* db = new Database();
+    db->setKey(key);
+    // Disable compression so we write a predictable number of bytes.
+    db->setCompressionAlgo(Database::CompressionNone);
+
+    Entry* entry = new Entry();
+    entry->setParent(db->rootGroup());
+    QByteArray attachment(4096, 'Z');
+    entry->attachments()->set("test", attachment);
+
+    FailDevice failDevice(512);
+    QVERIFY(failDevice.open(QIODevice::WriteOnly));
+    KeePass2Writer writer;
+    writer.writeDatabase(&failDevice, db);
+    QVERIFY(writer.hasError());
+    QCOMPARE(writer.errorString(), QString("FAILDEVICE"));
+
+    delete db;
+}
+
 void TestKeePass2Writer::cleanupTestCase()
 {
     delete m_dbOrg;
     delete m_dbTest;
 }
-
-QTEST_GUILESS_MAIN(TestKeePass2Writer)

@@ -18,13 +18,14 @@
 #include "SymmetricCipherStream.h"
 
 SymmetricCipherStream::SymmetricCipherStream(QIODevice* baseDevice, SymmetricCipher::Algorithm algo,
-                                             SymmetricCipher::Mode mode, SymmetricCipher::Direction direction,
-                                             const QByteArray& key, const QByteArray& iv)
+                                             SymmetricCipher::Mode mode, SymmetricCipher::Direction direction)
     : LayeredStream(baseDevice)
-    , m_cipher(new SymmetricCipher(algo, mode, direction, key, iv))
+    , m_cipher(new SymmetricCipher(algo, mode, direction))
     , m_bufferPos(0)
     , m_bufferFilling(false)
     , m_error(false)
+    , m_isInitalized(false)
+    , m_dataWritten(false)
 {
 }
 
@@ -33,28 +34,55 @@ SymmetricCipherStream::~SymmetricCipherStream()
     close();
 }
 
+bool SymmetricCipherStream::init(const QByteArray& key, const QByteArray& iv)
+{
+    m_isInitalized = m_cipher->init(key, iv);
+    if (!m_isInitalized) {
+        setErrorString(m_cipher->errorString());
+        }
+
+    return m_isInitalized;
+    }
+
+void SymmetricCipherStream::resetInternalState()
+{
+    m_buffer.clear();
+    m_bufferPos = 0;
+    m_bufferFilling = false;
+    m_error = false;
+    m_dataWritten = false;
+    m_cipher->reset();
+}
+
+bool SymmetricCipherStream::open(QIODevice::OpenMode mode)
+{
+    if (!m_isInitalized) {
+        return false;
+    }
+
+    return LayeredStream::open(mode);
+}
+
 bool SymmetricCipherStream::reset()
 {
-    if (isWritable()) {
+    if (isWritable() && m_dataWritten) {
         if (!writeBlock(true)) {
             return false;
         }
     }
 
-    m_buffer.clear();
-    m_bufferPos = 0;
-    m_bufferFilling = false;
-    m_error = false;
-    m_cipher->reset();
+    resetInternalState();
 
     return true;
 }
 
 void SymmetricCipherStream::close()
 {
-    if (isWritable()) {
+    if (isWritable() && m_dataWritten) {
         writeBlock(true);
     }
+
+    resetInternalState();
 
     LayeredStream::close();
 }
@@ -96,11 +124,25 @@ qint64 SymmetricCipherStream::readData(char* data, qint64 maxSize)
 
 bool SymmetricCipherStream::readBlock()
 {
+    QByteArray newData;
+
     if (m_bufferFilling) {
-        m_buffer.append(m_baseDevice->read(m_cipher->blockSize() - m_buffer.size()));
+        newData.resize(m_cipher->blockSize() - m_buffer.size());
     }
     else {
-        m_buffer = m_baseDevice->read(m_cipher->blockSize());
+        m_buffer.clear();
+        newData.resize(m_cipher->blockSize());
+    }
+
+    int readResult = m_baseDevice->read(newData.data(), newData.size());
+
+    if (readResult == -1) {
+        m_error = true;
+        setErrorString(m_baseDevice->errorString());
+        return false;
+    }
+    else {
+        m_buffer.append(newData.left(readResult));
     }
 
     if (m_buffer.size() != m_cipher->blockSize()) {
@@ -108,7 +150,11 @@ bool SymmetricCipherStream::readBlock()
         return false;
     }
     else {
-        m_cipher->processInPlace(m_buffer);
+        if (!m_cipher->processInPlace(m_buffer)) {
+            m_error = true;
+            setErrorString(m_cipher->errorString());
+            return false;
+        }
         m_bufferPos = 0;
         m_bufferFilling = false;
 
@@ -125,6 +171,7 @@ bool SymmetricCipherStream::readBlock()
             else if (padLength > m_cipher->blockSize()) {
                 // invalid padding
                 m_error = true;
+                setErrorString("Invalid padding.");
                 return false;
             }
             else {
@@ -148,6 +195,7 @@ qint64 SymmetricCipherStream::writeData(const char* data, qint64 maxSize)
         return -1;
     }
 
+    m_dataWritten = true;
     qint64 bytesRemaining = maxSize;
     qint64 offset = 0;
 
@@ -176,6 +224,8 @@ qint64 SymmetricCipherStream::writeData(const char* data, qint64 maxSize)
 
 bool SymmetricCipherStream::writeBlock(bool lastBlock)
 {
+    Q_ASSERT(lastBlock || (m_buffer.size() == m_cipher->blockSize()));
+
     if (lastBlock) {
         // PKCS7 padding
         int padLen = m_cipher->blockSize() - m_buffer.size();
@@ -183,15 +233,16 @@ bool SymmetricCipherStream::writeBlock(bool lastBlock)
             m_buffer.append(static_cast<char>(padLen));
         }
     }
-    else if (m_buffer.isEmpty()) {
-        return true;
-    }
 
-    m_cipher->processInPlace(m_buffer);
+    if (!m_cipher->processInPlace(m_buffer)) {
+        m_error = true;
+        setErrorString(m_cipher->errorString());
+        return false;
+    }
 
     if (m_baseDevice->write(m_buffer) != m_buffer.size()) {
         m_error = true;
-        // TODO: copy error string
+        setErrorString(m_baseDevice->errorString());
         return false;
     }
     else {

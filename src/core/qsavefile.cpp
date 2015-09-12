@@ -44,10 +44,16 @@
 
 #include <QAbstractFileEngine>
 #include <QFileInfo>
+#include <QTemporaryFile>
 
-QSaveFilePrivate::QSaveFilePrivate() :
-  tempFile(0),
-  error(QFile::NoError)
+#ifdef Q_OS_WIN
+#  include <windows.h>
+#else
+#  include <unistd.h>
+#endif
+
+QSaveFilePrivate::QSaveFilePrivate()
+    : tempFile(0), error(QFile::NoError)
 {
 }
 
@@ -90,61 +96,36 @@ QSaveFilePrivate::~QSaveFilePrivate()
 /*!
     \internal
 */
-QSaveFile::QSaveFile() :
-  QIODevice(),
-    d_ptr(new QSaveFilePrivate)
+QSaveFile::QSaveFile()
+    : QIODevice(), d_ptr(new QSaveFilePrivate)
 {
 }
-
 /*!
     Constructs a new file object with the given \a parent.
 */
-QSaveFile::QSaveFile(QObject *parent) :
-  QIODevice(parent),
-  d_ptr(new QSaveFilePrivate)
+QSaveFile::QSaveFile(QObject *parent)
+    : QIODevice(parent), d_ptr(new QSaveFilePrivate)
 {
 }
-
 /*!
     Constructs a new file object to represent the file with the given \a name.
 */
-QSaveFile::QSaveFile(const QString &name) :
-  QIODevice(0),
-  d_ptr(new QSaveFilePrivate)
+QSaveFile::QSaveFile(const QString &name)
+    : QIODevice(0), d_ptr(new QSaveFilePrivate)
 {
   Q_D(QSaveFile);
   d->fileName = name;
 }
-
 /*!
     Constructs a new file object with the given \a parent to represent the
     file with the specified \a name.
 */
-QSaveFile::QSaveFile(const QString &name, QObject *parent) :
-  QIODevice(parent),
-  d_ptr(new QSaveFilePrivate)
+QSaveFile::QSaveFile(const QString &name, QObject *parent)
+    : QIODevice(parent), d_ptr(new QSaveFilePrivate)
 {
   Q_D(QSaveFile);
   d->fileName = name;
 }
-
-
-QSaveFile::QSaveFile(const QString &name, const QDateTime& newTime, QObject *parent) :
-QIODevice(parent), d_ptr(new QSaveFilePrivate)
-{
-    Q_D(QSaveFile);
-    d->fileName = name;
-    d->newTime = newTime;
-}
-
-QSaveFile::QSaveFile(const QString &name, const QDateTime& newTime) :
-QIODevice(0), d_ptr(new QSaveFilePrivate)
-{
-    Q_D(QSaveFile);
-    d->fileName = name;
-    d->newTime = newTime;
-}
-
 
 /*!
     Destroys the file object, discarding the saved contents unless commit() was called.
@@ -272,10 +253,8 @@ bool QSaveFile::open(OpenMode mode)
     return false;
   }
   QIODevice::open(mode);
-  if (existingFile.exists()) {
+    if (existingFile.exists())
       d->tempFile->setPermissions(existingFile.permissions());
-  }
-
   return true;
 }
 
@@ -306,8 +285,19 @@ bool QSaveFile::commit()
   Q_D(QSaveFile);
   if (!d->tempFile)
     return false;
-  Q_ASSERT(isOpen());
-  QIODevice::close();   // flush and close
+    if (!isOpen()) {
+        qWarning("QSaveFile::commit: File (%s) is not open", qPrintable(fileName()));
+        return false;
+    }
+    flush();
+#ifdef Q_OS_WIN
+    FlushFileBuffers(reinterpret_cast<HANDLE>(handle()));
+#elif defined(_POSIX_SYNCHRONIZED_IO) && _POSIX_SYNCHRONIZED_IO > 0
+    fdatasync(d->tempFile->handle());
+#else
+    fsync(d->tempFile->handle());
+#endif
+    QIODevice::close();
   if (d->error != QFile::NoError) {
     d->tempFile->remove();
     unsetError();
@@ -316,7 +306,6 @@ bool QSaveFile::commit()
     return false;
   }
   d->tempFile->close();
-  RemoteTools::setLastModificationDate(d->tempFile->fileName(), d->newTime);
 #ifdef Q_OS_WIN
   // On Windows QAbstractFileEngine::rename() fails if the the target exists,
   // so we have to rename the target.

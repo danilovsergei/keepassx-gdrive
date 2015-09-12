@@ -17,11 +17,11 @@
 
 #include "Config.h"
 
+#include <QCoreApplication>
+#include <QDesktopServices>
 #include <QDir>
 #include <QSettings>
 #include <QTemporaryFile>
-#include <QApplication>
-#include <QDesktopServices>
 #include <QDebug>
 
 Config* Config::m_instance(Q_NULLPTR);
@@ -72,11 +72,12 @@ Config::Config(QObject* parent)
     userPath += "/keepassx/";
 #else
     userPath = QDir::fromNativeSeparators(QDesktopServices::storageLocation(QDesktopServices::DataLocation));
-    userPath += "/keepassx/";
+    // storageLocation() appends the application name ("/keepassx") to the end
+    userPath += "/";
 #endif
 
     userPath += "keepassx2.ini";
-    this->userPath=userPath;
+
     init(userPath);
 }
 
@@ -84,23 +85,30 @@ Config::~Config()
 {
 }
 
-QString Config::getConfigDir() {
-    return QDir::toNativeSeparators(QFileInfo(userPath).path());
-
-}
-
 void Config::init(const QString& fileName)
 {
     m_settings.reset(new QSettings(fileName, QSettings::IniFormat));
 
     m_defaults.insert("RememberLastDatabases", true);
+    m_defaults.insert("RememberLastKeyFiles", true);
     m_defaults.insert("OpenPreviousDatabasesOnStartup", true);
-    m_defaults.insert("ModifiedOnExpandedStateChanges", true);
     m_defaults.insert("AutoSaveAfterEveryChange", false);
     m_defaults.insert("AutoSaveOnExit", false);
     m_defaults.insert("ShowToolbar", true);
+    m_defaults.insert("MinimizeOnCopy", false);
+    m_defaults.insert("UseGroupIconOnEntryCreation", false);
+    m_defaults.insert("AutoTypeEntryTitleMatch", true);
     m_defaults.insert("security/clearclipboard", true);
     m_defaults.insert("security/clearclipboardtimeout", 10);
+    m_defaults.insert("security/lockdatabaseidle", false);
+    m_defaults.insert("security/lockdatabaseidlesec", 10);
+    m_defaults.insert("security/passwordscleartext", false);
+    m_defaults.insert("security/autotypeask", true);
+    m_defaults.insert("GUI/Language", "system");
+    m_defaults.insert("GUI/ShowTrayIcon", false);
+    m_defaults.insert("GUI/MinimizeToTray", false);
+
+   // cloud sync configuration
     m_defaults.insert("cloud/dbdir",QDir::toNativeSeparators(QFileInfo(fileName).path()+"/cloud"));
     //default value means all keepass databases will stored in the Google drive root folder
     m_defaults.insert("cloud/GdriveKeepassFolder","");
@@ -118,7 +126,7 @@ Config* Config::instance()
     return m_instance;
 }
 
-void Config::createConfigFromFile(QString file)
+void Config::createConfigFromFile(const QString& file)
 {
     Q_ASSERT(!m_instance);
     m_instance = new Config(file, qApp);
