@@ -762,9 +762,8 @@ Entry* KeePass2XmlReader::parseEntry(bool history)
             entry->setUpdateTimeinfo(false);
         }
         else {
-            // TODO Sdanilov: find out why we replace locationChanged time here for Entry
             Entry* tmpEntry = entry;
-
+            // TODO Sdanilov: find out why we replace locationChanged time here for Entry
             entry = getEntry(tmpEntry->uuid());
             entry->copyDataFrom(tmpEntry);
             entry->setUpdateTimeinfo(false);

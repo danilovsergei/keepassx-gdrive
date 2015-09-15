@@ -62,7 +62,7 @@ QString FilePath::pluginPath(const QString& name)
             QString absolutePluginDir = QString("%1/%2")
                     .arg(KEEPASSX_PREFIX_DIR, configuredPluginDir);
             pluginPaths << QDir(absolutePluginDir).canonicalPath();
-    }
+        }
     }
 
     QStringList dirFilter;

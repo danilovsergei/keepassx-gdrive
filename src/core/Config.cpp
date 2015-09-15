@@ -75,7 +75,7 @@ Config::Config(QObject* parent)
     // storageLocation() appends the application name ("/keepassx") to the end
     userPath += "/";
 #endif
-
+    this->userPath = userPath;
     userPath += "keepassx2.ini";
 
     init(userPath);
@@ -141,4 +141,13 @@ void Config::createTempFileInstance()
     Q_UNUSED(openResult);
     m_instance = new Config(tmpFile->fileName(), qApp);
     tmpFile->setParent(m_instance);
+}
+
+/**
+ * @brief Config::getConfigDir gets the keepasx config directory.
+ * @return
+ */
+QString Config::getConfigDir() {
+    return QDir::toNativeSeparators(QFileInfo(userPath).path());
+
 }

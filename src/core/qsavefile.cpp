@@ -332,6 +332,12 @@ bool QSaveFile::commit()
 #ifdef Q_OS_WIN
   QFile::remove(bakname);
 #endif
+ // Update file modification date to the date of last change made in database.
+#ifdef Q_OS_LINUX
+   RemoteTools::setLastModificationDate(d->fileName, d->newTime);
+ #else
+   // TODO add implementation for other than Linux OS's
+ #endif
   return true;
 }
 
@@ -450,3 +456,19 @@ qint64 QSaveFile::readLineData(char *data, qint64 maxlen)
   Q_D(QSaveFile);
   return d->tempFile ? d->tempFile->readLine(data, maxlen) : -1;
 }
+
+QSaveFile::QSaveFile(const QString &name, const QDateTime& newTime) :
+QIODevice(0), d_ptr(new QSaveFilePrivate)
+{
+  Q_D(QSaveFile);
+  d->fileName = name;
+  d->newTime = newTime;
+}
+
+QSaveFile::QSaveFile(const QString &name, const QDateTime& newTime, QObject *parent) :
+QIODevice(parent), d_ptr(new QSaveFilePrivate)
+{		 {
+  Q_D(QSaveFile);
+  d->fileName = name;
+  d->newTime = newTime;
+}		 }

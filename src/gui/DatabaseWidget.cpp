@@ -46,6 +46,11 @@
 #include "gui/group/EditGroupWidget.h"
 #include "gui/group/GroupView.h"
 
+// Remote sync includes and metatypes.
+#include "gui/DatabaseOpenWidgetCloud.h"
+Q_DECLARE_METATYPE(Database*)
+Q_DECLARE_METATYPE(QSharedPointer<SyncObject >)
+
 DatabaseWidget::DatabaseWidget(Database* db, QWidget* parent)
     : QStackedWidget(parent)
     , m_db(db)
@@ -54,6 +59,7 @@ DatabaseWidget::DatabaseWidget(Database* db, QWidget* parent)
     , m_newGroup(Q_NULLPTR)
     , m_newEntry(Q_NULLPTR)
     , m_newParent(Q_NULLPTR)
+    , m_tabWidget(parent)
 {
     m_searchUi->setupUi(m_searchWidget);
 
@@ -128,6 +134,12 @@ DatabaseWidget::DatabaseWidget(Database* db, QWidget* parent)
     m_keepass1OpenWidget->setObjectName("keepass1OpenWidget");
     m_unlockDatabaseWidget = new UnlockDatabaseWidget();
     m_unlockDatabaseWidget->setObjectName("unlockDatabaseWidget");
+
+    // Remote db open widget.
+    m_databaseOpenWidgetCloud= new DatabaseOpenWidgetCloud();
+    m_databaseOpenWidgetCloud->headlineLabel()->setText(tr("Open cloud database"));
+    m_databaseOpenWidgetCloud->headlineLabel()->setFont(headlineLabelFont);
+
     addWidget(m_mainWidget);
     addWidget(m_editEntryWidget);
     addWidget(m_editGroupWidget);
@@ -137,6 +149,7 @@ DatabaseWidget::DatabaseWidget(Database* db, QWidget* parent)
     addWidget(m_databaseOpenWidget);
     addWidget(m_keepass1OpenWidget);
     addWidget(m_unlockDatabaseWidget);
+    addWidget(m_databaseOpenWidgetCloud);
 
     connect(m_splitter, SIGNAL(splitterMoved(int,int)), SIGNAL(splitterSizesChanged()));
     connect(m_entryView->header(), SIGNAL(sectionResized(int,int,int)), SIGNAL(entryColumnSizesChanged()));
@@ -164,6 +177,27 @@ DatabaseWidget::DatabaseWidget(Database* db, QWidget* parent)
     connect(m_searchTimer, SIGNAL(timeout()), this, SLOT(search()));
     connect(closeAction, SIGNAL(triggered()), this, SLOT(closeSearch()));
 
+    // Remote db open  connect.
+    // TODO find better way to check whether cmake google drive is enabled.
+    if (QString(GOOGLE_DRIVE_SYNC) == "ON") {
+        // initialize credentials in gui thread because it could contain UI pages
+        // to let user approve access to accounts like GMAIL
+        AuthCredentials* creds = new GoogleDriveCredentials(this);
+        CommandsFactory* commandsFactory = new CommandsFactoryImpl(this,creds);
+        // remote drive will be used to call all remote drive functions like sync , upload, download
+        remoteDrive = new RemoteDriveApi(this,commandsFactory);
+        syncCommand = remoteDrive->sync();
+        uploadCommand  = remoteDrive->upload();
+         syncCloudDir = config()->get(RemoteDrive::CONFIG_KEEPASS_REMOTE_FOLDER).toString();
+        // update last db last modification time to use it for sync with remote database
+        connect(m_databaseOpenWidgetCloud, SIGNAL(dbRejected()),SLOT(rejectDb()));
+        connect(m_databaseOpenWidgetCloud,SIGNAL(dbSelected(QString)),this,SLOT(cloudDbOpen(QString)));
+        connect(m_editEntryWidget, SIGNAL(editFinished(bool)), SLOT(setLastModified(bool)));
+        connect(m_editGroupWidget, SIGNAL(editFinished(bool)), SLOT(setLastModified(bool)));
+        connect(syncCommand.data(), SIGNAL(finished()),      this, SLOT(syncDone()));
+        connect(this, SIGNAL(databaseSaved(Database*, QString)), this, SLOT(saveDatabaseToCloud(Database*, QString)));
+        connect(this, SIGNAL(requestSaveDatabase(Database*, bool)), m_tabWidget, SLOT(saveDatabase(Database*, bool)));
+    }
     setCurrentWidget(m_mainWidget);
 }
 
@@ -627,14 +661,19 @@ void DatabaseWidget::updateMasterKey(bool accepted)
     setCurrentWidget(m_mainWidget);
 }
 
+/**
+ * @brief DatabaseWidget::openDatabase loads db view to the current widget
+ * after user entered correct credentials on DatabaseOpenWidget
+ * @param accepted
+ */
 void DatabaseWidget::openDatabase(bool accepted)
 {
     if (accepted) {
         replaceDatabase(static_cast<DatabaseOpenWidget*>(sender())->database());
         setCurrentWidget(m_mainWidget);
 
-         // save the time when initial db opened
-        // will update it each time when database in memory changed and use to decide where to run sync
+        // Save the time when initial db opened.
+        // Will update it each time when database in memory changed and use to decide where to run sync.
         m_db->metadata()->setLastModifiedDate(QFileInfo(m_filename).lastModified());
         syncDatabase();
 
@@ -1060,6 +1099,82 @@ void DatabaseWidget::syncError(int ErrorType, QString description) {
 void DatabaseWidget::setLastModified(bool accepted) {
   accepted?m_db->metadata()->setLastModifiedDate(QDateTime::currentDateTime()): void();
 }
+
+/**
+ * @brief DatabaseWidget::switchToCloudDbOpen switches current widget to the databaseOpenWidgetCloud
+ */
+void DatabaseWidget::switchToCloudDbOpen()
+{
+    m_databaseOpenWidgetCloud->loadSupportedCloudEngines();
+    setCurrentWidget(m_databaseOpenWidgetCloud);
+}
+
+/**
+ * @brief DatabaseWidget::cloudDbOpen  emits a signal
+ *  that db from the cloud was open by databaseOpenWidgetCloud
+ * @param dbPath
+ */
+void DatabaseWidget::cloudDbOpen(QString dbPath) {
+Q_ASSERT(!dbPath.isNull() && !dbPath.isEmpty());
+qDebug() <<"DB was selected and passed to a slot::"+dbPath;
+//Pass path to the downloaded database and key to dbStruct array to get this struct from another widget
+Q_EMIT cloudDbSelected(dbPath,m_db);
+
+}
+
+/**
+ * @brief DatabaseWidget::rejectDb emits a signal when user cancelled cloud db open  dialog
+ */
+void DatabaseWidget::rejectDb() {
+    qDebug() << "Emitting cloudDbRejected";
+    Q_EMIT cloudDbRejected(m_db);
+
+}
+
+/**
+ * @brief DatabaseWidget::syncDatabase performs sync of the currently open database with database in the cloud
+ * local database file will be updated as well to prevent loosing changes
+ */
+void DatabaseWidget::syncDatabase() {
+    // Perfom asyncronous sync of recent database with remote database if
+    // GOOGLE_DRIVE_SYNC feature enabled through CMAKE
+    if (QString(GOOGLE_DRIVE_SYNC) != "ON") return;
+      // write general method to run commands in thread
+      syncCommand->executeAsync(OptionsBuilder().addOption(OPTION_DB_POINTER,m_db).addOption(OPTION_ABSOLUTE_DB_NAME,m_filename).build());
+      //Changes will be applied to the already opened database
+      //typically it will take 1-2 seconds while user will browse to an item
+      //TODO prevent or warn user copy the value if database is still in sync
+}
+
+/**
+ * @brief DatabaseWidget::emitDatabaseSaved emits a signal database was saved.
+ * Used to connect saveDatabase in DatabaseTabWidget with connected slots in DatabaseWidget
+ * @param db database which was saved
+ * @param filePath path to the local database file
+ * @param saveToCloud should signal trigger saving to the cloud.
+ *   In such cases when local databases saved locally after sync with newer remote database
+ *   we don't need to save it again remotely
+ */
+void DatabaseWidget::emitDatabaseSaved(Database *db, const QString filePath) {
+    Q_EMIT databaseSaved(db, filePath);
+}
+
+/**
+ * @brief DatabaseWidget::saveDatabaseToCloud - uploads current version of the database to the selected cloud
+ * @param db - database which will be loaded to cloud
+ */
+void DatabaseWidget::saveDatabaseToCloud(Database *db, const QString filePath)
+{
+  // Perfom asyncronous upload of the local database to the cloud
+  // GOOGLE_DRIVE_SYNC feature enabled through CMAKE
+  if (QString(GOOGLE_DRIVE_SYNC) != "ON") return;
+  uploadCommand->executeAsync(OptionsBuilder().addOption(OPTION_ABSOLUTE_DB_NAME,
+                                                       filePath).addOption(
+                              OPTION_LAST_MODIFIED_TIME,
+                              db->metadata()->
+                              lastModifiedDate()).addOption(OPTION_PARENT_NAME, syncCloudDir).build());
+}
+
 
 //void DatabaseWidget::showSyncLoginPage(QWebView* view) {
 //view->show();

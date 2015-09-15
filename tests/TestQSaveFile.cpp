@@ -203,16 +203,27 @@ QString TestQSaveFile::tmpDir()
     return dirName;
 }
 
+/**
+ * @brief TestQSaveFile::testModificationTimeUpdate checks file last modification time
+ * updated on commit.
+ */
 void TestQSaveFile::testModificationTimeUpdate() {
     const QString dir = tmpDir();
     QVERIFY(!dir.isEmpty());
     const QString targetFile = dir + QString::fromLatin1("/outfile");
-    QScopedPointer<QTemporaryFile> tmpFile(new QTemporaryFile());
-    tmpFile->open();
-    tmpFile->close();
-    QSaveFile file(targetFile);
+    DirCleanup dirCleanup(dir, "outfile");
+    QFile::remove(targetFile);
     int num = 1438746441155;
-    RemoteTools::setLastModificationDate(tmpFile.data()->fileName(), QDateTime::fromMSecsSinceEpoch(num));
-    QFileInfo fileObj(tmpFile->fileName());
-    QCOMPARE(fileObj.lastModified().toMSecsSinceEpoch(), QDateTime::fromTime_t(num).toMSecsSinceEpoch());
+    QDateTime testTime = QDateTime::fromMSecsSinceEpoch(num);
+    QSaveFile file(targetFile, testTime);
+    QVERIFY(file.open(QIODevice::WriteOnly));
+    QVERIFY(file.isOpen());
+
+    QTextStream ts(&file);
+    ts << "This is test data one.\n";
+    ts.flush();
+    QCOMPARE(file.error(), QFile::NoError);
+    file.commit();
+    QFileInfo fileObj(targetFile);
+    QCOMPARE(fileObj.lastModified().toLocalTime().toTime_t(), testTime.toLocalTime().toTime_t());
 }

@@ -66,6 +66,8 @@ public:
     QTemporaryFile *tempFile;
 
     QFile::FileError error;
+
+    QDateTime newTime;
 };
 
 #endif // QSAVEFILE_P_H

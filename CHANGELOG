@@ -1,4 +1,4 @@
-2.0 Beta 1 (2015-07-18)
+.0 Beta 1 (2015-07-18)
 =========================
 
 - Remember entry column sizes [#159]
@@ -68,7 +68,6 @@
 - Search in databases [#24]
 - Sortable entry view
 - Support building Mac OS X bundles
-
 
 2.0 Alpha 1 (2012-05-07)
 =========================

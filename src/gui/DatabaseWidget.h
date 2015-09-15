@@ -26,6 +26,15 @@
 
 #include "gui/entry/EntryModel.h"
 
+// Remote drive sync includes
+#include "remotedrive/SyncObject.h"
+#include "remotedrive/RemoteDriveApi.h"
+#include "remotedrive/gdrive/CommandsFactoryImpl.h"
+#include "remotedrive/gdrive/GoogleDriveCredentials.h"
+#include "remotedrive/Errors.h"
+#include "remotedrive/OptionsBuilder.h"
+#include "config-keepassx.h"
+
 class ChangeMasterKeyWidget;
 class DatabaseOpenWidget;
 class DatabaseSettingsWidget;
@@ -41,6 +50,8 @@ class QFile;
 class QMenu;
 class QSplitter;
 class UnlockDatabaseWidget;
+
+// Required by remote db sync.
 class DatabaseOpenWidgetCloud;
 using namespace DatabaseSyncObject;
 
@@ -103,6 +114,8 @@ Q_SIGNALS:
     void searchModeActivated();
     void splitterSizesChanged();
     void entryColumnSizesChanged();
+
+    // Remote sync signals.
     void cloudDbSelected(const QString& fileName,Database* db);
     void cloudDbRejected(Database* db);
     void databaseSaved(Database* db,  const QString filePath);
@@ -131,11 +144,13 @@ public Q_SLOTS:
     void switchToOpenDatabase(const QString& fileName, const QString& password, const QString& keyFile);
     void switchToImportKeepass1(const QString& fileName);
     void openSearch();
-   void cloudDbOpen(QString dbPath);
+    // Remote sync slots
+    void cloudDbOpen(QString dbPath);
     void syncDone();
     void syncError(int ErrorType, QString description);
     void saveDatabaseToCloud(Database *db, const QString filePath);
     void emitDatabaseSaved(Database *db, const QString filePath);
+    void switchToCloudDbOpen();
     //void showSyncLoginPage();
 
 private Q_SLOTS:
@@ -158,6 +173,12 @@ private Q_SLOTS:
     void startSearchTimer();
     void showSearch();
     void closeSearch();
+
+    // Remote sync slots
+    void rejectDb();
+    void syncDatabase();
+    // set last modification time of database when entry/group was changed
+    void setLastModified(bool accepted);
 
 private:
     void setClipboardTextAndMinimize(const QString& text);
@@ -186,6 +207,10 @@ private:
     QTimer* m_searchTimer;
     QString m_filename;
     Uuid m_groupBeforeLock;
+
+    // Remote db sync needed vars.
+    QWidget* m_tabWidget;
+    DatabaseOpenWidgetCloud* m_databaseOpenWidgetCloud;
     RemoteDriveApi* remoteDrive;
     KeePassxDriveSync::Command  syncCommand;
     KeePassxDriveSync::Command uploadCommand;

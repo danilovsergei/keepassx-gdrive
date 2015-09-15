@@ -24,6 +24,7 @@ project(KeePassX)
 cmake_minimum_required(VERSION 2.6.4)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+
 include(CheckCCompilerFlag)
 include(CheckCXXCompilerFlag)
 include(CheckCXXSourceCompiles)
@@ -32,6 +33,7 @@ option(WITH_TESTS "Enable building of unit tests" ON)
 option(WITH_GUI_TESTS "Enable building of GUI tests" OFF)
 option(WITH_LTO "Enable Link Time Optimization (LTO)" OFF)
 option(WITH_CXX11 "Build with the C++ 11 standard" ON)
+option(WITH_GOOGLE_DRIVE "Enable support for syncing with google drive" ON)
 
 set(KEEPASSX_VERSION "2.0 beta 1")
 set(KEEPASSX_VERSION_NUM "1.9.91")
@@ -70,7 +72,8 @@ add_gcc_compiler_flags("-Wformat=2 -Wmissing-format-attribute")
 add_gcc_compiler_flags("-fvisibility=hidden")
 add_gcc_compiler_cxxflags("-fvisibility-inlines-hidden")
 
-add_gcc_compiler_cxxflags("-fno-exceptions -fno-rtti")
+# Temporary remote -fno-exceptions. Add back when gdrive will be moved to a library
+add_gcc_compiler_cxxflags("-fno-rtti")
 add_gcc_compiler_cxxflags("-Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual")
 add_gcc_compiler_cflags("-Wchar-subscripts -Wwrite-strings")
 
@@ -220,6 +223,12 @@ add_subdirectory(src)
 add_subdirectory(share)
 add_subdirectory(utils)
 if(WITH_TESTS)
+  # Required by remote db sync.
+  if(WITH_GOOGLE_DRIVE)
+    #use to set custom parent directory , usermail and password for tests with google drive
+    set(TEST_GOOGLE_DRIVE_DIR "0B8tltL21wts3alc0eS00UVRLNnc")
+  endif(WITH_GOOGLE_DRIVE)
+
   add_subdirectory(tests)
 endif(WITH_TESTS)
 

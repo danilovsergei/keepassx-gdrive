@@ -100,15 +100,6 @@ void DatabaseOpenWidget::openDatabase()
 {
   KeePass2Reader reader;
   CompositeKey   masterKey = databaseKey();
-    if (masterKey.isEmpty()) {
-        return;
-    }
-
-    QFile file(m_filename);
-    if (!file.open(QIODevice::ReadOnly)) {
-        // TODO: error message
-        return;
-    }
   if (m_db) {
     delete m_db;
   }
@@ -117,6 +108,7 @@ void DatabaseOpenWidget::openDatabase()
   QApplication::restoreOverrideCursor();
 
   if (m_db) {
+    // signal switched focus to opened database view
     Q_EMIT editFinished(true);
   }
   else {

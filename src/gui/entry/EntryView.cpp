@@ -80,8 +80,8 @@ void EntryView::setFirstEntryActive()
         setCurrentEntry(m_model->entryFromIndex(index));
     }
     else {
-    Q_EMIT entrySelectionChanged();
-}
+        Q_EMIT entrySelectionChanged();
+    }
 }
 
 bool EntryView::inEntryListMode()

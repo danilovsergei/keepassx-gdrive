@@ -112,6 +112,9 @@ public:
      */
     Group* clone(Entry::CloneFlags entryFlags = Entry::CloneNewUuid | Entry::CloneResetTimeInfo) const;
     void copyDataFrom(const Group* other);
+    QMap<Uuid,Entry*> entriesMapRecursive() const;
+    QMap<Uuid,Group*> groupsMapRecursive(bool includeSelf);
+    QString getGroupName() const;
 
 Q_SIGNALS:
     void dataChanged(Group* group);

@@ -124,6 +124,8 @@ MainWindow::MainWindow()
 
     m_ui->actionSearch->setIcon(filePath()->icon("actions", "system-search"));
 
+    m_ui->actionSync->setIcon(filePath()->icon("actions", "gdrive-sync"));
+
     m_actionMultiplexer.connect(SIGNAL(currentModeChanged(DatabaseWidget::Mode)),
                                 this, SLOT(setMenuActionState(DatabaseWidget::Mode)));
     m_actionMultiplexer.connect(SIGNAL(groupChanged()),
@@ -170,6 +172,9 @@ MainWindow::MainWindow()
             SLOT(lockDatabases()));
     connect(m_ui->actionQuit, SIGNAL(triggered()), SLOT(close()));
 
+    connect(m_ui->actionOpen_Cloud_database,SIGNAL(triggered()),m_ui->tabWidget,
+            SLOT(openCloudDatabase()));
+
     m_actionMultiplexer.connect(m_ui->actionEntryNew, SIGNAL(triggered()),
             SLOT(createEntry()));
     m_actionMultiplexer.connect(m_ui->actionEntryClone, SIGNAL(triggered()),
@@ -207,6 +212,9 @@ MainWindow::MainWindow()
 
     m_actionMultiplexer.connect(m_ui->actionSearch, SIGNAL(triggered()),
                                 SLOT(openSearch()));
+
+    m_actionMultiplexer.connect(m_ui->actionSync, SIGNAL(triggered()),
+                                SLOT(syncDatabase()));
 
     updateTrayIcon();
 }
@@ -307,6 +315,10 @@ void MainWindow::setMenuActionState(DatabaseWidget::Mode mode)
             m_ui->actionDatabaseSave->setEnabled(true);
             m_ui->actionDatabaseSaveAs->setEnabled(true);
             m_ui->actionExportCsv->setEnabled(true);
+
+            // Turn on remote database sync
+            m_ui->actionSync->setEnabled(true);
+
             break;
         }
         case DatabaseWidget::EditMode:

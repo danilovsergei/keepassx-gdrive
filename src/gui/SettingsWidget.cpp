@@ -19,9 +19,14 @@
 #include "ui_SettingsWidgetGeneral.h"
 #include "ui_SettingsWidgetSecurity.h"
 
+
 #include "autotype/AutoType.h"
 #include "core/Config.h"
 #include "core/Translator.h"
+
+// Required by remote db sync.
+#include "ui_SettingsWidgetCloud.h"
+#include "QtGui/QFileDialog"
 
 SettingsWidget::SettingsWidget(QWidget* parent)
     : EditWidget(parent)
@@ -31,6 +36,8 @@ SettingsWidget::SettingsWidget(QWidget* parent)
     , m_generalUi(new Ui::SettingsWidgetGeneral())
     , m_globalAutoTypeKey(static_cast<Qt::Key>(0))
     , m_globalAutoTypeModifiers(Qt::NoModifier)
+    , m_cloudWidget(new QWidget)
+    , m_cloudUi(new Ui::SettingsWidgetCloud())
 {
     setHeadline(tr("Application Settings"));
 
@@ -41,6 +48,10 @@ SettingsWidget::SettingsWidget(QWidget* parent)
 
     m_generalUi->autoTypeShortcutWidget->setVisible(autoType()->isAvailable());
     m_generalUi->autoTypeShortcutLabel->setVisible(autoType()->isAvailable());
+
+    // Remote db sync widget setup.
+    m_cloudUi->setupUi(m_cloudWidget);
+    add(tr("Cloud"),m_cloudWidget);
 
     connect(this, SIGNAL(accepted()), SLOT(saveSettings()));
     connect(this, SIGNAL(rejected()), SLOT(reject()));
@@ -54,6 +65,9 @@ SettingsWidget::SettingsWidget(QWidget* parent)
             m_secUi->clearClipboardSpinBox, SLOT(setEnabled(bool)));
     connect(m_secUi->lockDatabaseIdleCheckBox, SIGNAL(toggled(bool)),
             m_secUi->lockDatabaseIdleSpinBox, SLOT(setEnabled(bool)));
+
+    // Remote db sync connections.
+    connect(m_cloudUi->browseButton, SIGNAL(clicked()), SLOT(browseDbDirectory()));
 }
 
 SettingsWidget::~SettingsWidget()
@@ -103,6 +117,9 @@ void SettingsWidget::loadSettings()
 
     m_secUi->autoTypeAskCheckBox->setChecked(config()->get("security/autotypeask").toBool());
 
+    // Remote db sync default settings.
+    m_cloudUi->dbDirectory->setText(config()->get("cloud/dbdir").toString());
+
     setCurrentRow(0);
 }
 
@@ -141,6 +158,9 @@ void SettingsWidget::saveSettings()
 
     config()->set("security/autotypeask", m_secUi->autoTypeAskCheckBox->isChecked());
 
+    // Remote db sync settings.
+    config()->set("cloud/dbdir",m_cloudUi->dbDirectory->text());
+
     Q_EMIT editFinished(true);
 }
 
@@ -157,4 +177,16 @@ void SettingsWidget::reject()
 void SettingsWidget::enableAutoSaveOnExit(bool checked)
 {
     m_generalUi->autoSaveOnExitCheckBox->setEnabled(!checked);
+}
+
+void SettingsWidget::browseDbDirectory()
+{
+    QString fileName= QFileDialog::getExistingDirectory(this, tr("Open Directory"),
+                                                 config()->getConfigDir(),
+                                                 QFileDialog::ShowDirsOnly
+                                                 | QFileDialog::DontResolveSymlinks);
+
+    if (!fileName.isEmpty()) {
+        m_cloudUi->dbDirectory->setText(fileName);
+    }
 }

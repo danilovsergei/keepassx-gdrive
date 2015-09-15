@@ -37,6 +37,8 @@ public:
     bool operator!=(const Uuid& other) const;
     static const int Length;
     static Uuid fromBase64(const QString& str);
+    bool operator>(const Uuid& other) const;
+    bool operator<(const Uuid& other) const;
 
 private:
     QByteArray m_data;

@@ -49,6 +49,9 @@ Metadata::Metadata(QObject* parent)
     m_recycleBinChanged = now;
     m_entryTemplatesGroupChanged = now;
     m_masterKeyChanged = now;
+
+    // Required by remote db sync.
+    m_lastModified=now;
 }
 
 template <class P, class V> bool Metadata::set(P& property, const V& value)
@@ -459,3 +462,32 @@ void Metadata::removeCustomField(const QString& key)
     m_customFields.remove(key);
     Q_EMIT modified();
 }
+
+/**
+ * @brief Metadata::setLastModifiedDate sets database last modification date.
+ * Runtime variable only. Will not be saved with a database saving
+ */
+void Metadata::setLastModifiedDate(const QDateTime& date) {
+    if  (m_update_lastModified) {
+        m_lastModified=date;
+    }
+
+}
+
+/**
+ * @brief Metadata::lastModifiedDate returns
+ * @return  database last modification date as QDateTime.
+ */
+QDateTime Metadata::lastModifiedDate() const
+{
+ return m_lastModified;
+}
+/**
+ * @brief Metadata::setUpdateLastModifiedDate  triggers whether m_lastModified will be updated
+ * upon each setLastModifiedDate call.
+ * For now set to false only for db sync to prevent m_lastModified set to now instead real remote db time
+ */
+void Metadata::setUpdateLastModifiedDate(bool value) {
+    m_update_lastModified = value;
+}
+

@@ -97,7 +97,7 @@ void DatabaseTabWidget::newDatabase()
     dbStruct.dbWidget->switchToMasterKeyChange();
 }
 
-* @brief DatabaseTabWidget::openDatabase opens database from system file open dialog
+/* @brief DatabaseTabWidget::openDatabase opens database from system file open dialog
 * when user selects Open database from menu
 */
 void DatabaseTabWidget::openDatabase()
@@ -309,15 +309,14 @@ bool DatabaseTabWidget::closeAllDatabases()
  * @brief DatabaseTabWidget::saveDatabase called when user invokes SaveDatabase from menu
  * @param db
  */
-bool DatabaseTabWidget::saveDatabase(Database* db, bool syncToCloud)
+bool DatabaseTabWidget::saveDatabase(Database* db,  bool syncToCloud)
 {
-    DatabaseManagerStruct& dbStruct = m_dbList[db];
+  DatabaseManagerStruct &dbStruct = m_dbList[db];
 
-    if (dbStruct.saveToFilename) {
-        QSaveFile saveFile(dbStruct.filePath, db->metadata()->lastModifiedDate());
-        qDebug() << "save file with a date: " + db->metadata()->lastModifiedDate().toLocalTime().toString();
-        if (saveFile.open(QIODevice::WriteOnly)) {
-            m_writer.writeDatabase(&saveFile, db);
+  if (dbStruct.saveToFilename) {
+        QSaveFile saveFile(dbStruct.filePath);
+    if (saveFile.open(QIODevice::WriteOnly)) {
+      m_writer.writeDatabase(&saveFile, db);
             if (m_writer.hasError()) {
                 MessageBox::critical(this, tr("Error"), tr("Writing the database failed.") + "\n\n"
                                      + m_writer.errorString());
@@ -328,15 +327,20 @@ bool DatabaseTabWidget::saveDatabase(Database* db, bool syncToCloud)
                                      + saveFile.errorString());
                 return false;
             }
-        }
+    }
 
-        dbStruct.modified = false;
-        updateTabName(db);
+      dbStruct.modified = false;
+      updateTabName(db);
+
+        // Process with sync to cloud changes.
+        // Get local database modification time.
+        QFileInfo info(dbStruct.filePath);
         if (syncToCloud) {
           Q_EMIT currentDatabaseWidget()->emitDatabaseSaved(db,  dbStruct.filePath);
         }
+
         return true;
-    }
+      }
     else {
         return saveDatabaseAs(db);
     }
@@ -885,8 +889,11 @@ void DatabaseTabWidget::openDatabaseDownloadedFromCloud(const QString &fileName,
  *   also uploads it to the cloud if cloud/upload_on_save config option set to true
  * @param db Database to save locally
  */
-void DatabaseTabWidget::saveDatabaseWithSync(Database *db) {
+bool DatabaseTabWidget::saveDatabaseWithSync(Database *db) {
+    bool result = false;
     if (config()->get("cloud/upload_on_save").toBool()) {
-        saveDatabase(db, true);
+        result = saveDatabase(db, true);
     }
+    return result;
 }
+

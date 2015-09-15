@@ -87,7 +87,7 @@ set(GDRIVE_DEPS
     google_drive
 )
 
-set(TEST_LIBRARIES
+set(PROJECT_DEPS
     keepassx_core
     ${QT_QTCORE_LIBRARY}
     ${QT_QTGUI_LIBRARY}
@@ -96,6 +96,12 @@ set(TEST_LIBRARIES
     ${ZLIB_LIBRARIES}
     ${GDRIVE_DEPS}
 )
+
+set(TEST_LIBRARIES
+    ${PROJECT_DEPS}
+    test_tools
+)
+
 add_subdirectory(remotedrive)
 set(TESTTOOLS_HEADERS
     GDriveTestUtils.h

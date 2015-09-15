@@ -369,8 +369,8 @@ KeySym AutoTypePlatformX11::charToKeySym(const QChar& ch)
         return unicode | 0x01000000;
     }
 
-        return NoSymbol;
-    }
+    return NoSymbol;
+}
 
 KeySym AutoTypePlatformX11::keyToKeySym(Qt::Key key)
 {
@@ -447,7 +447,7 @@ void AutoTypePlatformX11::updateKeymap()
         if (QString(devices[i].name) == "Virtual core XTEST keyboard") {
             keyboard_id = devices[i].id;
             break;
-    }
+        }
     }
 
     m_xkb = XkbGetKeyboard(m_dpy, XkbCompatMapMask | XkbGeometryMask, keyboard_id);
@@ -468,7 +468,7 @@ void AutoTypePlatformX11::updateKeymap()
                m_currentRemapKeysym = NoSymbol;
                break;
             }
-}
+        }
     }
 
     /* determine the keycode to use for modifiers */
@@ -555,11 +555,11 @@ int AutoTypePlatformX11::AddKeysym(KeySym keysym)
     m_currentRemapKeysym = keysym;
 
     XChangeKeyboardMapping(m_dpy, m_remapKeycode, m_keysymPerKeycode, &m_keysymTable[inx], 1);
-                        XFlush(m_dpy);
+    XFlush(m_dpy);
     updateKeymap();
 
     return m_remapKeycode;
-        }
+}
 
 /*
  * Send event to the focused window.
@@ -583,7 +583,7 @@ void AutoTypePlatformX11::SendEvent(XKeyEvent* event, int event_type)
  * which are set in the mask variable.
  */
 void AutoTypePlatformX11::SendModifier(XKeyEvent *event, unsigned int mask, int event_type) 
-        {
+{
     int mod_index;
     for (mod_index = ShiftMapIndex; mod_index <= Mod5MapIndex; mod_index ++) {
         if (mask & (1 << mod_index)) {
@@ -593,9 +593,9 @@ void AutoTypePlatformX11::SendModifier(XKeyEvent *event, unsigned int mask, int 
                 event->state |= (1 << mod_index);
             else
                 event->state &= (1 << mod_index);
-            }
         }
     }
+}
 
 /*
  * Determines the keycode and modifier mask for the given
@@ -613,11 +613,11 @@ int AutoTypePlatformX11::GetKeycode(KeySym keysym, unsigned int *mask)
     keycode = AddKeysym(keysym);
     if (keycode && keysymModifiers(keysym, keycode, mask)) {
         return keycode;
-        }
+    }
 
     *mask = 0;
     return 0;
-    }
+}
 
 bool AutoTypePlatformX11::keysymModifiers(KeySym keysym, int keycode, unsigned int *mask)
 {
@@ -633,9 +633,9 @@ bool AutoTypePlatformX11::keysymModifiers(KeySym keysym, int keycode, unsigned i
             XkbTranslateKeyCode(m_xkb, keycode, *mask, &mods_rtrn, &keysym_rtrn);
             if (keysym_rtrn == keysym) {
                 return true;
-                }
             }
         }
+    }
 
     return false;
 }
@@ -657,7 +657,7 @@ void AutoTypePlatformX11::SendKeyPressedEvent(KeySym keysym)
     if (keysym == NoSymbol) {
         qWarning("No such key: keysym=0x%lX", keysym);
         return;
-                }
+    }
 
     XGetInputFocus(m_dpy, &cur_focus, &revert_to);
 
@@ -707,8 +707,8 @@ void AutoTypePlatformX11::SendKeyPressedEvent(KeySym keysym)
 
             if (keysym_rtrn != keysym) {
                 release_mask |= (1 << mod_index);
-    }
-    }
+            }
+        }
     }
 
     // finally check if the combination of pressed modifiers that we chose to ignore affects the keysym

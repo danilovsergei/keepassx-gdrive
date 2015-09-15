@@ -34,6 +34,9 @@
 #include "core/TimeInfo.h"
 #include "core/Uuid.h"
 
+// Required by remote db sync.
+#include "core/Metadata.h"
+
 class Database;
 class Group;
 
@@ -140,6 +143,7 @@ public:
     const Group* group() const;
     void setGroup(Group* group);
 
+    void updateLastModified(QDateTime time);
     void setUpdateTimeinfo(bool value);
 
 Q_SIGNALS:

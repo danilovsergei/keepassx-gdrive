@@ -28,11 +28,8 @@
 #include "keys/CompositeKey.h"
 #include "keys/FileKey.h"
 #include "keys/PasswordKey.h"
-<<<<<<< HEAD
 #include <QtGlobal>
 #include <QDebug>
-=======
->>>>>>> original_2_0_beta
 
 int main(int argc, char **argv)
 {
@@ -42,7 +39,6 @@ int main(int argc, char **argv)
         qCritical("Usage: kdbx-extract <password/key file> <kdbx file>");
         return 1;
     }
-
 
     if (!Crypto::init()) {
         qFatal("Fatal error while testing the cryptographic functions:\n%s", qPrintable(Crypto::errorString()));
@@ -61,15 +57,6 @@ int main(int argc, char **argv)
     }
 
     QString dbFile(app.arguments().at(2));
-    if (!dbFile.exists()) {
-        qCritical("File does not exist.");
-        return 1;
-    }
-    if (!dbFile.open(QIODevice::ReadOnly)) {
-        qCritical("Unable to open file.");
-        return 1;
-    }
-
     KeePass2Reader reader;
     reader.setSaveXml(true);
     Database* db = reader.readDatabase(dbFile, key);

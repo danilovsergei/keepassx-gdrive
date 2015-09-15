@@ -67,9 +67,9 @@ AutoType::AutoType(QObject* parent, bool test)
 AutoType::~AutoType()
 {
     if (m_executor) {
-    delete m_executor;
+        delete m_executor;
         m_executor = Q_NULLPTR;
-}
+    }
 }
 
 void AutoType::loadPlugin(const QString& pluginPath)
@@ -484,9 +484,9 @@ QList<AutoTypeAction*> AutoType::createActionFromTemplate(const QString& tmpl, c
                 list.append(new AutoTypeKey(Qt::Key_Tab));
             }
             else {
-            list.append(new AutoTypeChar(ch));
+                list.append(new AutoTypeChar(ch));
+            }
         }
-    }
     }
 
     return list;

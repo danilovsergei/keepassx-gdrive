@@ -22,7 +22,6 @@
 
 #include "gui/DialogyWidget.h"
 #include "keys/CompositeKey.h"
-#include "remotedrive/gdrive/GoogleDriveTools.h"
 
 class Database;
 class QFile;
@@ -57,6 +56,7 @@ private Q_SLOTS:
     void activateKeyFile();
     void setOkButtonEnabled();
     void browseKeyFile();
+
 protected:
     const QScopedPointer<Ui::DatabaseOpenWidget> m_ui;
     Database* m_db;

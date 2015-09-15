@@ -66,8 +66,8 @@ public Q_SLOTS:
     void importKeePass1Database();
     bool saveDatabase(int index = -1);
     bool saveDatabaseAs(int index = -1);
-    void saveDatabase(Database* db, bool syncToCloud = false);
-    void saveDatabaseWithSync(Database *db);
+    bool saveDatabase(Database* db, bool syncToCloud = false);
+    bool saveDatabaseWithSync(Database *db);
     void exportToCsv();
     bool closeDatabase(int index = -1);
     void closeDatabaseFromSender();
@@ -77,7 +77,8 @@ public Q_SLOTS:
     bool readOnly(int index = -1);
     void performGlobalAutoType();
     void lockDatabases();
-
+    void openCloudDatabase();
+    void openDatabaseDownloadedFromCloud(const QString& fileName, Database *db);
 Q_SIGNALS:
     void tabNameChanged();
     void databaseWithFileClosed(QString filePath);

@@ -109,3 +109,14 @@ QDataStream& operator>>(QDataStream& stream, Uuid& uuid)
 
     return stream;
 }
+
+bool Uuid::operator<(const Uuid& other) const
+{
+  return m_data < other.m_data;
+}
+
+bool Uuid::operator>(const Uuid& other) const
+{
+  return m_data > other.m_data;
+}
+

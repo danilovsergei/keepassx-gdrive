@@ -23,6 +23,7 @@
 namespace Ui {
     class SettingsWidgetGeneral;
     class SettingsWidgetSecurity;
+    class SettingsWidgetCloud;
 }
 
 class SettingsWidget : public EditWidget
@@ -41,6 +42,7 @@ private Q_SLOTS:
     void saveSettings();
     void reject();
     void enableAutoSaveOnExit(bool checked);
+    void browseDbDirectory();
 
 private:
     QWidget* const m_secWidget;
@@ -49,6 +51,10 @@ private:
     const QScopedPointer<Ui::SettingsWidgetGeneral> m_generalUi;
     Qt::Key m_globalAutoTypeKey;
     Qt::KeyboardModifiers m_globalAutoTypeModifiers;
+
+    // Remote db sync settings.
+    QWidget* const m_cloudWidget;
+    const QScopedPointer<Ui::SettingsWidgetCloud> m_cloudUi;
 };
 
 #endif // KEEPASSX_SETTINGSWIDGET_H

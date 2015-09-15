@@ -31,6 +31,7 @@ private Q_SLOTS:
     void transactionalWriteNoPermissions();
     void transactionalWriteCanceled();
     void transactionalWriteErrorRenaming();
+    void testModificationTimeUpdate();
 
 private:
     QString tmpDir();

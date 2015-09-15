@@ -113,7 +113,7 @@ bool SymmetricCipherGcrypt::setKey(const QByteArray& key)
     if (error != 0) {
         setErrorString(error);
         return false;
-}
+    }
 
     return true;
 }
@@ -126,7 +126,7 @@ bool SymmetricCipherGcrypt::setIv(const QByteArray& iv)
     if (error != 0) {
         setErrorString(error);
         return false;
-}
+    }
 
     return true;
 }
@@ -172,7 +172,7 @@ bool SymmetricCipherGcrypt::processInPlace(QByteArray& data)
     if (error != 0) {
         setErrorString(error);
         return false;
-}
+    }
 
     return true;
 }
@@ -203,9 +203,9 @@ bool SymmetricCipherGcrypt::processInPlace(QByteArray& data, quint64 rounds)
             if (error != 0) {
                 setErrorString(error);
                 return false;
+            }
         }
     }
-}
 
     return true;
 }

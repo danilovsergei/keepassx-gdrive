@@ -1,4 +1,5 @@
-Dependencies:
+These are keepassx *.deb dependencies on clean ubuntu workstation
+#TODO move to INSTALL file
 libgcrypt11
 libgcrypt11-dev
 zlib1g-dev

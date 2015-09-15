@@ -74,7 +74,7 @@ template<class T> inline bool Entry::set(T &property, const T &value)
 void Entry::updateTimeinfo()
 {
   if (m_updateTimeinfo) {
-       QDateTime current = Tools::currentDateTimeUtc();
+        QDateTime current = Tools::currentDateTimeUtc();
         m_data.timeInfo.setLastModificationTime(current);
         m_data.timeInfo.setLastAccessTime(current);
         updateLastModified(current);
@@ -490,6 +490,10 @@ void Entry::copyDataFrom(const Entry *other)
   setUpdateTimeinfo(true);
 }
 
+/**
+ * @brief Entry::beginUpdate copies all information from entry under edit to the temp entry
+ * Used to maintain entry history after edits
+ */
 void Entry::beginUpdate()
 {
   Q_ASSERT(!m_tmpHistoryItem);
@@ -504,6 +508,11 @@ void Entry::beginUpdate()
   m_modifiedSinceBegin = false;
 }
 
+/**
+ * @brief Entry::endUpdate adds temporary item created before entry edit
+ * to the history items.
+ * Used to maintain entry history after edits
+ */
 void Entry::endUpdate()
 {
   Q_ASSERT(m_tmpHistoryItem);
@@ -596,4 +605,12 @@ QString Entry::resolvePlaceholders(const QString &str) const
   // TODO: lots of other placeholders missing
 
   return result;
+}
+
+void Entry::updateLastModified(QDateTime time)
+{
+  // update db last modification time only if entry attached to some group and group to db
+  // otherwise it does not make a sense to update it
+  if (m_group && m_group->database())
+    m_group->database()->metadata()->setLastModifiedDate(time);
 }

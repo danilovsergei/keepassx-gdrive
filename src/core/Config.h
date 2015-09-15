@@ -39,6 +39,9 @@ public:
     static void createConfigFromFile(const QString& file);
     static void createTempFileInstance();
 
+    // returns keepassx configuration directory.
+    QString getConfigDir();
+
 private:
     Config(const QString& fileName, QObject* parent);
     explicit Config(QObject* parent);
@@ -48,6 +51,9 @@ private:
 
     QScopedPointer<QSettings> m_settings;
     QHash<QString, QVariant> m_defaults;
+
+    // Remote db sync vars.
+    QString userPath;
 
     Q_DISABLE_COPY(Config)
 };

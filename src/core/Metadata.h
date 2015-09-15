@@ -99,6 +99,8 @@ public:
     static const int DefaultHistoryMaxItems;
     static const int DefaultHistoryMaxSize;
 
+    QDateTime lastModifiedDate() const;
+
     void setGenerator(const QString& value);
     void setName(const QString& value);
     void setNameChanged(const QDateTime& value);
@@ -141,6 +143,8 @@ public:
      * - Custom fields
      */
     void copyAttributesFrom(const Metadata* other);
+    void setLastModifiedDate(const QDateTime& value);
+    void setUpdateLastModifiedDate(bool value);
 
 Q_SIGNALS:
     void nameTextChanged();

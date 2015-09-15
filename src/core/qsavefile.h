@@ -70,7 +70,6 @@ public:
     QSaveFile(const QString &name, QObject *parent);
     QSaveFile(const QString &name, const QDateTime& newTime, QObject *parent);
     QSaveFile(const QString &name, const QDateTime& newTime);
-    bool setLastModificationDate(QTemporaryFile* tempFile, const QDateTime& newTime);
     ~QSaveFile();
 
     QFile::FileError error() const;

@@ -445,51 +445,13 @@ QList<const Group*> Group::groupsRecursive(bool includeSelf) const
     return groupList;
 }
 
-/**
- * @brief Group::entriesMapRecursive - build QMap of entries with UUID as a key
- * @return  QMap of entries UUID is a key
- */
-QMap<Uuid, Entry *> Group::entriesMapRecursive() const
-{
-  QMap<Uuid, Entry *> entryList;
-
-  Q_FOREACH(Entry* entry, m_entries) {
-    entryList[entry->uuid()] = entry;
-  }
-  Q_FOREACH(Group* group, m_children) {
-    Q_FOREACH(Entry* entry1, group->entriesMapRecursive()) {
-      entryList[entry1->uuid()] = entry1;
-    }
-  }
-
-  return entryList;
-}
-
-QMap<Uuid, Group *> Group::groupsMapRecursive(bool includeSelf)
-{
-  QMap<Uuid, Group *> groupMap;
-  if (includeSelf)
-    groupMap[this->uuid()] = this;
-
-  Q_FOREACH(Group* group, m_children) {
-    Q_FOREACH(Group* group1, group->groupsMapRecursive(true)){
-      groupMap[group1->uuid()] = group1;
-    }
-  }
-  return groupMap;
-}
-
-QString Group::getGroupName() const
-{
-  return m_data.name;
-}
-
 QList<Group*> Group::groupsRecursive(bool includeSelf)
 {
     QList<Group*> groupList;
     if (includeSelf) {
         groupList.append(this);
 }
+
   Q_FOREACH(Group* group, m_children) {
     groupList.append(group->groupsRecursive(true));
   }
@@ -688,4 +650,51 @@ bool Group::resolveAutoTypeEnabled() const
     Q_ASSERT(false);
     return false;
   }
+}
+
+/**
+ * @brief Group::entriesMapRecursive - build QMap of entries with UUID as a key
+ * @return  QMap of entries UUID is a key
+ */
+QMap<Uuid, Entry *> Group::entriesMapRecursive() const
+{
+  QMap<Uuid, Entry *> entryList;
+
+  Q_FOREACH(Entry* entry, m_entries) {
+    entryList[entry->uuid()] = entry;
+  }
+  Q_FOREACH(Group* group, m_children) {
+    Q_FOREACH(Entry* entry1, group->entriesMapRecursive()) {
+      entryList[entry1->uuid()] = entry1;
+    }
+  }
+
+  return entryList;
+}
+
+QMap<Uuid, Group *> Group::groupsMapRecursive(bool includeSelf)
+{
+  QMap<Uuid, Group *> groupMap;
+  if (includeSelf)
+    groupMap[this->uuid()] = this;
+
+  Q_FOREACH(Group* group, m_children) {
+    Q_FOREACH(Group* group1, group->groupsMapRecursive(true)){
+      groupMap[group1->uuid()] = group1;
+    }
+  }
+  return groupMap;
+}
+
+QString Group::getGroupName() const
+{
+  return m_data.name;
+}
+
+void Group::updateLastModified(QDateTime time)
+{
+  // update db last modification time only if group attached to some parent group and to db
+  // otherwise it does not make a sense to update it
+  if (m_db)
+    m_db->metadata()->setLastModifiedDate(time);
 }
