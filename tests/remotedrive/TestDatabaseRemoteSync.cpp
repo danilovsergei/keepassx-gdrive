@@ -619,8 +619,7 @@ void TestDatabaseRemoteSync::testRemoveRemoteEntrySlots()
   QList<QVariant> args = syncCommand->getResult();
   // expect:
   // 0: QSharedPointer<SyncObject> syncObject
-  // 1: QDateTime with lastModifiedDate
-  QCOMPARE(args.count(), 2);
+  QCOMPARE(args.count(), 1);
   QSharedPointer<SyncObject> actual = args.at(0).value < QSharedPointer <
                                                            SyncObject > >();
   QMap<SyncMapKey, int> expectedMap;

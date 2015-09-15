@@ -1042,7 +1042,7 @@ void DatabaseWidget::syncDone() {
    qRegisterMetaType < QSharedPointer < DatabaseSyncObject::SyncObject >>
     ("QSharedPointer<SyncObject>");
     qRegisterMetaType<SyncType>("SyncType");
-  Q_ASSERT(syncCommand->getResult().length() == 2);
+  Q_ASSERT(syncCommand->getResult().length() == 1);
   QVariant vSyncObject = syncCommand->getResult().at(0);
   QSharedPointer<SyncObject> syncObject = vSyncObject.value<SyncType>();
 
@@ -1068,11 +1068,18 @@ void DatabaseWidget::syncDone() {
     qDebug() <<QString("modified=%1, localTime = %2, remoteTime = %3").arg(localModifiedEntries).arg(syncObject->getLocalModificationDate().toLocalTime().toString()).arg(syncObject->getRemoteModificationDate().toLocalTime().toString());
     Q_EMIT requestSaveDatabase(m_db, false);
   }
-  // getRemoteModificationDate() could be not valid in the case when remote database not present in the cloud.
-  if (remoteModifiedEntries > 0 || !syncObject->getRemoteModificationDate().isValid()) {
+
+  if (remoteModifiedEntries > 0) {
       qDebug() << "Saving remote database after sync because it's older or has missing entries";
       saveDatabaseToCloud(m_db, m_filename);
   }
+
+  // getRemoteModificationDate() could be not valid in the case when remote database not present in the cloud.
+  if (!syncObject->getRemoteModificationDate().isValid()) {
+      qDebug() << "Saving remote database to the cloud for the first time.";
+      saveDatabaseToCloud(m_db, m_filename);
+  }
+
   if (remoteModifiedEntries ==0 && syncObject->getRemoteModificationDate() < syncObject->getLocalModificationDate()) {
     // user just touched local database without updating data. Take care about remote db date
     // Just update remote last modification date without uploading new revision

@@ -54,6 +54,6 @@ public:
     // it's a remote db version which is currently synced with local version
     QDateTime getRemoteDbLastModified();
 private:
-    void emitCustomSuccess(Database* remoteDb,  QSharedPointer<SyncObject> syncObject, QDateTime remoteDbLastModified);
+    void emitCustomSuccess(Database* remoteDb,  QSharedPointer<SyncObject> syncObject);
 };
 #endif // SyncCommand_H
