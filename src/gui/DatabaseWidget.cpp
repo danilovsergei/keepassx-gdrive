@@ -1068,7 +1068,8 @@ void DatabaseWidget::syncDone() {
     qDebug() <<QString("modified=%1, localTime = %2, remoteTime = %3").arg(localModifiedEntries).arg(syncObject->getLocalModificationDate().toLocalTime().toString()).arg(syncObject->getRemoteModificationDate().toLocalTime().toString());
     Q_EMIT requestSaveDatabase(m_db, false);
   }
-  if (remoteModifiedEntries > 0) {
+  // getRemoteModificationDate() could be not valid in the case when remote database not present in the cloud.
+  if (remoteModifiedEntries > 0 || !syncObject->getRemoteModificationDate().isValid()) {
       qDebug() << "Saving remote database after sync because it's older or has missing entries";
       saveDatabaseToCloud(m_db, m_filename);
   }

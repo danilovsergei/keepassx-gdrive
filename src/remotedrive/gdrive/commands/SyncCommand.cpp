@@ -31,7 +31,7 @@ void SyncCommand::execute(const QVariantMap options)
   if (dbList.size() == 0) {
     qDebug() << QString("Nothing to sync. There is no remote database with name: %1").arg(QFileInfo(
                                                                                             localDbPath).fileName());
-    emitSuccess();
+    emitCustomSuccess(Q_NULLPTR,  QSharedPointer<SyncObject>(new SyncObject()), QDateTime());
     return;
   }
 
@@ -103,6 +103,13 @@ void SyncCommand::execute(const QVariantMap options)
   emitCustomSuccess(remoteDb, syncObject, remoteDbLastModified);
 }
 
+/**
+ * @brief SyncCommand::emitCustomSuccess emits sucess with provided sync object
+ *  and cleans downloaded remote database.
+ * @param remoteDb downloaded remote database
+ * @param syncObject syncobject with sync data to pass
+ * @param remoteDbLastModified time when remote db was last modfied
+ */
 void SyncCommand::emitCustomSuccess(Database * remoteDb, QSharedPointer<SyncObject> syncObject,
                                     QDateTime remoteDbLastModified)
 {
